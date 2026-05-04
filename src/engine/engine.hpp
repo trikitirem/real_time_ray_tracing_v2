@@ -3,6 +3,7 @@
 #include "engine/window.hpp"
 #include "renderer/shared/device_config.hpp"
 #include "renderer/shared/device_context.hpp"
+#include "renderer/shared/swapchain.hpp"
 
 namespace engine {
 
@@ -17,7 +18,7 @@ public:
 private:
     void initWindow();
     void initVulkan();
-    void mainLoop() const;
+    void mainLoop();
 
     const bool             useRasterBackend_;
     renderer::DeviceConfig rasterConfig_;
@@ -25,6 +26,9 @@ private:
 
     Window                  window_;
     renderer::DeviceContext deviceContext_;
+    renderer::Swapchain     swapchain_;
+
+    bool framebufferResized_ = false;
 };
 
 } // namespace engine

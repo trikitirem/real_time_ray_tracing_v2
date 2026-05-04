@@ -32,6 +32,8 @@ int Engine::run()
 void Engine::initWindow()
 {
     window_.init(kInitialWidth, kInitialHeight, "real_time_ray_tracing_v2");
+    window_.setResizeCallback(
+        [this](int /*w*/, int /*h*/) { framebufferResized_ = true; });
 }
 
 void Engine::initVulkan()
@@ -39,11 +41,25 @@ void Engine::initVulkan()
     const renderer::DeviceConfig& cfg =
         useRasterBackend_ ? rasterConfig_ : rayTracingConfig_;
     deviceContext_.init(window_.handle(), cfg);
+
+    int fbW = 0;
+    int fbH = 0;
+    window_.framebufferSize(fbW, fbH);
+    swapchain_.create(deviceContext_, fbW, fbH);
 }
 
-void Engine::mainLoop() const
+void Engine::mainLoop()
 {
     while (!window_.shouldClose()) {
+        if (framebufferResized_) {
+            framebufferResized_    = false;
+            int w = 0;
+            int h = 0;
+            window_.framebufferSize(w, h);
+            if (w > 0 && h > 0) {
+                swapchain_.recreate(deviceContext_, window_.handle());
+            }
+        }
         window_.pollEvents();
     }
 }

@@ -35,6 +35,7 @@ add_executable(real_time_ray_tracing_v2
         src/engine/window.cpp
         src/engine/engine.cpp
         src/renderer/shared/device_context.cpp
+        src/renderer/shared/swapchain.cpp
         src/renderer/ray_tracing/device_config.hpp
 )
 
