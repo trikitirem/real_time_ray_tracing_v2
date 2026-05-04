@@ -7,3 +7,6 @@ out/
 .cursor
 .agents
 .idea
+
+# Local architecture notes (optional / machine-specific paths)
+docs/

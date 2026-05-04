@@ -1,0 +1,198 @@
+@startuml architecture-classes
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+left to right direction
+
+title real_time_ray_tracing_v2 — główne klasy renderera i silnika
+
+package "engine" {
+    class Engine {
+        -deviceConfig_: DeviceConfig
+        -window_: Window
+        -deviceContext_: DeviceContext
+        -swapchain_: Swapchain
+        -renderer_: Renderer
+        -backend_: unique_ptr<IRenderBackend>
+        -scene_: Scene
+        --
+        +Engine(backend, deviceConfig)
+        +run(): int
+    }
+
+    class Window {
+        +handle(): GLFWwindow*
+        ..
+        GLFW init / surface helpers
+    }
+}
+
+package "scene (CPU)" <<Rectangle>> {
+    class Scene {
+        modele, materiały, hierarchia
+        --
+        bez typów Vulkan
+    }
+}
+
+package "renderer::shared" {
+    struct DeviceConfig {
+        requiredDeviceExtensions
+        featureChainHead (pNext)
+    }
+
+    class DeviceContext {
+        +init(window, cfg: DeviceConfig)
+        ..
+        instance, device, queues
+    }
+
+    class Swapchain {
+        +init(ctx, window)
+        ..
+        images, extent, format
+    }
+
+    class Renderer {
+        +init(ctx, swapchain, backend, window)
+        +drawFrame(ctx, swapchain, backend, window)
+        +notifyFramebufferResized()
+        +destroy(ctx)
+        ..
+        acquire → begin CB → backend.recordFrame → submit → present
+    }
+
+    struct RenderBackendInitInfo {
+        ctx: DeviceContext&
+        swapchain: Swapchain&
+        window: GLFWwindow*
+    }
+
+    abstract class IRenderBackend {
+        {abstract} +init(info: RenderBackendInitInfo)
+        {abstract} +destroy(ctx: DeviceContext)
+        {abstract} +recordFrame(ctx, swapchain, window, imageIndex)
+    }
+
+    abstract class RenderFrameRecorder {
+        {abstract} nagranie treści klatki na CB\n(render pass vs dynamic rendering)
+        --
+        #helpers: viewport, scissor, ...
+    }
+}
+
+package "renderer::raster" {
+    class RasterBackend {
+        -recorder_: RasterFrameRecorder
+        -pipeline_: RasterPipeline
+        -gpuScene_: RasterScene
+        ..
+        +recordFrame(...)
+    }
+
+    class RasterFrameRecorder {
+        +record(...): void
+        ..
+        vkCmdBeginRenderPass … EndRenderPass
+    }
+
+    class RasterPipeline {
+        VkRenderPass, VkFramebuffer, graphics pipeline
+    }
+
+    class RasterScene {
+        VB/IB, UBO, descriptors\nbez TLAS/BLAS
+    }
+
+    class RasterDeviceConfig <<utility>> {
+        {static} makeRasterDeviceConfig(): DeviceConfig
+    }
+
+    class RasterShaderConfig <<utility>> {
+        constexpr set/bind dla rastera
+    }
+}
+
+package "renderer::ray_tracing" {
+    class RayTracingBackend {
+        -recorder_: RayTracingFrameRecorder
+        -pipeline_: RayTracingPipeline
+        -gpuScene_: RayTracingScene
+        ..
+        +recordFrame(...)
+    }
+
+    class RayTracingFrameRecorder {
+        +record(...): void
+        ..
+        barriers → vkCmdBeginRendering … EndRendering\nDraw / TraceRays
+    }
+
+    class RayTracingPipeline {
+        graphics / RT pipeline, SBT (docelowo)
+    }
+
+    class RayTracingScene {
+        BLAS/TLAS, LUT, materiały GPU
+    }
+
+    class AccelerationStructures {
+        BLAS, TLAS, InstanceDesc, ...
+    }
+
+    class RayTracingDeviceConfig <<utility>> {
+        {static} makeRayTracingDeviceConfig(): DeviceConfig
+    }
+
+    class RayTracingShaderConfig <<utility>> {
+        constexpr set/bind dla RT
+    }
+}
+
+' --- Relationships ---
+
+Engine *-- Window
+Engine *-- DeviceContext
+Engine *-- Swapchain
+Engine *-- Renderer
+Engine o-- "1" IRenderBackend : owns
+Engine *-- DeviceConfig
+Engine ..> Scene : buildScene / read
+
+DeviceContext ..> DeviceConfig : init uses
+
+Renderer ..> IRenderBackend : recordFrame
+IRenderBackend ..> RenderBackendInitInfo : init
+
+IRenderBackend <|.. RasterBackend
+IRenderBackend <|.. RayTracingBackend
+
+RenderFrameRecorder <|-- RasterFrameRecorder
+RenderFrameRecorder <|-- RayTracingFrameRecorder
+
+RasterBackend *-- RasterFrameRecorder : uses
+RasterBackend *-- RasterPipeline
+RasterBackend *-- RasterScene
+RayTracingBackend *-- RayTracingFrameRecorder : uses
+RayTracingBackend *-- RayTracingPipeline
+RayTracingBackend *-- RayTracingScene
+
+RasterScene ..> Scene : built from
+RayTracingScene ..> Scene : built from
+RayTracingScene *-- AccelerationStructures
+
+RasterDeviceConfig ..> DeviceConfig : builds
+RayTracingDeviceConfig ..> DeviceConfig : builds
+
+note bottom of RenderFrameRecorder
+  Klasa bazowa dla dwóch ścieżek API:
+  klasyczny render pass (raster)
+  vs dynamic rendering (RT).
+end note
+
+note bottom of IRenderBackend
+  Backend orchestruje barriery swapchaina
+  i deleguje „rysowanie” do *FrameRecorder.
+end note
+
+@enduml
