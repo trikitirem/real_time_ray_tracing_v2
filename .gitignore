@@ -1,0 +1,9 @@
+# CMake / IDE build trees
+cmake-build-*/
+build/
+out/
+
+#
+.cursor
+.agents
+.idea
