@@ -84,9 +84,22 @@ DeviceContext::DeviceContext()
 {
 }
 
+const DeviceConfig& DeviceContext::cfg() const
+{
+    if (cfgPtr_ == nullptr) {
+        throw std::logic_error("DeviceContext::cfg used before init");
+    }
+    return *cfgPtr_;
+}
+
+const DeviceConfig& DeviceContext::deviceConfig() const
+{
+    return cfg();
+}
+
 void DeviceContext::init(GLFWwindow* window, const DeviceConfig& cfg)
 {
-    config_ = cfg;
+    cfgPtr_ = &cfg;
 
 #ifndef NDEBUG
     enableValidation_ = true;
@@ -113,15 +126,15 @@ void DeviceContext::createInstance()
         .apiVersion         = VK_API_VERSION_1_3,
     };
 
-    std::vector<const char*> layers = config_.instanceLayers;
+    std::vector<const char*> layers = cfg().instanceLayers;
     if (enableValidation_) {
         layers.insert(layers.end(), kValidationLayers.begin(), kValidationLayers.end());
     }
 
     std::vector<const char*> extensions = getGlfwRequiredInstanceExtensions();
     extensions.insert(extensions.end(),
-                        config_.instanceExtensionsExtra.begin(),
-                        config_.instanceExtensionsExtra.end());
+                      cfg().instanceExtensionsExtra.begin(),
+                      cfg().instanceExtensionsExtra.end());
     if (enableValidation_) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
@@ -163,7 +176,7 @@ void DeviceContext::pickPhysicalDevice()
     const auto devices = instance_.enumeratePhysicalDevices();
 
     for (const auto& dev : devices) {
-        if (!checkDeviceExtensionSupport(dev, config_.deviceExtensions)) {
+        if (!checkDeviceExtensionSupport(dev, cfg().deviceExtensions)) {
             continue;
         }
 
@@ -197,7 +210,7 @@ void DeviceContext::pickPhysicalDevice()
 
 void DeviceContext::createLogicalDevice()
 {
-    auto* features2 = static_cast<vk::PhysicalDeviceFeatures2*>(config_.deviceFeaturesChainHead);
+    auto* features2 = static_cast<vk::PhysicalDeviceFeatures2*>(cfg().deviceFeaturesChainHead);
     if (features2 == nullptr) {
         throw std::runtime_error("DeviceConfig::deviceFeaturesChainHead is null");
     }
@@ -217,8 +230,8 @@ void DeviceContext::createLogicalDevice()
         .pNext                   = features2,
         .queueCreateInfoCount    = static_cast<std::uint32_t>(queueInfos.size()),
         .pQueueCreateInfos       = queueInfos.data(),
-        .enabledExtensionCount   = static_cast<std::uint32_t>(config_.deviceExtensions.size()),
-        .ppEnabledExtensionNames = config_.deviceExtensions.data(),
+        .enabledExtensionCount   = static_cast<std::uint32_t>(cfg().deviceExtensions.size()),
+        .ppEnabledExtensionNames = cfg().deviceExtensions.data(),
     };
 
     device_        = vk::raii::Device(physicalDevice_, di);

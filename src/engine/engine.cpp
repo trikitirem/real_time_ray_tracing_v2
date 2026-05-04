@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "renderer/raster/device_config.hpp"
+#include "renderer/ray_tracing/device_config.hpp"
 
 namespace engine {
 
@@ -13,10 +14,17 @@ constexpr std::uint32_t kInitialHeight = 720;
 
 } // namespace
 
+Engine::Engine(bool useRasterBackend)
+    : useRasterBackend_(useRasterBackend)
+    , rasterConfig_(renderer::raster::makeRasterDeviceConfig())
+    , rayTracingConfig_(renderer::ray_tracing::makeRayTracingDeviceConfig())
+{
+}
+
 int Engine::run()
 {
     initWindow();
-    initRenderer();
+    initVulkan();
     mainLoop();
     return 0;
 }
@@ -26,12 +34,15 @@ void Engine::initWindow()
     window_.init(kInitialWidth, kInitialHeight, "real_time_ray_tracing_v2");
 }
 
-void Engine::initRenderer()
+void Engine::initVulkan()
 {
-    deviceContext_.init(window_.handle(), renderer::raster::makeRasterDeviceConfig());
+    const renderer::DeviceConfig& cfg =
+        useRasterBackend_ ? rasterConfig_ : rayTracingConfig_;
+    deviceContext_.init(window_.handle(), cfg);
 }
 
-void Engine::mainLoop() const {
+void Engine::mainLoop() const
+{
     while (!window_.shouldClose()) {
         window_.pollEvents();
     }

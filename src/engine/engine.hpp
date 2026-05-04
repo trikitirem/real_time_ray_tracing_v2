@@ -1,13 +1,14 @@
 #pragma once
 
 #include "engine/window.hpp"
+#include "renderer/shared/device_config.hpp"
 #include "renderer/shared/device_context.hpp"
 
 namespace engine {
 
 class Engine {
 public:
-    Engine()                         = default;
+    explicit Engine(bool useRasterBackend);
     Engine(const Engine&)            = delete;
     Engine& operator=(const Engine&) = delete;
 
@@ -15,8 +16,12 @@ public:
 
 private:
     void initWindow();
-    void initRenderer();
+    void initVulkan();
     void mainLoop() const;
+
+    const bool             useRasterBackend_;
+    renderer::DeviceConfig rasterConfig_;
+    renderer::DeviceConfig rayTracingConfig_;
 
     Window                  window_;
     renderer::DeviceContext deviceContext_;
