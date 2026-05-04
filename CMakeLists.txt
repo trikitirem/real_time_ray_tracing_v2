@@ -30,4 +30,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-add_executable(real_time_ray_tracing_v2 main.cpp)
+add_executable(real_time_ray_tracing_v2
+        main.cpp
+        src/engine/window.cpp
+        src/engine/engine.cpp
+)
+
+target_include_directories(real_time_ray_tracing_v2 PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(real_time_ray_tracing_v2 PRIVATE
+        glfw
+        Vulkan::Headers
+)
