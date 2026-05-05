@@ -6,9 +6,12 @@
 #include <array>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 #include <set>
 #include <stdexcept>
 #include <vector>
+
+#include <vulkan/vulkan.hpp>
 
 namespace renderer {
 
@@ -100,6 +103,11 @@ const DeviceConfig& DeviceContext::deviceConfig() const
 void DeviceContext::init(GLFWwindow* window, const DeviceConfig& cfg)
 {
     cfgPtr_ = &cfg;
+
+    static std::once_flag dispatch_init;
+    std::call_once(dispatch_init, []() {
+        VULKAN_HPP_DEFAULT_DISPATCHER.init();
+    });
 
 #ifndef NDEBUG
     enableValidation_ = true;

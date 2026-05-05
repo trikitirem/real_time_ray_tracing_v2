@@ -71,8 +71,14 @@ add_executable(real_time_ray_tracing_v2
         src/engine/window.cpp
         src/engine/engine.cpp
         src/renderer/shared/device_context.cpp
+        src/renderer/shared/vulkan_dynamic_dispatch.cpp
         src/renderer/shared/swapchain.cpp
+        src/renderer/shared/shader_module_util.cpp
+        src/renderer/shared/graphics_pipeline.cpp
+        src/renderer/raster/raster_pipeline.cpp
+        src/renderer/ray_tracing/rt_pipeline.cpp
         src/renderer/ray_tracing/device_config.hpp
+        src/renderer/shared/viewport_flip.hpp
 )
 
 add_dependencies(real_time_ray_tracing_v2 rtrt_shaders)
