@@ -78,10 +78,11 @@ void append_primitive(DeviceContext& ctx,
     out.material_albedos.push_back(glm::vec4(primitive.material.base_color, 1.0f));
 
     const std::uint32_t reflection_index_offset = static_cast<std::uint32_t>(reflection_indices.size());
-    reflection_indices.insert(
-        reflection_indices.end(),
-        primitive.indices.begin(),
-        primitive.indices.end());
+    const std::uint32_t reflection_uv_base = static_cast<std::uint32_t>(reflection_uvs.size());
+    reflection_indices.reserve(reflection_indices.size() + primitive.indices.size());
+    for (const util::Index local_index : primitive.indices) {
+        reflection_indices.push_back(reflection_uv_base + local_index);
+    }
     reflection_uvs.reserve(reflection_uvs.size() + primitive.vertices.size());
     for (const util::Vertex& vertex : primitive.vertices) {
         reflection_uvs.push_back(vertex.uv);

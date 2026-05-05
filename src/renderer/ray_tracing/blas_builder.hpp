@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 
+#include <glm/mat4x4.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
 namespace renderer {
@@ -24,6 +25,7 @@ struct BlasInstanceInput {
     vk::DeviceAddress blas_address = 0;
     std::uint32_t material_index = 0;
     std::uint32_t index_offset = 0;
+    glm::mat4 model_matrix = glm::mat4(1.0f);
 };
 
 struct BlasBuildResult {

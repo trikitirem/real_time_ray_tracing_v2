@@ -196,6 +196,7 @@ BlasBuildResult BlasBuilder::build(DeviceContext& ctx, const RtSceneGpuData& sce
             .blas_address = blas_addr,
             .material_index = item.material_index,
             .index_offset = item.first_index,
+            .model_matrix = item.model_matrix,
         });
         out.entries.push_back(std::move(entry));
     }

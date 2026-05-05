@@ -6,6 +6,7 @@
 #include <array>
 #include <cstring>
 #include <cstdint>
+#include <glm/mat4x4.hpp>
 #include <memory>
 #include <stdexcept>
 
@@ -82,6 +83,19 @@ void end_single_time_commands(const vk::raii::Queue& queue, const vk::raii::Comm
     }, nullptr);
     queue.waitIdle();
 }
+    /// Vulkan transform expects 3x4 row-major, glm::mat4 is column-major.
+    /// Thats is why this mapping exists
+vk::TransformMatrixKHR to_vk_transform(const glm::mat4& matrix)
+{
+    vk::TransformMatrixKHR out{};
+
+    out.matrix = std::array<std::array<float, 4>, 3>{
+        std::array<float, 4>{ matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0] },
+        std::array<float, 4>{ matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1] },
+        std::array<float, 4>{ matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2] },
+    };
+    return out;
+}
 
 } // namespace
 
@@ -103,17 +117,10 @@ TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasIns
     std::vector<vk::AccelerationStructureInstanceKHR> as_instances{};
     as_instances.reserve(instances.size());
 
-    vk::TransformMatrixKHR identity{};
-    identity.matrix = std::array<std::array<float, 4>, 3>{
-        std::array<float, 4>{ 1.f, 0.f, 0.f, 0.f },
-        std::array<float, 4>{ 0.f, 1.f, 0.f, 0.f },
-        std::array<float, 4>{ 0.f, 0.f, 1.f, 0.f },
-    };
-
     for (const BlasInstanceInput& in : instances) {
         vk::AccelerationStructureInstanceKHR inst{};
-        inst.transform = identity;
-        inst.instanceCustomIndex = in.material_index;
+        inst.transform = to_vk_transform(in.model_matrix);
+        inst.instanceCustomIndex = in.geometry_index;
         inst.mask = 0xFF;
         inst.instanceShaderBindingTableRecordOffset = 0;
         inst.flags = static_cast<VkGeometryInstanceFlagsKHR>(
