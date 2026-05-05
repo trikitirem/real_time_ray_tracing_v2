@@ -6,6 +6,8 @@
 #include "renderer/shared/device_config.hpp"
 #include "renderer/shared/device_context.hpp"
 #include "renderer/shared/renderer.hpp"
+#include "scene/camera.hpp"
+#include "scene/scene.hpp"
 
 namespace engine {
 
@@ -18,6 +20,7 @@ public:
     int run();
 
 private:
+    void initTestScene();
     void initWindow();
     void initVulkan();
     void mainLoop();
@@ -29,6 +32,8 @@ private:
     Window                  window_;
     renderer::DeviceContext deviceContext_;
     std::unique_ptr<renderer::Renderer> renderer_;
+    scene::Scene            scene_{};
+    scene::Camera           camera_{};
 
     bool framebufferResized_ = false;
 };
