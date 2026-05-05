@@ -1,13 +1,8 @@
 #include "renderer/shared/renderer.hpp"
 
-#include "renderer/raster/raster_frame_recorder.hpp"
-#include "renderer/raster/raster_pipeline.hpp"
-#include "renderer/ray_tracing/rt_frame_recorder.hpp"
-#include "renderer/ray_tracing/rt_pipeline.hpp"
+#include "renderer/raster/raster_render_backend.hpp"
+#include "renderer/ray_tracing/rt_render_backend.hpp"
 #include "renderer/shared/device_context.hpp"
-#include "renderer/shared/graphics_pipeline.hpp"
-
-#include "util/shader_paths.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -18,24 +13,6 @@
 #include <GLFW/glfw3.h>
 
 namespace renderer {
-
-namespace {
-
-std::uint32_t find_memory_type(const vk::raii::PhysicalDevice& physicalDevice,
-                               std::uint32_t                 typeFilter,
-                               vk::MemoryPropertyFlags        properties)
-{
-    const vk::PhysicalDeviceMemoryProperties mem = physicalDevice.getMemoryProperties();
-    for (std::uint32_t i = 0; i < mem.memoryTypeCount; ++i) {
-        if ((typeFilter & (1u << i))
-            && (mem.memoryTypes[i].propertyFlags & properties) == properties) {
-            return i;
-        }
-    }
-    throw std::runtime_error("find_memory_type: no suitable memory type");
-}
-
-} // namespace
 
 Renderer::Renderer(GLFWwindow* window, DeviceContext& ctx, bool useRasterBackend)
     : window_(window)
@@ -51,7 +28,12 @@ Renderer::Renderer(GLFWwindow* window, DeviceContext& ctx, bool useRasterBackend
         swapchain_.create(ctx_, 1, 1);
     }
 
-    create_pipeline_resources();
+    if (use_raster_) {
+        backend_ = std::make_unique<raster::RasterRenderBackend>();
+    } else {
+        backend_ = std::make_unique<ray_tracing::RtRenderBackend>();
+    }
+    backend_->create(ctx_, swapchain_);
     create_command_pool_and_buffers();
     create_sync_objects();
 }
@@ -61,106 +43,7 @@ Renderer::~Renderer()
     ctx_.device().waitIdle();
     destroy_sync_objects();
     destroy_command_pool_and_buffers();
-    destroy_pipeline_resources();
-}
-
-void Renderer::create_rt_depth_resources(vk::Extent2D extent)
-{
-    const vk::raii::Device&         device   = ctx_.device();
-    const vk::raii::PhysicalDevice& physical = ctx_.physicalDevice();
-
-    rt_depth_format_ = GraphicsPipeline::find_depth_format(physical);
-
-    const std::uint32_t w = extent.width;
-    const std::uint32_t h = extent.height;
-
-    vk::ImageCreateInfo depth_info{};
-    depth_info.imageType     = vk::ImageType::e2D;
-    depth_info.extent        = vk::Extent3D{ w, h, 1 };
-    depth_info.mipLevels     = 1;
-    depth_info.arrayLayers   = 1;
-    depth_info.format        = rt_depth_format_;
-    depth_info.tiling        = vk::ImageTiling::eOptimal;
-    depth_info.initialLayout = vk::ImageLayout::eUndefined;
-    depth_info.usage         = vk::ImageUsageFlagBits::eDepthStencilAttachment;
-    depth_info.samples       = vk::SampleCountFlagBits::e1;
-
-    rt_depth_image_ = vk::raii::Image(device, depth_info);
-
-    vk::ImageMemoryRequirementsInfo2 imreq{};
-    imreq.image                            = *rt_depth_image_;
-    const vk::MemoryRequirements2 mem_req2 = device.getImageMemoryRequirements2(imreq);
-    const vk::MemoryRequirements& mem_req = mem_req2.memoryRequirements;
-
-    const std::uint32_t mem_index
-        = find_memory_type(physical, mem_req.memoryTypeBits,
-                           vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-    vk::MemoryAllocateInfo alloc{};
-    alloc.allocationSize  = mem_req.size;
-    alloc.memoryTypeIndex = mem_index;
-    rt_depth_memory_      = vk::raii::DeviceMemory(device, alloc);
-
-    vk::Device vk_dev(*device);
-    vk_dev.bindImageMemory(*rt_depth_image_, *rt_depth_memory_, 0);
-
-    vk::ImageViewCreateInfo view_info{};
-    view_info.image    = *rt_depth_image_;
-    view_info.viewType = vk::ImageViewType::e2D;
-    view_info.format   = rt_depth_format_;
-    view_info.subresourceRange.aspectMask
-        = (rt_depth_format_ == vk::Format::eD32Sfloat)
-        ? vk::ImageAspectFlagBits::eDepth
-        : (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil);
-    view_info.subresourceRange.levelCount = 1;
-    view_info.subresourceRange.layerCount = 1;
-
-    rt_depth_view_ = vk::raii::ImageView(device, view_info);
-}
-
-void Renderer::destroy_rt_depth_resources()
-{
-    rt_depth_view_   = nullptr;
-    rt_depth_image_  = nullptr;
-    rt_depth_memory_ = nullptr;
-    rt_depth_format_ = vk::Format::eUndefined;
-}
-
-void Renderer::create_pipeline_resources()
-{
-    if (use_raster_) {
-        raster_pipeline_ = std::make_unique<raster::RasterPipeline>();
-        raster_pipeline_->create(ctx_, swapchain_,
-                                 util::raster_shader("default.spv").full_path());
-        frame_recorder_
-            = std::make_unique<raster::RasterFrameRecorder>(*raster_pipeline_);
-    } else {
-        const vk::raii::Device& device = ctx_.device();
-        rt_pipeline_ = std::make_unique<ray_tracing::RayTracingPipeline>();
-        rt_pipeline_->create(device, ctx_.physicalDevice(), swapchain_.imageFormat(),
-                             util::ray_tracing_shader("default.spv").full_path());
-        create_rt_depth_resources(swapchain_.extent());
-        frame_recorder_ = std::make_unique<ray_tracing::RayTracingFrameRecorder>(
-            *rt_pipeline_,
-            swapchain_,
-            rt_depth_format_,
-            *rt_depth_view_);
-    }
-}
-
-void Renderer::destroy_pipeline_resources()
-{
-    frame_recorder_.reset();
-
-    if (raster_pipeline_) {
-        raster_pipeline_->destroy();
-        raster_pipeline_.reset();
-    }
-    if (rt_pipeline_) {
-        rt_pipeline_->destroy();
-        rt_pipeline_.reset();
-    }
-    destroy_rt_depth_resources();
+    backend_->destroy(ctx_);
 }
 
 void Renderer::create_command_pool_and_buffers()
@@ -221,7 +104,7 @@ void Renderer::recreate_swapchain()
 
     destroy_sync_objects();
     destroy_command_pool_and_buffers();
-    destroy_pipeline_resources();
+    backend_->destroy(ctx_);
 
     int width  = 0;
     int height = 0;
@@ -233,7 +116,7 @@ void Renderer::recreate_swapchain()
 
     swapchain_.recreate(ctx_, window_);
 
-    create_pipeline_resources();
+    backend_->create(ctx_, swapchain_);
     create_command_pool_and_buffers();
     create_sync_objects();
 }
@@ -249,11 +132,7 @@ void Renderer::record_command_buffer(const std::uint32_t frame_index,
     ctx.extent         = swapchain_.extent();
     ctx.imageIndex     = image_index;
     ctx.swapchainImage = swapchain_.images()[image_index];
-    if (!use_raster_) {
-        ctx.depthImage = *rt_depth_image_;
-    }
-
-    frame_recorder_->record(cmd, ctx);
+    backend_->record(cmd, ctx);
 
     cmd.end();
 }

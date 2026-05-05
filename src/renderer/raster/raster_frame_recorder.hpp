@@ -6,7 +6,7 @@ namespace renderer::raster {
 
 class RasterPipeline;
 
-class RasterFrameRecorder final : public RenderFrameRecorder {
+class RasterFrameRecorder final : public FrameRecorder {
 public:
     explicit RasterFrameRecorder(RasterPipeline& pipeline);
 

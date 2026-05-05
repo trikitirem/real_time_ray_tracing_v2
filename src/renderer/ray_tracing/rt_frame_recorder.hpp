@@ -12,7 +12,7 @@ namespace renderer::ray_tracing {
 
 class RayTracingPipeline;
 
-class RayTracingFrameRecorder final : public RenderFrameRecorder {
+class RayTracingFrameRecorder final : public FrameRecorder {
 public:
     RayTracingFrameRecorder(RayTracingPipeline& pipeline,
                             const renderer::Swapchain& swapchain,

@@ -94,8 +94,10 @@ add_executable(real_time_ray_tracing_v2
         src/renderer/shared/buffers/host_visible_buffer.cpp
         src/renderer/raster/raster_pipeline.cpp
         src/renderer/raster/raster_frame_recorder.cpp
+        src/renderer/raster/raster_render_backend.cpp
         src/renderer/ray_tracing/rt_pipeline.cpp
         src/renderer/ray_tracing/rt_frame_recorder.cpp
+        src/renderer/ray_tracing/rt_render_backend.cpp
         src/renderer/ray_tracing/device_config.hpp
         src/renderer/shared/viewport_flip.hpp
         src/scene/mesh_primitive.hpp
@@ -109,7 +111,7 @@ add_dependencies(real_time_ray_tracing_v2 rtrt_images)
 
 target_include_directories(real_time_ray_tracing_v2 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+        ${CMAKE_CURRENT_SOURCE_DIR}/external
         ${Vulkan_INCLUDE_DIRS}
 )
 

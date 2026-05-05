@@ -234,23 +234,22 @@ TextureResource TextureResource::load_from_asset_location(
     out.view_ = vk::raii::ImageView(device, view_ci);
 
     const vk::PhysicalDeviceProperties properties = physical_device.getProperties();
-    const vk::SamplerCreateInfo sampler_ci{
-        .magFilter               = vk::Filter::eLinear,
-        .minFilter               = vk::Filter::eLinear,
-        .mipmapMode              = vk::SamplerMipmapMode::eLinear,
-        .addressModeU            = vk::SamplerAddressMode::eRepeat,
-        .addressModeV            = vk::SamplerAddressMode::eRepeat,
-        .addressModeW            = vk::SamplerAddressMode::eRepeat,
-        .anisotropyEnable        = vk::True,
-        .maxAnisotropy           = properties.limits.maxSamplerAnisotropy,
-        .borderColor             = vk::BorderColor::eIntOpaqueBlack,
-        .unnormalizedCoordinates = vk::False,
-        .compareEnable           = vk::False,
-        .compareOp               = vk::CompareOp::eAlways,
-        .minLod                  = 0.0f,
-        .maxLod                  = 0.0f,
-        .mipLodBias              = 0.0f,
-    };
+    vk::SamplerCreateInfo sampler_ci{};
+    sampler_ci.magFilter = vk::Filter::eLinear;
+    sampler_ci.minFilter = vk::Filter::eLinear;
+    sampler_ci.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    sampler_ci.addressModeU = vk::SamplerAddressMode::eRepeat;
+    sampler_ci.addressModeV = vk::SamplerAddressMode::eRepeat;
+    sampler_ci.addressModeW = vk::SamplerAddressMode::eRepeat;
+    sampler_ci.mipLodBias = 0.0f;
+    sampler_ci.anisotropyEnable = vk::True;
+    sampler_ci.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+    sampler_ci.compareEnable = vk::False;
+    sampler_ci.compareOp = vk::CompareOp::eAlways;
+    sampler_ci.minLod = 0.0f;
+    sampler_ci.maxLod = 0.0f;
+    sampler_ci.borderColor = vk::BorderColor::eIntOpaqueBlack;
+    sampler_ci.unnormalizedCoordinates = vk::False;
     out.sampler_ = vk::raii::Sampler(device, sampler_ci);
 
     return out;
