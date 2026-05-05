@@ -36,7 +36,17 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
     cmd.setScissor(0, make_full_framebuffer_scissor(ctx.extent));
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.pipeline());
-    cmd.draw(3, 1, 0, 0);
+    if (scene_data_ && scene_data_->valid) {
+        for (const DrawItem& item : scene_data_->draw_items) {
+            const vk::Buffer vb = item.vertex_buffer;
+            const vk::DeviceSize vb_offset = 0;
+            cmd.bindVertexBuffers(0, vb, vb_offset);
+            cmd.bindIndexBuffer(item.index_buffer, 0, vk::IndexType::eUint32);
+            cmd.drawIndexed(item.index_count, 1, item.first_index, item.vertex_offset, 0);
+        }
+    } else {
+        cmd.draw(3, 1, 0, 0);
+    }
 
     cmd.endRenderPass();
 }

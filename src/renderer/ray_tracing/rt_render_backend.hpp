@@ -17,6 +17,7 @@ public:
 
     void create(DeviceContext& ctx, const Swapchain& swapchain) override;
     void destroy(DeviceContext& ctx) override;
+    void load_scene(SceneGpuData&& scene_data) override;
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:
@@ -30,6 +31,7 @@ private:
     vk::raii::Image rt_depth_image_ = nullptr;
     vk::raii::DeviceMemory rt_depth_memory_ = nullptr;
     vk::raii::ImageView rt_depth_view_ = nullptr;
+    SceneGpuData scene_data_{};
 };
 
 } // namespace renderer::ray_tracing

@@ -75,6 +75,7 @@ void Engine::initVulkan()
 
     renderer_
         = std::make_unique<renderer::Renderer>(window_.handle(), deviceContext_, useRasterBackend_);
+    renderer_->load_scene(scene_);
 }
 
 void Engine::mainLoop()

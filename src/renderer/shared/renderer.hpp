@@ -11,6 +11,10 @@
 
 struct GLFWwindow;
 
+namespace scene {
+class Scene;
+}
+
 namespace renderer {
 
 class DeviceContext;
@@ -25,6 +29,7 @@ public:
 
     ~Renderer();
 
+    void load_scene(const scene::Scene& scene);
     void draw();
 
     void notifyFramebufferResized() { framebuffer_resized_ = true; }
@@ -58,6 +63,7 @@ private:
     vk::raii::CommandBuffers           command_buffers_  = nullptr;
     std::vector<FrameSync>             frames_{};
     std::vector<vk::raii::Semaphore>   render_finished_{};
+    const scene::Scene* loaded_scene_ = nullptr;
 
     std::uint32_t current_frame_        = 0;
     bool          framebuffer_resized_ = false;

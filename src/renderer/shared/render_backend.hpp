@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer/shared/render_frame_recorder.hpp"
+#include "renderer/shared/scene_gpu_data.hpp"
 
 namespace renderer {
 
@@ -16,6 +17,7 @@ public:
 
     virtual void create(DeviceContext& ctx, const Swapchain& swapchain) = 0;
     virtual void destroy(DeviceContext& ctx) = 0;
+    virtual void load_scene(SceneGpuData&& scene_data) = 0;
     virtual void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) = 0;
 };
 

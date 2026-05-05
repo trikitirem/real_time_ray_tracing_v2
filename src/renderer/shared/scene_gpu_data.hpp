@@ -6,6 +6,9 @@
 #include <glm/mat4x4.hpp>
 #include <vulkan/vulkan.hpp>
 
+#include "renderer/shared/buffers/gpu_buffer.hpp"
+#include "renderer/shared/textures/texture_resource.hpp"
+
 namespace renderer {
 
 struct DrawItem {
@@ -19,11 +22,16 @@ struct DrawItem {
 };
 
 struct SceneGpuData {
+    std::vector<buffers::GpuBuffer> vertex_buffers{};
+    std::vector<buffers::GpuBuffer> index_buffers{};
+    std::vector<textures::TextureResource> textures{};
+
     std::vector<DrawItem> draw_items{};
     vk::Buffer material_buffer{};
     std::vector<vk::ImageView> texture_views{};
     vk::Sampler texture_sampler{};
     std::uint32_t material_count = 0;
+    bool valid = false;
 };
 
 } // namespace renderer

@@ -6,6 +6,8 @@
 #include "renderer/shared/swapchain.hpp"
 #include "util/shader_paths.hpp"
 
+#include <utility>
+
 namespace renderer::raster {
 
 RasterRenderBackend::~RasterRenderBackend() = default;
@@ -20,6 +22,7 @@ void RasterRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
 void RasterRenderBackend::destroy(DeviceContext& ctx)
 {
     (void)ctx;
+    scene_data_ = {};
     frame_recorder_.reset();
     if (pipeline_) {
         pipeline_->destroy();
@@ -27,8 +30,19 @@ void RasterRenderBackend::destroy(DeviceContext& ctx)
     }
 }
 
+void RasterRenderBackend::load_scene(SceneGpuData&& scene_data)
+{
+    scene_data_ = std::move(scene_data);
+    if (frame_recorder_) {
+        frame_recorder_->set_scene_data(&scene_data_);
+    }
+}
+
 void RasterRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx)
 {
+    if (frame_recorder_) {
+        frame_recorder_->set_scene_data(&scene_data_);
+    }
     frame_recorder_->record(cmd, frame_ctx);
 }
 

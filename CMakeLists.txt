@@ -95,9 +95,11 @@ add_executable(real_time_ray_tracing_v2
         src/renderer/raster/raster_pipeline.cpp
         src/renderer/raster/raster_frame_recorder.cpp
         src/renderer/raster/raster_render_backend.cpp
+        src/renderer/raster/raster_scene_gpu_builder.cpp
         src/renderer/ray_tracing/rt_pipeline.cpp
         src/renderer/ray_tracing/rt_frame_recorder.cpp
         src/renderer/ray_tracing/rt_render_backend.cpp
+        src/renderer/ray_tracing/rt_scene_gpu_builder.cpp
         src/renderer/ray_tracing/device_config.hpp
         src/renderer/shared/viewport_flip.hpp
         src/scene/mesh_primitive.hpp

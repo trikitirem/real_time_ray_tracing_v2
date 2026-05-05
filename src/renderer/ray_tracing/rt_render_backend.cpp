@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include "renderer/ray_tracing/rt_frame_recorder.hpp"
 #include "renderer/ray_tracing/rt_pipeline.hpp"
@@ -50,12 +51,18 @@ void RtRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
 void RtRenderBackend::destroy(DeviceContext& ctx)
 {
     (void)ctx;
+    scene_data_ = {};
     frame_recorder_.reset();
     if (pipeline_) {
         pipeline_->destroy();
         pipeline_.reset();
     }
     destroy_depth_resources();
+}
+
+void RtRenderBackend::load_scene(SceneGpuData&& scene_data)
+{
+    scene_data_ = std::move(scene_data);
 }
 
 void RtRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx)

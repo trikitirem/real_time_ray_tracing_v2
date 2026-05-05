@@ -1,8 +1,11 @@
 #include "renderer/shared/renderer.hpp"
 
 #include "renderer/raster/raster_render_backend.hpp"
+#include "renderer/raster/raster_scene_gpu_builder.hpp"
 #include "renderer/ray_tracing/rt_render_backend.hpp"
+#include "renderer/ray_tracing/rt_scene_gpu_builder.hpp"
 #include "renderer/shared/device_context.hpp"
+#include "scene/scene.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -44,6 +47,18 @@ Renderer::~Renderer()
     destroy_sync_objects();
     destroy_command_pool_and_buffers();
     backend_->destroy(ctx_);
+}
+
+void Renderer::load_scene(const scene::Scene& scene)
+{
+    loaded_scene_ = &scene;
+    if (use_raster_) {
+        raster::RasterSceneGpuBuilder builder{};
+        backend_->load_scene(builder.build(ctx_, scene));
+    } else {
+        ray_tracing::RtSceneGpuBuilder builder{};
+        backend_->load_scene(builder.build(ctx_, scene));
+    }
 }
 
 void Renderer::create_command_pool_and_buffers()
@@ -117,6 +132,9 @@ void Renderer::recreate_swapchain()
     swapchain_.recreate(ctx_, window_);
 
     backend_->create(ctx_, swapchain_);
+    if (loaded_scene_ != nullptr) {
+        load_scene(*loaded_scene_);
+    }
     create_command_pool_and_buffers();
     create_sync_objects();
 }
