@@ -1,5 +1,6 @@
 #include "renderer/raster/raster_pipeline.hpp"
 
+#include "renderer/raster/shader_config.hpp"
 #include "renderer/shared/device_context.hpp"
 #include "renderer/shared/swapchain.hpp"
 
@@ -37,6 +38,7 @@ void RasterPipeline::destroy()
     depth_memory_  = nullptr;
     shader_module_   = nullptr;
     pipeline_layout_ = nullptr;
+    camera_set_layout_ = nullptr;
     depth_format_    = vk::Format::eUndefined;
 }
 
@@ -52,7 +54,16 @@ void RasterPipeline::create(DeviceContext& ctx, const Swapchain& swapchain, cons
 
     create_depth_resources(device, physical, extent);
     create_render_pass(device, swapchain.imageFormat());
-    create_empty_pipeline_layout(device);
+    vk::DescriptorSetLayoutCreateInfo camera_layout_ci{};
+    camera_layout_ci.bindingCount = static_cast<std::uint32_t>(kCameraDescriptorBindings.size());
+    camera_layout_ci.pBindings    = kCameraDescriptorBindings.data();
+    camera_set_layout_            = vk::raii::DescriptorSetLayout(device, camera_layout_ci);
+
+    const vk::DescriptorSetLayout set_layouts[] = { *camera_set_layout_ };
+    vk::PipelineLayoutCreateInfo  pipeline_layout_ci{};
+    pipeline_layout_ci.setLayoutCount = 1;
+    pipeline_layout_ci.pSetLayouts    = set_layouts;
+    pipeline_layout_                  = vk::raii::PipelineLayout(device, pipeline_layout_ci);
     create_raster_graphics_pipeline(device);
     create_framebuffers(device, swapchain, extent);
 }

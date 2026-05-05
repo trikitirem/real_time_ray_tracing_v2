@@ -1,5 +1,9 @@
 #include "renderer/ray_tracing/rt_pipeline.hpp"
 
+#include "renderer/ray_tracing/shader_config.hpp"
+
+#include <cstdint>
+
 namespace renderer::ray_tracing {
 
 void RayTracingPipeline::destroy()
@@ -7,6 +11,7 @@ void RayTracingPipeline::destroy()
     pipeline_        = nullptr;
     shader_module_   = nullptr;
     pipeline_layout_ = nullptr;
+    camera_set_layout_ = nullptr;
 }
 
 void RayTracingPipeline::create(const vk::raii::Device&        device,
@@ -15,7 +20,16 @@ void RayTracingPipeline::create(const vk::raii::Device&        device,
                                 const std::filesystem::path&   spirv_path)
 {
     load_shader_module(device, spirv_path);
-    create_empty_pipeline_layout(device);
+    vk::DescriptorSetLayoutCreateInfo camera_layout_ci{};
+    camera_layout_ci.bindingCount = static_cast<std::uint32_t>(kCameraDescriptorBindings.size());
+    camera_layout_ci.pBindings    = kCameraDescriptorBindings.data();
+    camera_set_layout_            = vk::raii::DescriptorSetLayout(device, camera_layout_ci);
+
+    const vk::DescriptorSetLayout set_layouts[] = { *camera_set_layout_ };
+    vk::PipelineLayoutCreateInfo  pipeline_layout_ci{};
+    pipeline_layout_ci.setLayoutCount = 1;
+    pipeline_layout_ci.pSetLayouts    = set_layouts;
+    pipeline_layout_                  = vk::raii::PipelineLayout(device, pipeline_layout_ci);
 
     const vk::Format depth_format = find_depth_format(physicalDevice);
 

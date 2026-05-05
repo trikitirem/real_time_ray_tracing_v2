@@ -21,6 +21,9 @@ public:
                 vk::Format                     colorFormat,
                 const std::filesystem::path&   spirv_path);
     void destroy();
+
+private:
+    vk::raii::DescriptorSetLayout camera_set_layout_ = nullptr;
 };
 
 } // namespace renderer::ray_tracing

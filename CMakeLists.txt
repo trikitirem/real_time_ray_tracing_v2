@@ -76,6 +76,7 @@ add_executable(real_time_ray_tracing_v2
         src/renderer/shared/shader_module_util.cpp
         src/renderer/shared/graphics_pipeline.cpp
         src/renderer/shared/renderer.cpp
+        src/renderer/shared/descriptors/uniform_set.cpp
         src/renderer/shared/buffers/base_buffer.cpp
         src/renderer/shared/buffers/gpu_buffer.cpp
         src/renderer/shared/buffers/host_visible_buffer.cpp
@@ -87,6 +88,8 @@ add_executable(real_time_ray_tracing_v2
         src/renderer/shared/viewport_flip.hpp
         src/scene/mesh_primitive.hpp
         src/scene/model.hpp
+        src/renderer/shared/descriptors/uniform_set.hpp
+        src/renderer/ray_tracing/shader_config.hpp
 )
 
 add_dependencies(real_time_ray_tracing_v2 rtrt_shaders)

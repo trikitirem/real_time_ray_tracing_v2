@@ -54,6 +54,7 @@ private:
     vk::raii::DeviceMemory depth_memory_ = nullptr;
     vk::raii::Image        depth_image_  = nullptr;
     vk::raii::ImageView    depth_view_   = nullptr;
+    vk::raii::DescriptorSetLayout camera_set_layout_ = nullptr;
 };
 
 } // namespace renderer::raster
