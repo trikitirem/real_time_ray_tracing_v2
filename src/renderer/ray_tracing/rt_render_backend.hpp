@@ -35,6 +35,7 @@ private:
     void create_depth_resources(DeviceContext& ctx, vk::Extent2D extent);
     void destroy_depth_resources();
     void rebuild_acceleration_structures();
+    void update_acceleration_structure_descriptor();
 
     std::unique_ptr<RayTracingPipeline> pipeline_;
     std::unique_ptr<RayTracingFrameRecorder> frame_recorder_;

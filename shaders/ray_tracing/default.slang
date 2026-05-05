@@ -29,6 +29,9 @@ struct VertexOutput {
 [[vk::binding(0, 0)]]
 ConstantBuffer<CameraUbo> gCamera;
 
+[[vk::binding(1, 0)]]
+RaytracingAccelerationStructure gAccelerationStructure;
+
 [[vk::push_constant]]
 ModelPushConstant gModel;
 
@@ -51,7 +54,7 @@ VertexOutput vertMain(VsInput input) {
 
 [shader("fragment")]
 float4 fragMain(VertexOutput v) : SV_Target {
-    const float3 lightDirToLight = normalize(float3(0.0, 1.0, 1.0));
+    const float3 lightDirToLight = normalize(float3(0.7, 1.0, 0.2));
     const float3 lightColor = float3(1.0, 1.0, 1.0);
     const float ambientStrength = 0.12;
     const float specularStrength = 0.7;
@@ -67,12 +70,30 @@ float4 fragMain(VertexOutput v) : SV_Target {
     float3 L = lightDirToLight;
     float3 V = normalize(gCamera.viewPosition - v.worldPos);
     float3 H = normalize(L + V);
+    const float shadowStrength = 0.2;
 
     float3 ambient = ambientStrength * lightColor * baseColor;
     float ndotl = saturate(dot(N, L));
     float3 diffuse = ndotl * lightColor * baseColor;
     float spec = pow(saturate(dot(N, H)), shininess);
     float3 specular = specularStrength * spec * lightColor;
+
+    RayDesc shadowRayDesc;
+    shadowRayDesc.Origin = v.worldPos;
+    shadowRayDesc.Direction = normalize(lightDirToLight);
+    shadowRayDesc.TMin = 0.01;
+    shadowRayDesc.TMax = 1e4;
+
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> sq;
+    let shadowRayFlags = RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
+    sq.TraceRayInline(gAccelerationStructure, shadowRayFlags, 0xFF, shadowRayDesc);
+    sq.Proceed();
+
+    bool inShadow = (sq.CommittedStatus() == COMMITTED_TRIANGLE_HIT);
+    if (inShadow) {
+        diffuse *= shadowStrength;
+        specular *= shadowStrength;
+    }
 
     float3 litColor = ambient + diffuse + specular;
     return float4(litColor, 1.0f);

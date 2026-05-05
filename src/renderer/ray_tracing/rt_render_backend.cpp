@@ -227,6 +227,28 @@ void RtRenderBackend::rebuild_acceleration_structures()
     }
     blas_build_ = blas_builder_.build(*ctx_, scene_data_);
     tlas_build_ = tlas_builder_.build(*ctx_, blas_build_.instance_inputs);
+    update_acceleration_structure_descriptor();
+}
+
+void RtRenderBackend::update_acceleration_structure_descriptor()
+{
+    if (ctx_ == nullptr || !camera_uniform_set_ || tlas_build_.tlas == nullptr) {
+        return;
+    }
+    vk::WriteDescriptorSetAccelerationStructureKHR as_info{};
+    as_info.accelerationStructureCount = 1;
+    const vk::AccelerationStructureKHR tlas_handle = *tlas_build_.tlas;
+    as_info.pAccelerationStructures = &tlas_handle;
+
+    vk::WriteDescriptorSet as_write{};
+    as_write.pNext = &as_info;
+    as_write.dstSet = camera_uniform_set_->set();
+    as_write.dstBinding = kAccelerationStructureBinding;
+    as_write.dstArrayElement = 0;
+    as_write.descriptorCount = 1;
+    as_write.descriptorType = vk::DescriptorType::eAccelerationStructureKHR;
+
+    ctx_->device().updateDescriptorSets({ as_write }, {});
 }
 
 } // namespace renderer::ray_tracing
