@@ -15,7 +15,7 @@
 #include "renderer/shared/device_context.hpp"
 #include "renderer/shared/graphics_pipeline.hpp"
 #include "renderer/shared/swapchain.hpp"
-#include "scene/camera.hpp"
+#include "engine/camera.hpp"
 #include "util/shader_paths.hpp"
 
 namespace renderer::ray_tracing {
@@ -192,7 +192,7 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
     }
 }
 
-void RtRenderBackend::update_camera(const scene::Camera& camera, vk::Extent2D extent)
+void RtRenderBackend::update_camera(const engine::Camera& camera, vk::Extent2D extent)
 {
     if (!pipeline_) {
         return;

@@ -2,11 +2,11 @@
 
 #include <memory>
 
+#include "engine/camera.hpp"
 #include "engine/window.hpp"
 #include "renderer/shared/device_config.hpp"
 #include "renderer/shared/device_context.hpp"
 #include "renderer/shared/renderer.hpp"
-#include "scene/camera.hpp"
 #include "scene/scene.hpp"
 
 namespace engine {
@@ -33,7 +33,7 @@ private:
     renderer::DeviceContext deviceContext_;
     std::unique_ptr<renderer::Renderer> renderer_;
     scene::Scene            scene_{};
-    scene::Camera           camera_{};
+    Camera                  camera_{};
 
     bool framebufferResized_ = false;
 };

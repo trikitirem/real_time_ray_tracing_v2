@@ -5,7 +5,7 @@
 #include "renderer/ray_tracing/rt_render_backend.hpp"
 #include "renderer/ray_tracing/rt_scene_gpu_builder.hpp"
 #include "renderer/shared/device_context.hpp"
-#include "scene/camera.hpp"
+#include "engine/camera.hpp"
 #include "scene/scene.hpp"
 
 #include <cstdint>
@@ -62,7 +62,7 @@ void Renderer::load_scene(const scene::Scene& scene)
     }
 }
 
-void Renderer::set_camera(const scene::Camera& camera)
+void Renderer::set_camera(const engine::Camera& camera)
 {
     camera_ = &camera;
     backend_->update_camera(camera, swapchain_.extent());

@@ -6,7 +6,7 @@
 #include "renderer/raster/shader_config.hpp"
 #include "renderer/shared/device_context.hpp"
 #include "renderer/shared/swapchain.hpp"
-#include "scene/camera.hpp"
+#include "engine/camera.hpp"
 #include "util/shader_paths.hpp"
 
 #include <span>
@@ -94,7 +94,7 @@ void RasterRenderBackend::load_scene(ScenePayload&& scene_payload)
     }
 }
 
-void RasterRenderBackend::update_camera(const scene::Camera& camera, vk::Extent2D extent)
+void RasterRenderBackend::update_camera(const engine::Camera& camera, vk::Extent2D extent)
 {
     if (!pipeline_) {
         return;

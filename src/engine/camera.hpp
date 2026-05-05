@@ -6,7 +6,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
-namespace scene {
+namespace engine {
 
 /// World space is right-handed, Y up (matches `make_viewport_y_up_ndc`: no extra Y flip here).
 class Camera {
@@ -36,4 +36,4 @@ public:
     }
 };
 
-} // namespace scene
+} // namespace engine
