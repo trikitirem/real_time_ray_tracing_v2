@@ -24,6 +24,15 @@ struct ModelPushConstant {
 
 struct MaterialGpu {
     glm::vec4 albedo{ 1.0f };
+    std::uint32_t has_texture = 0;
+    std::uint32_t _pad0 = 0;
+    std::uint32_t _pad1 = 0;
+    std::uint32_t _pad2 = 0;
+};
+
+struct ReflectionInstanceLutGpu {
+    std::uint32_t material_index = 0;
+    std::uint32_t index_offset = 0;
 };
 
 } // namespace renderer::ray_tracing

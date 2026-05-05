@@ -98,6 +98,7 @@ void RtRenderBackend::destroy(DeviceContext& ctx)
     tlas_build_ = {};
     blas_build_ = {};
     scene_data_ = {};
+    reflection_instance_lut_buffer_.reset();
     texture_uniform_sets_.clear();
     camera_uniform_set_.reset();
     camera_buffer_.reset();
@@ -120,11 +121,53 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
         throw std::runtime_error("RtRenderBackend::load_scene payload type mismatch");
     }
     scene_data_ = std::move(*typed);
-    if (camera_uniform_set_ && scene_data_.material_buffer) {
-        camera_uniform_set_->update_storage_buffer(
-            kMaterialBufferBinding,
-            *scene_data_.material_buffer->buffer(),
-            scene_data_.material_buffer->size_bytes());
+    reflection_instance_lut_buffer_.reset();
+    if (camera_uniform_set_) {
+        if (scene_data_.material_buffer) {
+            camera_uniform_set_->update_storage_buffer(
+                kMaterialBufferBinding,
+                *scene_data_.material_buffer->buffer(),
+                scene_data_.material_buffer->size_bytes());
+        }
+        if (scene_data_.reflection_index_buffer) {
+            camera_uniform_set_->update_storage_buffer(
+                kReflectionIndexBufferBinding,
+                *scene_data_.reflection_index_buffer->buffer(),
+                scene_data_.reflection_index_buffer->size_bytes());
+        }
+        if (scene_data_.reflection_uv_buffer) {
+            camera_uniform_set_->update_storage_buffer(
+                kReflectionUvBufferBinding,
+                *scene_data_.reflection_uv_buffer->buffer(),
+                scene_data_.reflection_uv_buffer->size_bytes());
+        }
+        if (!scene_data_.reflection_instance_lut.empty() && ctx_ != nullptr) {
+            std::vector<ReflectionInstanceLutGpu> reflection_lut_gpu{};
+            reflection_lut_gpu.reserve(scene_data_.reflection_instance_lut.size());
+            for (const ReflectionInstanceLutEntry& entry : scene_data_.reflection_instance_lut) {
+                reflection_lut_gpu.push_back(ReflectionInstanceLutGpu{
+                    .material_index = entry.material_index,
+                    .index_offset = entry.index_offset,
+                });
+            }
+            vk::CommandPoolCreateInfo pool_info{};
+            pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+            pool_info.queueFamilyIndex = ctx_->graphicsQueueFamily();
+            const vk::raii::CommandPool command_pool(ctx_->device(), pool_info);
+            reflection_instance_lut_buffer_.emplace(buffers::GpuBuffer::from_span(
+                ctx_->physicalDevice(),
+                ctx_->device(),
+                command_pool,
+                ctx_->graphicsQueue(),
+                buffers::BufferKind::storage,
+                std::span<const ReflectionInstanceLutGpu>(
+                    reflection_lut_gpu.data(),
+                    reflection_lut_gpu.size())));
+            camera_uniform_set_->update_storage_buffer(
+                kReflectionInstanceLutBufferBinding,
+                *reflection_instance_lut_buffer_->buffer(),
+                reflection_instance_lut_buffer_->size_bytes());
+        }
     }
     rebuild_acceleration_structures();
     if (frame_recorder_) {

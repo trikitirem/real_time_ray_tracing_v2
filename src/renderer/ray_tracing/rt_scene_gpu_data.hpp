@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <glm/mat4x4.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 #include <vulkan/vulkan.hpp>
 
@@ -28,13 +29,21 @@ struct RtDrawItem {
     std::uint32_t material_index = 0;
 };
 
+struct ReflectionInstanceLutEntry {
+    std::uint32_t material_index = 0;
+    std::uint32_t index_offset = 0;
+};
+
 struct RtSceneGpuData {
     std::vector<buffers::GpuBuffer> vertex_buffers{};
     std::vector<buffers::GpuBuffer> index_buffers{};
     std::optional<buffers::GpuBuffer> material_buffer{};
+    std::optional<buffers::GpuBuffer> reflection_index_buffer{};
+    std::optional<buffers::GpuBuffer> reflection_uv_buffer{};
     std::vector<textures::TextureResource> textures{};
 
     std::vector<RtDrawItem> draw_items{};
+    std::vector<ReflectionInstanceLutEntry> reflection_instance_lut{};
     std::vector<glm::vec4> material_albedos{};
     std::vector<vk::ImageView> texture_views{};
     vk::Sampler texture_sampler{};

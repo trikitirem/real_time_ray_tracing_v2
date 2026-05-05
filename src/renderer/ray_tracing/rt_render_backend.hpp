@@ -12,6 +12,7 @@
 #include "renderer/ray_tracing/rt_pipeline.hpp"
 #include "renderer/ray_tracing/rt_scene_gpu_data.hpp"
 #include "renderer/ray_tracing/tlas_builder.hpp"
+#include "renderer/shared/buffers/gpu_buffer.hpp"
 #include "renderer/shared/buffers/host_visible_buffer.hpp"
 #include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/render_backend.hpp"
@@ -46,6 +47,7 @@ private:
     vk::raii::DeviceMemory rt_depth_memory_ = nullptr;
     vk::raii::ImageView rt_depth_view_ = nullptr;
     RtSceneGpuData scene_data_{};
+    std::optional<buffers::GpuBuffer> reflection_instance_lut_buffer_;
     std::optional<buffers::HostVisibleBuffer> camera_buffer_;
     std::optional<descriptors::UniformSet> camera_uniform_set_;
     std::vector<descriptors::UniformSet> texture_uniform_sets_{};

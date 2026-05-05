@@ -15,15 +15,6 @@ struct ModelPushConstant {
 
 struct MaterialGpu {
     float4 albedo;
-    uint hasTexture;
-    uint _pad0;
-    uint _pad1;
-    uint _pad2;
-};
-
-struct ReflectionInstanceLutGpu {
-    uint materialIndex;
-    uint indexOffset;
 };
 
 struct VsInput {
@@ -48,15 +39,6 @@ RaytracingAccelerationStructure gAccelerationStructure;
 [[vk::binding(2, 0)]]
 StructuredBuffer<MaterialGpu> gMaterials;
 
-[[vk::binding(3, 0)]]
-StructuredBuffer<uint> gReflectionIndices;
-
-[[vk::binding(4, 0)]]
-StructuredBuffer<float2> gReflectionUvs;
-
-[[vk::binding(5, 0)]]
-StructuredBuffer<ReflectionInstanceLutGpu> gReflectionInstanceLut;
-
 [[vk::push_constant]]
 ModelPushConstant gModel;
 
@@ -68,44 +50,6 @@ SamplerState gAlbedoSampler;
 
 static const float kEpsilon = 0.01;
 static const float3 kSkyColor = float3(0.53, 0.81, 0.98);
-
-float2 intersectionUv(uint instanceID, uint primitiveIndex, float2 barycentrics) {
-    uint lutCount = 0;
-    uint lutStride = 0;
-    gReflectionInstanceLut.GetDimensions(lutCount, lutStride);
-    if (instanceID >= lutCount) {
-        return float2(0.0, 0.0);
-    }
-
-    ReflectionInstanceLutGpu lutEntry = gReflectionInstanceLut[instanceID];
-    uint baseIndex = lutEntry.indexOffset + primitiveIndex * 3;
-
-    uint indexCount = 0;
-    uint indexStride = 0;
-    gReflectionIndices.GetDimensions(indexCount, indexStride);
-    if (baseIndex + 2 >= indexCount) {
-        return float2(0.0, 0.0);
-    }
-
-    uint i0 = gReflectionIndices[baseIndex + 0];
-    uint i1 = gReflectionIndices[baseIndex + 1];
-    uint i2 = gReflectionIndices[baseIndex + 2];
-
-    uint uvCount = 0;
-    uint uvStride = 0;
-    gReflectionUvs.GetDimensions(uvCount, uvStride);
-    if (i0 >= uvCount || i1 >= uvCount || i2 >= uvCount) {
-        return float2(0.0, 0.0);
-    }
-
-    float2 uv0 = gReflectionUvs[i0];
-    float2 uv1 = gReflectionUvs[i1];
-    float2 uv2 = gReflectionUvs[i2];
-    float w0 = 1.0 - barycentrics.x - barycentrics.y;
-    float w1 = barycentrics.x;
-    float w2 = barycentrics.y;
-    return w0 * uv0 + w1 * uv1 + w2 * uv2;
-}
 
 float3 sampleReflectionColor(float3 worldPos, float3 N, float3 V) {
     RayDesc reflectionRayDesc;
@@ -123,30 +67,14 @@ float3 sampleReflectionColor(float3 worldPos, float3 N, float3 V) {
         return kSkyColor;
     }
 
-    uint instanceID = rq.CommittedRayInstanceCustomIndex();
-    uint lutCount = 0;
-    uint lutStride = 0;
-    gReflectionInstanceLut.GetDimensions(lutCount, lutStride);
-    if (instanceID >= lutCount) {
-        return kSkyColor;
-    }
-    ReflectionInstanceLutGpu lutEntry = gReflectionInstanceLut[instanceID];
-    uint materialIndex = lutEntry.materialIndex;
+    uint materialIndex = rq.CommittedRayInstanceCustomIndex();
     uint materialCount = 0;
     uint materialStride = 0;
     gMaterials.GetDimensions(materialCount, materialStride);
     if (materialIndex >= materialCount) {
         return kSkyColor;
     }
-
-    MaterialGpu hitMaterial = gMaterials[materialIndex];
-    if (hitMaterial.hasTexture != 0) {
-        uint primitiveIndex = rq.CommittedPrimitiveIndex();
-        float2 bary = rq.CommittedTriangleBarycentrics();
-        float2 hitUv = intersectionUv(instanceID, primitiveIndex, bary);
-        return gAlbedoTexture.SampleLevel(gAlbedoSampler, hitUv, 0).rgb;
-    }
-    return hitMaterial.albedo.rgb;
+    return gMaterials[materialIndex].albedo.rgb;
 }
 
 [shader("vertex")]

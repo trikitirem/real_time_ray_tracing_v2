@@ -10,12 +10,15 @@
 
 #include <cstdint>
 #include <span>
+#include <vector>
 
 namespace renderer::ray_tracing {
 
 ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& scene)
 {
     RtSceneGpuData out{};
+    std::vector<std::uint32_t> reflection_indices{};
+    std::vector<glm::vec2> reflection_uvs{};
 
     const vk::raii::Device& device = ctx.device();
     vk::CommandPoolCreateInfo pool_info{};
@@ -59,6 +62,14 @@ ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& sc
             const std::uint32_t material_index
                 = static_cast<std::uint32_t>(out.material_albedos.size());
             out.material_albedos.push_back(glm::vec4(primitive.material.base_color, 1.0f));
+            const std::uint32_t reflection_index_offset = static_cast<std::uint32_t>(reflection_indices.size());
+            reflection_indices.insert(reflection_indices.end(),
+                                      primitive.indices.begin(),
+                                      primitive.indices.end());
+            reflection_uvs.reserve(reflection_uvs.size() + primitive.vertices.size());
+            for (const util::Vertex& vertex : primitive.vertices) {
+                reflection_uvs.push_back(vertex.uv);
+            }
             std::uint32_t texture_index = kNoTexture;
             if (!primitive.material.texture_location.file_name.empty()) {
                 texture_index = load_texture(primitive.material.texture_location);
@@ -77,6 +88,10 @@ ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& sc
                 .model_matrix = model.transform.matrix,
                 .material_index = material_index,
             });
+            out.reflection_instance_lut.push_back(ReflectionInstanceLutEntry{
+                .material_index = material_index,
+                .index_offset = reflection_index_offset,
+            });
         }
     }
 
@@ -84,8 +99,14 @@ ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& sc
     if (!out.material_albedos.empty()) {
         std::vector<MaterialGpu> gpu_materials{};
         gpu_materials.reserve(out.material_albedos.size());
-        for (const glm::vec4& albedo : out.material_albedos) {
-            gpu_materials.push_back(MaterialGpu{ .albedo = albedo });
+        for (const RtDrawItem& item : out.draw_items) {
+            const glm::vec4 albedo = item.material_index < out.material_albedos.size()
+                                         ? out.material_albedos[item.material_index]
+                                         : glm::vec4(1.0f);
+            gpu_materials.push_back(MaterialGpu{
+                .albedo = albedo,
+                .has_texture = item.texture_index != kNoTexture ? 1u : 0u,
+            });
         }
         out.material_buffer.emplace(buffers::GpuBuffer::from_span(
             ctx.physicalDevice(),
@@ -94,6 +115,24 @@ ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& sc
             ctx.graphicsQueue(),
             buffers::BufferKind::storage,
             std::span<const MaterialGpu>(gpu_materials.data(), gpu_materials.size())));
+    }
+    if (!reflection_indices.empty()) {
+        out.reflection_index_buffer.emplace(buffers::GpuBuffer::from_span(
+            ctx.physicalDevice(),
+            device,
+            command_pool,
+            ctx.graphicsQueue(),
+            buffers::BufferKind::storage,
+            std::span<const std::uint32_t>(reflection_indices.data(), reflection_indices.size())));
+    }
+    if (!reflection_uvs.empty()) {
+        out.reflection_uv_buffer.emplace(buffers::GpuBuffer::from_span(
+            ctx.physicalDevice(),
+            device,
+            command_pool,
+            ctx.graphicsQueue(),
+            buffers::BufferKind::storage,
+            std::span<const glm::vec2>(reflection_uvs.data(), reflection_uvs.size())));
     }
     out.valid = !out.draw_items.empty();
     ScenePayload payload{};
