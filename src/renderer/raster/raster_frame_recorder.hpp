@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/shared/render_frame_recorder.hpp"
-#include "renderer/shared/scene_gpu_data.hpp"
+#include "renderer/raster/raster_scene_gpu_data.hpp"
 
 namespace renderer::descriptors {
 class UniformSet;
@@ -14,7 +14,7 @@ class RasterPipeline;
 class RasterFrameRecorder final : public FrameRecorder {
 public:
     explicit RasterFrameRecorder(RasterPipeline& pipeline);
-    void set_scene_data(const SceneGpuData* scene_data) { scene_data_ = scene_data; }
+    void set_scene_data(const RasterSceneGpuData* scene_data) { scene_data_ = scene_data; }
     void set_camera_uniform_set(const descriptors::UniformSet* camera_uniform_set)
     {
         camera_uniform_set_ = camera_uniform_set;
@@ -28,7 +28,7 @@ public:
 
 private:
     RasterPipeline& pipeline_;
-    const SceneGpuData* scene_data_ = nullptr;
+    const RasterSceneGpuData* scene_data_ = nullptr;
     const descriptors::UniformSet* camera_uniform_set_ = nullptr;
     const descriptors::UniformSet* texture_uniform_set_ = nullptr;
 };

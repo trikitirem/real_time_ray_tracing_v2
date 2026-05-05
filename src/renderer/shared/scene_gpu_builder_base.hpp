@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/shared/scene_gpu_data.hpp"
+#include "renderer/shared/scene_payload.hpp"
 
 namespace scene {
 class Scene;
@@ -17,7 +17,7 @@ public:
     SceneGpuBuilderBase& operator=(const SceneGpuBuilderBase&) = delete;
     virtual ~SceneGpuBuilderBase() = default;
 
-    virtual SceneGpuData build(DeviceContext& ctx, const scene::Scene& scene) = 0;
+    virtual ScenePayload build(DeviceContext& ctx, const scene::Scene& scene) = 0;
 };
 
 } // namespace renderer

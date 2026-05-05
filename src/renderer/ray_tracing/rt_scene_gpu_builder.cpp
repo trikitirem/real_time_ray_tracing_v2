@@ -5,12 +5,15 @@
 
 namespace renderer::ray_tracing {
 
-SceneGpuData RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& scene)
+ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& scene)
 {
     (void)ctx;
-    SceneGpuData out{};
+    RtSceneGpuData out{};
     out.valid = !scene.models().empty();
-    return out;
+    ScenePayload payload{};
+    payload.backend = BackendKind::ray_tracing;
+    payload.set(std::move(out));
+    return payload;
 }
 
 } // namespace renderer::ray_tracing

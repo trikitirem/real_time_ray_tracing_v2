@@ -6,6 +6,7 @@
 
 #include "renderer/ray_tracing/rt_frame_recorder.hpp"
 #include "renderer/ray_tracing/rt_pipeline.hpp"
+#include "renderer/ray_tracing/rt_scene_gpu_data.hpp"
 #include "renderer/shared/render_backend.hpp"
 
 namespace renderer::ray_tracing {
@@ -17,7 +18,7 @@ public:
 
     void create(DeviceContext& ctx, const Swapchain& swapchain) override;
     void destroy(DeviceContext& ctx) override;
-    void load_scene(SceneGpuData&& scene_data) override;
+    void load_scene(ScenePayload&& scene_payload) override;
     void update_camera(const scene::Camera& camera, vk::Extent2D extent) override;
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
@@ -32,7 +33,7 @@ private:
     vk::raii::Image rt_depth_image_ = nullptr;
     vk::raii::DeviceMemory rt_depth_memory_ = nullptr;
     vk::raii::ImageView rt_depth_view_ = nullptr;
-    SceneGpuData scene_data_{};
+    RtSceneGpuData scene_data_{};
 };
 
 } // namespace renderer::ray_tracing

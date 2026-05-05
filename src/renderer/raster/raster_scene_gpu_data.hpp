@@ -11,11 +11,11 @@
 #include "renderer/shared/buffers/gpu_buffer.hpp"
 #include "renderer/shared/textures/texture_resource.hpp"
 
-namespace renderer {
+namespace renderer::raster {
 
 inline constexpr std::uint32_t kNoTexture = std::numeric_limits<std::uint32_t>::max();
 
-struct DrawItem {
+struct RasterDrawItem {
     vk::Buffer vertex_buffer{};
     vk::Buffer index_buffer{};
     std::uint32_t index_count = 0;
@@ -26,12 +26,12 @@ struct DrawItem {
     std::uint32_t material_index = 0;
 };
 
-struct SceneGpuData {
+struct RasterSceneGpuData {
     std::vector<buffers::GpuBuffer> vertex_buffers{};
     std::vector<buffers::GpuBuffer> index_buffers{};
     std::vector<textures::TextureResource> textures{};
 
-    std::vector<DrawItem> draw_items{};
+    std::vector<RasterDrawItem> draw_items{};
     std::vector<glm::vec4> material_albedos{};
     vk::Buffer material_buffer{};
     std::vector<vk::ImageView> texture_views{};
@@ -40,4 +40,4 @@ struct SceneGpuData {
     bool valid = false;
 };
 
-} // namespace renderer
+} // namespace renderer::raster

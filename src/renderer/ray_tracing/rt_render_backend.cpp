@@ -61,9 +61,16 @@ void RtRenderBackend::destroy(DeviceContext& ctx)
     destroy_depth_resources();
 }
 
-void RtRenderBackend::load_scene(SceneGpuData&& scene_data)
+void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
 {
-    scene_data_ = std::move(scene_data);
+    if (scene_payload.backend != BackendKind::ray_tracing) {
+        throw std::runtime_error("RtRenderBackend::load_scene received non-ray-tracing payload");
+    }
+    RtSceneGpuData* typed = scene_payload.get_if<RtSceneGpuData>();
+    if (typed == nullptr) {
+        throw std::runtime_error("RtRenderBackend::load_scene payload type mismatch");
+    }
+    scene_data_ = std::move(*typed);
 }
 
 void RtRenderBackend::update_camera(const scene::Camera& camera, vk::Extent2D extent)

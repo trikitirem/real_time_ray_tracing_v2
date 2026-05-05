@@ -12,9 +12,9 @@
 
 namespace renderer::raster {
 
-SceneGpuData RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& scene)
+ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& scene)
 {
-    SceneGpuData out{};
+    RasterSceneGpuData out{};
 
     const vk::raii::Device& device = ctx.device();
     vk::CommandPoolCreateInfo pool_info{};
@@ -65,7 +65,7 @@ SceneGpuData RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
                     out.texture_sampler = *out.textures.back().sampler();
                 }
             }
-            out.draw_items.push_back(DrawItem{
+            out.draw_items.push_back(RasterDrawItem{
                 .vertex_buffer = *out.vertex_buffers[vb_idx].buffer(),
                 .index_buffer = *out.index_buffers[ib_idx].buffer(),
                 .index_count = static_cast<std::uint32_t>(primitive.indices.size()),
@@ -80,7 +80,10 @@ SceneGpuData RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
 
     out.material_count = static_cast<std::uint32_t>(out.material_albedos.size());
     out.valid = !out.draw_items.empty();
-    return out;
+    ScenePayload payload{};
+    payload.backend = BackendKind::raster;
+    payload.set(std::move(out));
+    return payload;
 }
 
 } // namespace renderer::raster

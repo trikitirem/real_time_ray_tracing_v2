@@ -74,9 +74,16 @@ void RasterRenderBackend::destroy(DeviceContext& ctx)
     }
 }
 
-void RasterRenderBackend::load_scene(SceneGpuData&& scene_data)
+void RasterRenderBackend::load_scene(ScenePayload&& scene_payload)
 {
-    scene_data_ = std::move(scene_data);
+    if (scene_payload.backend != BackendKind::raster) {
+        throw std::runtime_error("RasterRenderBackend::load_scene received non-raster payload");
+    }
+    RasterSceneGpuData* typed = scene_payload.get_if<RasterSceneGpuData>();
+    if (typed == nullptr) {
+        throw std::runtime_error("RasterRenderBackend::load_scene payload type mismatch");
+    }
+    scene_data_ = std::move(*typed);
     if (frame_recorder_) {
         frame_recorder_->set_scene_data(&scene_data_);
         if (!texture_uniform_sets_.empty()) {

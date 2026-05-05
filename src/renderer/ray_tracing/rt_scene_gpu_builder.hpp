@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer/ray_tracing/rt_scene_gpu_data.hpp"
 #include "renderer/shared/scene_gpu_builder_base.hpp"
 
 namespace renderer::ray_tracing {
@@ -9,7 +10,7 @@ public:
     RtSceneGpuBuilder() = default;
     ~RtSceneGpuBuilder() override = default;
 
-    SceneGpuData build(DeviceContext& ctx, const scene::Scene& scene) override;
+    ScenePayload build(DeviceContext& ctx, const scene::Scene& scene) override;
 };
 
 } // namespace renderer::ray_tracing

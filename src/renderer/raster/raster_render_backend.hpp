@@ -7,6 +7,7 @@
 #include "renderer/raster/raster_frame_recorder.hpp"
 #include "renderer/raster/raster_gpu_types.hpp"
 #include "renderer/raster/raster_pipeline.hpp"
+#include "renderer/raster/raster_scene_gpu_data.hpp"
 #include "renderer/shared/buffers/host_visible_buffer.hpp"
 #include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/render_backend.hpp"
@@ -20,7 +21,7 @@ public:
 
     void create(DeviceContext& ctx, const Swapchain& swapchain) override;
     void destroy(DeviceContext& ctx) override;
-    void load_scene(SceneGpuData&& scene_data) override;
+    void load_scene(ScenePayload&& scene_payload) override;
     void update_camera(const scene::Camera& camera, vk::Extent2D extent) override;
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
@@ -29,7 +30,7 @@ private:
 
     std::unique_ptr<RasterPipeline> pipeline_;
     std::unique_ptr<RasterFrameRecorder> frame_recorder_;
-    SceneGpuData scene_data_{};
+    RasterSceneGpuData scene_data_{};
     std::optional<buffers::HostVisibleBuffer> camera_buffer_;
     std::optional<descriptors::UniformSet> camera_uniform_set_;
     std::vector<descriptors::UniformSet> texture_uniform_sets_{};

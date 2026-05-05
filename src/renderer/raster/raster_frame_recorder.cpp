@@ -43,7 +43,7 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
         camera_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
     }
     if (scene_data_ && scene_data_->valid) {
-        for (const DrawItem& item : scene_data_->draw_items) {
+        for (const RasterDrawItem& item : scene_data_->draw_items) {
             const bool has_texture = item.texture_index != kNoTexture
                                      && item.texture_index < scene_data_->texture_views.size()
                                      && texture_uniform_set_ != nullptr;
