@@ -5,7 +5,6 @@
 namespace renderer {
 
 // GLM-style clip space: flip Vulkan NDC Y using negative viewport height (VK_KHR_maintenance1).
-// Call vkCmdSetViewport / vkCmdSetScissor with these when recording (foundation layer later).
 
 [[nodiscard]] inline vk::Viewport make_viewport_y_up_ndc(vk::Extent2D extent)
 {

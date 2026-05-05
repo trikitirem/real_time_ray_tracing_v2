@@ -5,7 +5,7 @@
 
 namespace util {
 
-// Directory + file name (same idea as Zig `AssetLocation.resolve_alloc` / `get_full_path_alloc`).
+// Directory + file name
 struct AssetLocation {
     std::filesystem::path directory;
     std::string_view      file_name;
