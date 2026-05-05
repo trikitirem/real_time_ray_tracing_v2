@@ -32,6 +32,31 @@ void update_buffer_descriptor(const vk::raii::Device& device,
     device.updateDescriptorSets(writes, {});
 }
 
+void update_combined_image_sampler_descriptor(const vk::raii::Device& device,
+                                              const vk::DescriptorSet set,
+                                              const std::uint32_t     binding,
+                                              const vk::ImageView     image_view,
+                                              const vk::Sampler       sampler,
+                                              const vk::ImageLayout   image_layout)
+{
+    const vk::DescriptorImageInfo image_info{
+        .sampler     = sampler,
+        .imageView   = image_view,
+        .imageLayout = image_layout,
+    };
+
+    vk::WriteDescriptorSet write{};
+    write.dstSet          = set;
+    write.dstBinding      = binding;
+    write.dstArrayElement = 0;
+    write.descriptorCount = 1;
+    write.descriptorType  = vk::DescriptorType::eCombinedImageSampler;
+    write.pImageInfo      = &image_info;
+
+    const std::array<vk::WriteDescriptorSet, 1> writes = { write };
+    device.updateDescriptorSets(writes, {});
+}
+
 } // namespace
 
 UniformSet::UniformSet(const vk::raii::Device& device, const UniformSetConfig& cfg)
@@ -83,6 +108,15 @@ void UniformSet::update_storage_buffer(const std::uint32_t binding,
 {
     update_buffer_descriptor(*device_, set_, binding, vk::DescriptorType::eStorageBuffer, buffer,
                              range, offset);
+}
+
+void UniformSet::update_combined_image_sampler(const std::uint32_t binding,
+                                               const vk::ImageView image_view,
+                                               const vk::Sampler   sampler,
+                                               const vk::ImageLayout image_layout) const
+{
+    update_combined_image_sampler_descriptor(*device_, set_, binding, image_view, sampler,
+                                             image_layout);
 }
 
 void UniformSet::bind(const vk::CommandBuffer   cmd,

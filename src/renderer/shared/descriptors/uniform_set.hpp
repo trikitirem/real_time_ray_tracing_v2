@@ -37,6 +37,12 @@ public:
                                vk::DeviceSize range,
                                vk::DeviceSize offset = 0) const;
 
+    void update_combined_image_sampler(std::uint32_t binding,
+                                       vk::ImageView image_view,
+                                       vk::Sampler   sampler,
+                                       vk::ImageLayout image_layout
+                                       = vk::ImageLayout::eShaderReadOnlyOptimal) const;
+
     void bind(vk::CommandBuffer  cmd,
               vk::PipelineLayout pipeline_layout,
               vk::PipelineBindPoint bind_point = vk::PipelineBindPoint::eGraphics) const;

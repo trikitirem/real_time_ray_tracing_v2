@@ -3,6 +3,7 @@
 #include "renderer/ray_tracing/shader_config.hpp"
 
 #include <cstdint>
+#include <iterator>
 
 namespace renderer::ray_tracing {
 
@@ -12,6 +13,7 @@ void RayTracingPipeline::destroy()
     shader_module_   = nullptr;
     pipeline_layout_ = nullptr;
     camera_set_layout_ = nullptr;
+    texture_set_layout_ = nullptr;
 }
 
 void RayTracingPipeline::create(const vk::raii::Device&        device,
@@ -25,9 +27,14 @@ void RayTracingPipeline::create(const vk::raii::Device&        device,
     camera_layout_ci.pBindings    = kCameraDescriptorBindings.data();
     camera_set_layout_            = vk::raii::DescriptorSetLayout(device, camera_layout_ci);
 
-    const vk::DescriptorSetLayout set_layouts[] = { *camera_set_layout_ };
+    vk::DescriptorSetLayoutCreateInfo texture_layout_ci{};
+    texture_layout_ci.bindingCount = static_cast<std::uint32_t>(kTextureDescriptorBindings.size());
+    texture_layout_ci.pBindings    = kTextureDescriptorBindings.data();
+    texture_set_layout_            = vk::raii::DescriptorSetLayout(device, texture_layout_ci);
+
+    const vk::DescriptorSetLayout set_layouts[] = { *camera_set_layout_, *texture_set_layout_ };
     vk::PipelineLayoutCreateInfo  pipeline_layout_ci{};
-    pipeline_layout_ci.setLayoutCount = 1;
+    pipeline_layout_ci.setLayoutCount = static_cast<std::uint32_t>(std::size(set_layouts));
     pipeline_layout_ci.pSetLayouts    = set_layouts;
     pipeline_layout_                  = vk::raii::PipelineLayout(device, pipeline_layout_ci);
 

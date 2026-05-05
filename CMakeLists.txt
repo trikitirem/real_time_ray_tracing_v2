@@ -43,6 +43,15 @@ foreach(rel IN ITEMS shaders/raster shaders/ray_tracing)
 endforeach()
 add_custom_target(rtrt_shaders ALL DEPENDS ${RTRT_SHADER_SPV})
 
+# Runtime assets: copy images/ next to built binaries.
+add_custom_target(rtrt_images ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/images"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/images"
+            "${CMAKE_BINARY_DIR}/images"
+        COMMENT "Copy images -> build/images"
+)
+
 # GLFW
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
@@ -66,6 +75,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+# STBImage
+
 add_executable(real_time_ray_tracing_v2
         main.cpp
         src/engine/window.cpp
@@ -77,6 +88,7 @@ add_executable(real_time_ray_tracing_v2
         src/renderer/shared/graphics_pipeline.cpp
         src/renderer/shared/renderer.cpp
         src/renderer/shared/descriptors/uniform_set.cpp
+        src/renderer/shared/textures/texture_resource.cpp
         src/renderer/shared/buffers/base_buffer.cpp
         src/renderer/shared/buffers/gpu_buffer.cpp
         src/renderer/shared/buffers/host_visible_buffer.cpp
@@ -93,9 +105,11 @@ add_executable(real_time_ray_tracing_v2
 )
 
 add_dependencies(real_time_ray_tracing_v2 rtrt_shaders)
+add_dependencies(real_time_ray_tracing_v2 rtrt_images)
 
 target_include_directories(real_time_ray_tracing_v2 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/stb
         ${Vulkan_INCLUDE_DIRS}
 )
 

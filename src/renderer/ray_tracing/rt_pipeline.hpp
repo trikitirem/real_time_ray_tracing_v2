@@ -24,6 +24,7 @@ public:
 
 private:
     vk::raii::DescriptorSetLayout camera_set_layout_ = nullptr;
+    vk::raii::DescriptorSetLayout texture_set_layout_ = nullptr;
 };
 
 } // namespace renderer::ray_tracing
