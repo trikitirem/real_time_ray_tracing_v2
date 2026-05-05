@@ -42,6 +42,7 @@ RtRenderBackend::~RtRenderBackend() = default;
 
 void RtRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
 {
+    ctx_ = &ctx;
     const vk::raii::Device& device = ctx.device();
     pipeline_ = std::make_unique<RayTracingPipeline>();
     pipeline_->create(device, ctx.physicalDevice(), swapchain.imageFormat(),
@@ -94,6 +95,8 @@ void RtRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
 void RtRenderBackend::destroy(DeviceContext& ctx)
 {
     (void)ctx;
+    tlas_build_ = {};
+    blas_build_ = {};
     scene_data_ = {};
     texture_uniform_sets_.clear();
     camera_uniform_set_.reset();
@@ -104,6 +107,7 @@ void RtRenderBackend::destroy(DeviceContext& ctx)
         pipeline_.reset();
     }
     destroy_depth_resources();
+    ctx_ = nullptr;
 }
 
 void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
@@ -116,6 +120,7 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
         throw std::runtime_error("RtRenderBackend::load_scene payload type mismatch");
     }
     scene_data_ = std::move(*typed);
+    rebuild_acceleration_structures();
     if (frame_recorder_) {
         frame_recorder_->set_scene_data(&scene_data_);
     }
@@ -211,6 +216,17 @@ void RtRenderBackend::destroy_depth_resources()
     rt_depth_image_ = nullptr;
     rt_depth_memory_ = nullptr;
     rt_depth_format_ = vk::Format::eUndefined;
+}
+
+void RtRenderBackend::rebuild_acceleration_structures()
+{
+    tlas_build_ = {};
+    blas_build_ = {};
+    if (ctx_ == nullptr || !scene_data_.valid) {
+        return;
+    }
+    blas_build_ = blas_builder_.build(*ctx_, scene_data_);
+    tlas_build_ = tlas_builder_.build(*ctx_, blas_build_.instance_inputs);
 }
 
 } // namespace renderer::ray_tracing

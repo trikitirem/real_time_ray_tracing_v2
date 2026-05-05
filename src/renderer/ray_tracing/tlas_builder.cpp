@@ -116,7 +116,8 @@ TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasIns
         inst.instanceCustomIndex = in.geometry_index;
         inst.mask = 0xFF;
         inst.instanceShaderBindingTableRecordOffset = 0;
-        inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
+        inst.flags = static_cast<VkGeometryInstanceFlagsKHR>(
+            vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable);
         inst.accelerationStructureReference = in.blas_address;
         as_instances.push_back(inst);
     }
@@ -144,7 +145,8 @@ TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasIns
         .arrayOfPointers = vk::False,
         .data = instance_addr,
     };
-    const vk::AccelerationStructureGeometryDataKHR geometry_data(instances_data);
+    vk::AccelerationStructureGeometryDataKHR geometry_data{};
+    geometry_data.instances = instances_data;
     const vk::AccelerationStructureGeometryKHR geometry{
         .geometryType = vk::GeometryTypeKHR::eInstances,
         .geometry = geometry_data,

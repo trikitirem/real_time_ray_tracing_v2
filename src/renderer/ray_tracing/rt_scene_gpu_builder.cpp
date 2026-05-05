@@ -43,14 +43,14 @@ ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& sc
                 device,
                 command_pool,
                 ctx.graphicsQueue(),
-                buffers::BufferKind::vertex,
+                buffers::BufferKind::rt_vertex_as_input,
                 std::span<const util::Vertex>(primitive.vertices.data(), primitive.vertices.size())));
             out.index_buffers.push_back(buffers::GpuBuffer::from_span(
                 ctx.physicalDevice(),
                 device,
                 command_pool,
                 ctx.graphicsQueue(),
-                buffers::BufferKind::index,
+                buffers::BufferKind::rt_index_as_input,
                 std::span<const util::Index>(primitive.indices.data(), primitive.indices.size())));
 
             const auto vb_idx = out.vertex_buffers.size() - 1;

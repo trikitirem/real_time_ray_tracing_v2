@@ -85,6 +85,16 @@ vk::BufferUsageFlags BaseBuffer::gpu_usage_for(const BufferKind kind)
     case BufferKind::index:
         return vk::BufferUsageFlagBits::eIndexBuffer
              | vk::BufferUsageFlagBits::eTransferDst;
+    case BufferKind::rt_vertex_as_input:
+        return vk::BufferUsageFlagBits::eVertexBuffer
+             | vk::BufferUsageFlagBits::eTransferDst
+             | vk::BufferUsageFlagBits::eShaderDeviceAddress
+             | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR;
+    case BufferKind::rt_index_as_input:
+        return vk::BufferUsageFlagBits::eIndexBuffer
+             | vk::BufferUsageFlagBits::eTransferDst
+             | vk::BufferUsageFlagBits::eShaderDeviceAddress
+             | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR;
     case BufferKind::uniform:
         return vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
     case BufferKind::storage:
@@ -103,6 +113,8 @@ vk::BufferUsageFlags BaseBuffer::host_visible_usage_for(const BufferKind kind)
         return vk::BufferUsageFlagBits::eStorageBuffer;
     case BufferKind::vertex:
     case BufferKind::index:
+    case BufferKind::rt_vertex_as_input:
+    case BufferKind::rt_index_as_input:
         break;
     }
     throw std::runtime_error(
@@ -113,6 +125,8 @@ bool BaseBuffer::requires_device_address(const BufferKind kind)
 {
     switch (kind) {
     case BufferKind::storage:
+    case BufferKind::rt_vertex_as_input:
+    case BufferKind::rt_index_as_input:
         return true;
     case BufferKind::vertex:
     case BufferKind::index:
