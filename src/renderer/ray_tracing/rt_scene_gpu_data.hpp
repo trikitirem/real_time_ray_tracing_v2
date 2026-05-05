@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <vector>
 
 #include <glm/mat4x4.hpp>
@@ -30,6 +31,7 @@ struct RtDrawItem {
 struct RtSceneGpuData {
     std::vector<buffers::GpuBuffer> vertex_buffers{};
     std::vector<buffers::GpuBuffer> index_buffers{};
+    std::optional<buffers::GpuBuffer> material_buffer{};
     std::vector<textures::TextureResource> textures{};
 
     std::vector<RtDrawItem> draw_items{};

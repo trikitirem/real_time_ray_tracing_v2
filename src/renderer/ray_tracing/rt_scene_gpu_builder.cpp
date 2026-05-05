@@ -1,5 +1,6 @@
 #include "renderer/ray_tracing/rt_scene_gpu_builder.hpp"
 
+#include "renderer/ray_tracing/rt_gpu_types.hpp"
 #include "renderer/shared/buffers/buffer_kind.hpp"
 #include "renderer/shared/device_context.hpp"
 #include "scene/mesh_primitive.hpp"
@@ -80,6 +81,20 @@ ScenePayload RtSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& sc
     }
 
     out.material_count = static_cast<std::uint32_t>(out.material_albedos.size());
+    if (!out.material_albedos.empty()) {
+        std::vector<MaterialGpu> gpu_materials{};
+        gpu_materials.reserve(out.material_albedos.size());
+        for (const glm::vec4& albedo : out.material_albedos) {
+            gpu_materials.push_back(MaterialGpu{ .albedo = albedo });
+        }
+        out.material_buffer.emplace(buffers::GpuBuffer::from_span(
+            ctx.physicalDevice(),
+            device,
+            command_pool,
+            ctx.graphicsQueue(),
+            buffers::BufferKind::storage,
+            std::span<const MaterialGpu>(gpu_materials.data(), gpu_materials.size())));
+    }
     out.valid = !out.draw_items.empty();
     ScenePayload payload{};
     payload.backend = BackendKind::ray_tracing;

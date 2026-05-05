@@ -120,6 +120,12 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
         throw std::runtime_error("RtRenderBackend::load_scene payload type mismatch");
     }
     scene_data_ = std::move(*typed);
+    if (camera_uniform_set_ && scene_data_.material_buffer) {
+        camera_uniform_set_->update_storage_buffer(
+            kMaterialBufferBinding,
+            *scene_data_.material_buffer->buffer(),
+            scene_data_.material_buffer->size_bytes());
+    }
     rebuild_acceleration_structures();
     if (frame_recorder_) {
         frame_recorder_->set_scene_data(&scene_data_);

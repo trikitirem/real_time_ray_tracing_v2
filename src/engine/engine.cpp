@@ -44,7 +44,7 @@ void Engine::initTestScene()
     cube_mat.roughness  = 0.7f;
 
     scene::Transform cube_xf{};
-    cube_xf.translate(0.0f, 0.5f, 0.0f);
+    cube_xf.translate(0.0f, 1.5f, 0.0f);
     scene_.add_model(
         scene::primitives::make_cube(1.0f, 1.0f, 1.0f, cube_mat, cube_xf));
 

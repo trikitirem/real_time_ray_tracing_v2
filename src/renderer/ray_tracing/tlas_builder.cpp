@@ -113,7 +113,7 @@ TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasIns
     for (const BlasInstanceInput& in : instances) {
         vk::AccelerationStructureInstanceKHR inst{};
         inst.transform = identity;
-        inst.instanceCustomIndex = in.geometry_index;
+        inst.instanceCustomIndex = in.material_index;
         inst.mask = 0xFF;
         inst.instanceShaderBindingTableRecordOffset = 0;
         inst.flags = static_cast<VkGeometryInstanceFlagsKHR>(

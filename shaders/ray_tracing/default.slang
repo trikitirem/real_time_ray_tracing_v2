@@ -13,6 +13,10 @@ struct ModelPushConstant {
     uint _pad2;
 };
 
+struct MaterialGpu {
+    float4 albedo;
+};
+
 struct VsInput {
     float3 position : POSITION;
     float2 uv : TEXCOORD0;
@@ -32,6 +36,9 @@ ConstantBuffer<CameraUbo> gCamera;
 [[vk::binding(1, 0)]]
 RaytracingAccelerationStructure gAccelerationStructure;
 
+[[vk::binding(2, 0)]]
+StructuredBuffer<MaterialGpu> gMaterials;
+
 [[vk::push_constant]]
 ModelPushConstant gModel;
 
@@ -40,6 +47,35 @@ Texture2D<float4> gAlbedoTexture;
 
 [[vk::binding(1, 1)]]
 SamplerState gAlbedoSampler;
+
+static const float kEpsilon = 0.01;
+static const float3 kSkyColor = float3(0.53, 0.81, 0.98);
+
+float3 sampleReflectionColor(float3 worldPos, float3 N, float3 V) {
+    RayDesc reflectionRayDesc;
+    reflectionRayDesc.Origin = worldPos + N * kEpsilon;
+    reflectionRayDesc.Direction = reflect(-V, N);
+    reflectionRayDesc.TMin = kEpsilon;
+    reflectionRayDesc.TMax = 1e4;
+
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> rq;
+    let reflectionFlags = RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES;
+    rq.TraceRayInline(gAccelerationStructure, reflectionFlags, 0xFF, reflectionRayDesc);
+    rq.Proceed();
+
+    if (rq.CommittedStatus() != COMMITTED_TRIANGLE_HIT) {
+        return kSkyColor;
+    }
+
+    uint materialIndex = rq.CommittedRayInstanceCustomIndex();
+    uint materialCount = 0;
+    uint materialStride = 0;
+    gMaterials.GetDimensions(materialCount, materialStride);
+    if (materialIndex >= materialCount) {
+        return kSkyColor;
+    }
+    return gMaterials[materialIndex].albedo.rgb;
+}
 
 [shader("vertex")]
 VertexOutput vertMain(VsInput input) {
@@ -96,5 +132,9 @@ float4 fragMain(VertexOutput v) : SV_Target {
     }
 
     float3 litColor = ambient + diffuse + specular;
+    if (gModel.hasTexture == 0) {
+        float3 reflected = sampleReflectionColor(v.worldPos, N, V);
+        litColor = lerp(litColor, reflected, 0.65);
+    }
     return float4(litColor, 1.0f);
 }
