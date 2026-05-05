@@ -9,6 +9,8 @@ namespace renderer::raster {
 
 struct CameraUbo {
     glm::mat4 view_proj{ 1.0f };
+    glm::vec3 view_position{ 0.0f };
+    std::uint32_t _pad0 = 0;
 };
 
 struct ModelPushConstant {

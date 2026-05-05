@@ -97,6 +97,7 @@ void RasterRenderBackend::update_camera(const scene::Camera& camera, vk::Extent2
                                                    / static_cast<float>(extent.height);
     const CameraUbo ubo{
         .view_proj = camera.view_projection(aspect),
+        .view_position = camera.position,
     };
 
     if (!camera_buffer_) {

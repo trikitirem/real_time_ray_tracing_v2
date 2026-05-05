@@ -19,7 +19,7 @@ inline constexpr std::array<vk::DescriptorSetLayoutBinding, 1> kCameraDescriptor
         .binding         = kCameraBinding,
         .descriptorType  = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = 1,
-        .stageFlags      = vk::ShaderStageFlagBits::eVertex,
+        .stageFlags      = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
 };

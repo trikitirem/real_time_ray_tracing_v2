@@ -1,5 +1,7 @@
 struct CameraUbo {
     float4x4 viewProj;
+    float3 viewPosition;
+    uint _pad0;
 };
 
 struct ModelPushConstant {
@@ -21,6 +23,7 @@ struct VertexOutput {
     float4 position : SV_Position;
     float2 uv : TEXCOORD0;
     float3 normal : TEXCOORD1;
+    float3 worldPos : TEXCOORD2;
 };
 
 [[vk::binding(0, 0)]]
@@ -42,14 +45,35 @@ VertexOutput vertMain(VsInput input) {
     o.position = mul(gCamera.viewProj, worldPos);
     o.uv = input.uv;
     o.normal = input.normal;
+    o.worldPos = worldPos.xyz;
     return o;
 }
 
 [shader("fragment")]
 float4 fragMain(VertexOutput v) : SV_Target {
+    const float3 lightDirToLight = normalize(float3(0.0, 1.0, 1.0));
+    const float3 lightColor = float3(1.0, 1.0, 1.0);
+    const float ambientStrength = 0.12;
+    const float specularStrength = 0.7;
+    const float shininess = 24.0;
+
+    float3 baseColor = gModel.albedo.rgb;
     if (gModel.hasTexture != 0) {
         float4 tex = gAlbedoTexture.Sample(gAlbedoSampler, v.uv);
-        return float4(tex.rgb, 1.0f);
+        baseColor = tex.rgb;
     }
-    return float4(gModel.albedo.rgb, 1.0f);
+
+    float3 N = normalize(v.normal);
+    float3 L = lightDirToLight;
+    float3 V = normalize(gCamera.viewPosition - v.worldPos);
+    float3 H = normalize(L + V);
+
+    float3 ambient = ambientStrength * lightColor * baseColor;
+    float ndotl = saturate(dot(N, L));
+    float3 diffuse = ndotl * lightColor * baseColor;
+    float spec = pow(saturate(dot(N, H)), shininess);
+    float3 specular = specularStrength * spec * lightColor;
+
+    float3 litColor = ambient + diffuse + specular;
+    return float4(litColor, 1.0f);
 }
