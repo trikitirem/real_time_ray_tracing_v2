@@ -81,6 +81,25 @@ void update_sampled_image_descriptor(const vk::raii::Device& device,
     device.updateDescriptorSets(writes, {});
 }
 
+void update_sampled_images_descriptor(const vk::raii::Device& device,
+                                      const vk::DescriptorSet set,
+                                      const std::uint32_t binding,
+                                      std::span<const vk::DescriptorImageInfo> image_infos)
+{
+    if (image_infos.empty()) {
+        return;
+    }
+    vk::WriteDescriptorSet write{};
+    write.dstSet = set;
+    write.dstBinding = binding;
+    write.dstArrayElement = 0;
+    write.descriptorCount = static_cast<std::uint32_t>(image_infos.size());
+    write.descriptorType = vk::DescriptorType::eSampledImage;
+    write.pImageInfo = image_infos.data();
+    const std::array<vk::WriteDescriptorSet, 1> writes = { write };
+    device.updateDescriptorSets(writes, {});
+}
+
 void update_sampler_descriptor(const vk::raii::Device& device,
                                const vk::DescriptorSet set,
                                const std::uint32_t     binding,
@@ -175,6 +194,12 @@ void UniformSet::update_sampled_image(const std::uint32_t binding,
                                       const vk::ImageLayout image_layout) const
 {
     update_sampled_image_descriptor(*device_, *sets_.front(), binding, image_view, image_layout);
+}
+
+void UniformSet::update_sampled_images(const std::uint32_t binding,
+                                       std::span<const vk::DescriptorImageInfo> image_infos) const
+{
+    update_sampled_images_descriptor(*device_, *sets_.front(), binding, image_infos);
 }
 
 void UniformSet::update_sampler(const std::uint32_t binding, const vk::Sampler sampler) const

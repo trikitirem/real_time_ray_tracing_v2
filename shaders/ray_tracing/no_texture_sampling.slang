@@ -7,14 +7,18 @@ struct CameraUbo {
 struct ModelPushConstant {
     float4x4 model;
     float4 albedo;
+    uint materialIndex;
     uint hasTexture;
     uint _pad0;
     uint _pad1;
-    uint _pad2;
 };
 
 struct MaterialGpu {
     float4 albedo;
+    uint textureIndex;
+    uint hasTexture;
+    uint _pad0;
+    uint _pad1;
 };
 
 struct VsInput {
@@ -43,7 +47,7 @@ StructuredBuffer<MaterialGpu> gMaterials;
 ModelPushConstant gModel;
 
 [[vk::binding(0, 1)]]
-Texture2D<float4> gAlbedoTexture;
+Texture2D<float4> gTextures[];
 
 [[vk::binding(1, 1)]]
 SamplerState gAlbedoSampler;
@@ -97,9 +101,15 @@ float4 fragMain(VertexOutput v) : SV_Target {
     const float shininess = 24.0;
 
     float3 baseColor = gModel.albedo.rgb;
-    if (gModel.hasTexture != 0) {
-        float4 tex = gAlbedoTexture.Sample(gAlbedoSampler, v.uv);
-        baseColor = tex.rgb;
+    uint materialCount = 0;
+    uint materialStride = 0;
+    gMaterials.GetDimensions(materialCount, materialStride);
+    if (gModel.materialIndex < materialCount) {
+        MaterialGpu material = gMaterials[gModel.materialIndex];
+        if (material.hasTexture != 0) {
+            float4 tex = gTextures[NonUniformResourceIndex(material.textureIndex)].Sample(gAlbedoSampler, v.uv);
+            baseColor = tex.rgb;
+        }
     }
 
     float3 N = normalize(v.normal);

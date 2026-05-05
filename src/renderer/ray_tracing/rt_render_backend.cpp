@@ -87,7 +87,9 @@ void RtRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
     }
     frame_recorder_->set_camera_uniform_set(
         camera_uniform_set_ ? &*camera_uniform_set_ : nullptr);
-    if (!texture_uniform_sets_.empty()) {
+    if (!texture_uniform_sets_.empty()
+        && scene_data_.texture_sampler != vk::Sampler{}
+        && !scene_data_.texture_views.empty()) {
         frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_.front());
     }
 }
@@ -167,6 +169,21 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
                 kReflectionInstanceLutBufferBinding,
                 *reflection_instance_lut_buffer_->buffer(),
                 reflection_instance_lut_buffer_->size_bytes());
+        }
+    }
+    if (!texture_uniform_sets_.empty()) {
+        std::vector<vk::DescriptorImageInfo> bindless_images{};
+        bindless_images.reserve(scene_data_.texture_views.size());
+        for (const vk::ImageView view : scene_data_.texture_views) {
+            bindless_images.push_back(vk::DescriptorImageInfo{
+                .sampler = vk::Sampler{},
+                .imageView = view,
+                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+            });
+        }
+        for (descriptors::UniformSet& texture_set : texture_uniform_sets_) {
+            texture_set.update_sampler(kTextureSamplerBinding, scene_data_.texture_sampler);
+            texture_set.update_sampled_images(kTextureImageBinding, bindless_images);
         }
     }
     rebuild_acceleration_structures();

@@ -18,6 +18,7 @@ inline constexpr std::uint32_t kReflectionInstanceLutBufferBinding = 5;
 inline constexpr std::uint32_t kTextureSetIndex = 1;
 inline constexpr std::uint32_t kTextureImageBinding  = 0;
 inline constexpr std::uint32_t kTextureSamplerBinding  = 1;
+inline constexpr std::uint32_t kMaxBindlessTextures = 256;
 
 inline constexpr std::array<vk::DescriptorSetLayoutBinding, 6> kCameraDescriptorBindings = {
     vk::DescriptorSetLayoutBinding{
@@ -83,7 +84,7 @@ inline constexpr std::array<vk::DescriptorSetLayoutBinding, 2> kTextureDescripto
     vk::DescriptorSetLayoutBinding{
         .binding            = kTextureImageBinding,
         .descriptorType     = vk::DescriptorType::eSampledImage,
-        .descriptorCount    = 1,
+        .descriptorCount    = kMaxBindlessTextures,
         .stageFlags         = vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
@@ -99,7 +100,7 @@ inline constexpr std::array<vk::DescriptorSetLayoutBinding, 2> kTextureDescripto
 inline constexpr std::array<vk::DescriptorPoolSize, 2> kTextureDescriptorPoolSizes = {
     vk::DescriptorPoolSize{
         .type            = vk::DescriptorType::eSampledImage,
-        .descriptorCount = 1,
+        .descriptorCount = kMaxBindlessTextures,
     },
     vk::DescriptorPoolSize{
         .type            = vk::DescriptorType::eSampler,

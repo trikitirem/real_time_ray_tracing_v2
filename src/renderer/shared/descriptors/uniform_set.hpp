@@ -52,6 +52,8 @@ public:
                               vk::ImageView image_view,
                               vk::ImageLayout image_layout
                               = vk::ImageLayout::eShaderReadOnlyOptimal) const;
+    void update_sampled_images(std::uint32_t binding,
+                               std::span<const vk::DescriptorImageInfo> image_infos) const;
     void update_sampler(std::uint32_t binding, vk::Sampler sampler) const;
 
     void bind(vk::CommandBuffer  cmd,

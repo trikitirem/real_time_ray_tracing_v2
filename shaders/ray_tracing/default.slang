@@ -7,14 +7,15 @@ struct CameraUbo {
 struct ModelPushConstant {
     float4x4 model;
     float4 albedo;
+    uint materialIndex;
     uint hasTexture;
     uint _pad0;
     uint _pad1;
-    uint _pad2;
 };
 
 struct MaterialGpu {
     float4 albedo;
+    uint textureIndex;
     uint hasTexture;
     uint _pad0;
     uint _pad1;
@@ -61,7 +62,7 @@ StructuredBuffer<ReflectionInstanceLutGpu> gReflectionInstanceLut;
 ModelPushConstant gModel;
 
 [[vk::binding(0, 1)]]
-Texture2D<float4> gAlbedoTexture;
+Texture2D<float4> gTextures[];
 
 [[vk::binding(1, 1)]]
 SamplerState gAlbedoSampler;
@@ -144,7 +145,7 @@ float3 sampleReflectionColor(float3 worldPos, float3 N, float3 V) {
         uint primitiveIndex = rq.CommittedPrimitiveIndex();
         float2 bary = rq.CommittedTriangleBarycentrics();
         float2 hitUv = intersectionUv(instanceID, primitiveIndex, bary);
-        return gAlbedoTexture.SampleLevel(gAlbedoSampler, hitUv, 0).rgb;
+        return gTextures[NonUniformResourceIndex(hitMaterial.textureIndex)].SampleLevel(gAlbedoSampler, hitUv, 0).rgb;
     }
     return hitMaterial.albedo.rgb;
 }
@@ -169,8 +170,20 @@ float4 fragMain(VertexOutput v) : SV_Target {
     const float shininess = 24.0;
 
     float3 baseColor = gModel.albedo.rgb;
-    if (gModel.hasTexture != 0) {
-        float4 tex = gAlbedoTexture.Sample(gAlbedoSampler, v.uv);
+    MaterialGpu drawMaterial;
+    drawMaterial.albedo = float4(1.0, 1.0, 1.0, 1.0);
+    drawMaterial.textureIndex = 0;
+    drawMaterial.hasTexture = 0;
+    drawMaterial._pad0 = 0;
+    drawMaterial._pad1 = 0;
+    uint materialCount = 0;
+    uint materialStride = 0;
+    gMaterials.GetDimensions(materialCount, materialStride);
+    if (gModel.materialIndex < materialCount) {
+        drawMaterial = gMaterials[gModel.materialIndex];
+    }
+    if (drawMaterial.hasTexture != 0) {
+        float4 tex = gTextures[NonUniformResourceIndex(drawMaterial.textureIndex)].Sample(gAlbedoSampler, v.uv);
         baseColor = tex.rgb;
     }
 
