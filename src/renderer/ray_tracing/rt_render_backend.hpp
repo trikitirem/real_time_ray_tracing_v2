@@ -1,12 +1,17 @@
 #pragma once
 
 #include <memory>
+#include <optional>
+#include <vector>
 
 #include <vulkan/vulkan_raii.hpp>
 
 #include "renderer/ray_tracing/rt_frame_recorder.hpp"
+#include "renderer/ray_tracing/rt_gpu_types.hpp"
 #include "renderer/ray_tracing/rt_pipeline.hpp"
 #include "renderer/ray_tracing/rt_scene_gpu_data.hpp"
+#include "renderer/shared/buffers/host_visible_buffer.hpp"
+#include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/render_backend.hpp"
 
 namespace renderer::ray_tracing {
@@ -23,6 +28,8 @@ public:
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:
+    static constexpr std::uint32_t kFramesInFlight = 2;
+
     void create_depth_resources(DeviceContext& ctx, vk::Extent2D extent);
     void destroy_depth_resources();
 
@@ -34,6 +41,9 @@ private:
     vk::raii::DeviceMemory rt_depth_memory_ = nullptr;
     vk::raii::ImageView rt_depth_view_ = nullptr;
     RtSceneGpuData scene_data_{};
+    std::optional<buffers::HostVisibleBuffer> camera_buffer_;
+    std::optional<descriptors::UniformSet> camera_uniform_set_;
+    std::vector<descriptors::UniformSet> texture_uniform_sets_{};
 };
 
 } // namespace renderer::ray_tracing

@@ -100,6 +100,8 @@ add_executable(real_time_ray_tracing_v2
         src/renderer/ray_tracing/rt_frame_recorder.cpp
         src/renderer/ray_tracing/rt_render_backend.cpp
         src/renderer/ray_tracing/rt_scene_gpu_builder.cpp
+        src/renderer/ray_tracing/blas_builder.cpp
+        src/renderer/ray_tracing/tlas_builder.cpp
         src/renderer/ray_tracing/device_config.hpp
         src/renderer/shared/viewport_flip.hpp
         src/scene/mesh_primitive.hpp

@@ -2,7 +2,10 @@
 
 #include <array>
 
+#include "renderer/ray_tracing/rt_gpu_types.hpp"
 #include "renderer/ray_tracing/rt_pipeline.hpp"
+#include "renderer/ray_tracing/shader_config.hpp"
+#include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/swapchain.hpp"
 #include "renderer/shared/viewport_flip.hpp"
 
@@ -105,7 +108,45 @@ void RayTracingFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordCon
     cmd.setScissor(0, make_full_framebuffer_scissor(ctx.extent));
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.pipeline());
-    cmd.draw(3, 1, 0, 0);
+    if (camera_uniform_set_) {
+        camera_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+    }
+    if (scene_data_ && scene_data_->valid) {
+        for (const RtDrawItem& item : scene_data_->draw_items) {
+            const bool has_texture = item.texture_index != kNoTexture
+                                     && item.texture_index < scene_data_->texture_views.size()
+                                     && texture_uniform_set_ != nullptr;
+            if (has_texture) {
+                texture_uniform_set_->update_sampled_image(
+                    kTextureImageBinding,
+                    scene_data_->texture_views[item.texture_index],
+                    vk::ImageLayout::eShaderReadOnlyOptimal);
+                texture_uniform_set_->update_sampler(
+                    kTextureSamplerBinding,
+                    scene_data_->texture_sampler);
+                texture_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+            }
+            const glm::vec4 albedo
+                = item.material_index < scene_data_->material_albedos.size()
+                      ? scene_data_->material_albedos[item.material_index]
+                      : glm::vec4(1.0f);
+            const ModelPushConstant push{
+                .model = item.model_matrix,
+                .albedo = albedo,
+                .has_texture = has_texture ? 1u : 0u,
+            };
+            cmd.pushConstants(*pipeline_.pipeline_layout(),
+                              vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                              0,
+                              sizeof(ModelPushConstant),
+                              &push);
+            const vk::Buffer vb = item.vertex_buffer;
+            const vk::DeviceSize vb_offset = 0;
+            cmd.bindVertexBuffers(0, vb, vb_offset);
+            cmd.bindIndexBuffer(item.index_buffer, 0, vk::IndexType::eUint32);
+            cmd.drawIndexed(item.index_count, 1, item.first_index, item.vertex_offset, 0);
+        }
+    }
 
     cmd.endRendering();
 
