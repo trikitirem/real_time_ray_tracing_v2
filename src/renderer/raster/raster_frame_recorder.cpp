@@ -4,6 +4,7 @@
 
 #include "renderer/raster/raster_gpu_types.hpp"
 #include "renderer/raster/raster_pipeline.hpp"
+#include "renderer/raster/shader_config.hpp"
 #include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/viewport_flip.hpp"
 
@@ -43,6 +44,19 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
     }
     if (scene_data_ && scene_data_->valid) {
         for (const DrawItem& item : scene_data_->draw_items) {
+            const bool has_texture = item.texture_index != kNoTexture
+                                     && item.texture_index < scene_data_->texture_views.size()
+                                     && texture_uniform_set_ != nullptr;
+            if (has_texture) {
+                texture_uniform_set_->update_sampled_image(
+                    kTextureImageBinding,
+                    scene_data_->texture_views[item.texture_index],
+                    vk::ImageLayout::eShaderReadOnlyOptimal);
+                texture_uniform_set_->update_sampler(
+                    kTextureSamplerBinding,
+                    scene_data_->texture_sampler);
+                texture_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+            }
             const glm::vec4 albedo
                 = item.material_index < scene_data_->material_albedos.size()
                       ? scene_data_->material_albedos[item.material_index]
@@ -50,6 +64,7 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
             const ModelPushConstant push{
                 .model = item.model_matrix,
                 .albedo = albedo,
+                .has_texture = has_texture ? 1u : 0u,
             };
             cmd.pushConstants(*pipeline_.pipeline_layout(),
                               vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "renderer/raster/raster_frame_recorder.hpp"
 #include "renderer/raster/raster_gpu_types.hpp"
@@ -24,11 +25,14 @@ public:
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:
+    static constexpr std::uint32_t kFramesInFlight = 2;
+
     std::unique_ptr<RasterPipeline> pipeline_;
     std::unique_ptr<RasterFrameRecorder> frame_recorder_;
     SceneGpuData scene_data_{};
     std::optional<buffers::HostVisibleBuffer> camera_buffer_;
     std::optional<descriptors::UniformSet> camera_uniform_set_;
+    std::vector<descriptors::UniformSet> texture_uniform_sets_{};
 };
 
 } // namespace renderer::raster

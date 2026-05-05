@@ -41,13 +41,30 @@ void RasterRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
         kCameraBinding,
         *camera_buffer_->buffer(),
         sizeof(CameraUbo));
+
+    texture_uniform_sets_.clear();
+    texture_uniform_sets_.reserve(kFramesInFlight);
+    for (std::uint32_t i = 0; i < kFramesInFlight; ++i) {
+        texture_uniform_sets_.emplace_back(
+            ctx.device(),
+            descriptors::UniformSetConfig{
+                .bindings = kTextureDescriptorBindings,
+                .pool_sizes = kTextureDescriptorPoolSizes,
+                .set_index = kTextureSetIndex,
+                .max_sets = 1,
+            });
+    }
     frame_recorder_->set_camera_uniform_set(&*camera_uniform_set_);
+    if (!texture_uniform_sets_.empty()) {
+        frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_.front());
+    }
 }
 
 void RasterRenderBackend::destroy(DeviceContext& ctx)
 {
     (void)ctx;
     scene_data_ = {};
+    texture_uniform_sets_.clear();
     camera_uniform_set_.reset();
     camera_buffer_.reset();
     frame_recorder_.reset();
@@ -62,6 +79,11 @@ void RasterRenderBackend::load_scene(SceneGpuData&& scene_data)
     scene_data_ = std::move(scene_data);
     if (frame_recorder_) {
         frame_recorder_->set_scene_data(&scene_data_);
+        if (!texture_uniform_sets_.empty()) {
+            frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_.front());
+        } else {
+            frame_recorder_->set_texture_uniform_set(nullptr);
+        }
     }
 }
 
@@ -89,6 +111,12 @@ void RasterRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext
         frame_recorder_->set_scene_data(&scene_data_);
         frame_recorder_->set_camera_uniform_set(
             camera_uniform_set_ ? &*camera_uniform_set_ : nullptr);
+        if (!texture_uniform_sets_.empty()) {
+            const std::size_t idx = static_cast<std::size_t>(frame_ctx.frameIndex % texture_uniform_sets_.size());
+            frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_[idx]);
+        } else {
+            frame_recorder_->set_texture_uniform_set(nullptr);
+        }
     }
     frame_recorder_->record(cmd, frame_ctx);
 }

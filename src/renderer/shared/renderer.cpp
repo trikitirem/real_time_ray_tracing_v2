@@ -155,6 +155,7 @@ void Renderer::record_command_buffer(const std::uint32_t frame_index,
 
     FrameRecordContext ctx{};
     ctx.extent         = swapchain_.extent();
+    ctx.frameIndex     = frame_index;
     ctx.imageIndex     = image_index;
     ctx.swapchainImage = swapchain_.images()[image_index];
     backend_->record(cmd, ctx);

@@ -38,7 +38,7 @@ void Engine::initTestScene()
 {
     scene::Material cube_mat{};
     cube_mat.texture_location
-        = util::AssetLocation{ std::filesystem::path("images"), "textue.jpg" };
+        = util::AssetLocation{ std::filesystem::path("images"), "texture.jpg" };
     cube_mat.base_color = glm::vec3(1.0f, 0.0f, 0.0f);
     cube_mat.metalness  = 0.0f;
     cube_mat.roughness  = 0.7f;

@@ -5,6 +5,10 @@ struct CameraUbo {
 struct ModelPushConstant {
     float4x4 model;
     float4 albedo;
+    uint hasTexture;
+    uint _pad0;
+    uint _pad1;
+    uint _pad2;
 };
 
 struct VsInput {
@@ -25,6 +29,12 @@ ConstantBuffer<CameraUbo> gCamera;
 [[vk::push_constant]]
 ModelPushConstant gModel;
 
+[[vk::binding(0, 1)]]
+Texture2D<float4> gAlbedoTexture;
+
+[[vk::binding(1, 1)]]
+SamplerState gAlbedoSampler;
+
 [shader("vertex")]
 VertexOutput vertMain(VsInput input) {
     VertexOutput o;
@@ -37,5 +47,9 @@ VertexOutput vertMain(VsInput input) {
 
 [shader("fragment")]
 float4 fragMain(VertexOutput v) : SV_Target {
+    if (gModel.hasTexture != 0) {
+        float4 tex = gAlbedoTexture.Sample(gAlbedoSampler, v.uv);
+        return float4(tex.rgb, 1.0f);
+    }
     return float4(gModel.albedo.rgb, 1.0f);
 }

@@ -8,6 +8,7 @@ namespace renderer {
 
 struct FrameRecordContext {
     vk::Extent2D extent{};
+    std::uint32_t frameIndex = 0;
     std::uint32_t imageIndex = 0;
 
     vk::Image swapchainImage{};

@@ -11,7 +11,8 @@ namespace renderer::raster {
 inline constexpr std::uint32_t kCameraSetIndex = 0;
 inline constexpr std::uint32_t kCameraBinding  = 0;
 inline constexpr std::uint32_t kTextureSetIndex = 1;
-inline constexpr std::uint32_t kTextureBinding  = 0;
+inline constexpr std::uint32_t kTextureImageBinding  = 0;
+inline constexpr std::uint32_t kTextureSamplerBinding  = 1;
 
 inline constexpr std::array<vk::DescriptorSetLayoutBinding, 1> kCameraDescriptorBindings = {
     vk::DescriptorSetLayoutBinding{
@@ -30,19 +31,30 @@ inline constexpr std::array<vk::DescriptorPoolSize, 1> kCameraDescriptorPoolSize
     },
 };
 
-inline constexpr std::array<vk::DescriptorSetLayoutBinding, 1> kTextureDescriptorBindings = {
+inline constexpr std::array<vk::DescriptorSetLayoutBinding, 2> kTextureDescriptorBindings = {
     vk::DescriptorSetLayoutBinding{
-        .binding            = kTextureBinding,
-        .descriptorType     = vk::DescriptorType::eCombinedImageSampler,
+        .binding            = kTextureImageBinding,
+        .descriptorType     = vk::DescriptorType::eSampledImage,
+        .descriptorCount    = 1,
+        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .pImmutableSamplers = nullptr,
+    },
+    vk::DescriptorSetLayoutBinding{
+        .binding            = kTextureSamplerBinding,
+        .descriptorType     = vk::DescriptorType::eSampler,
         .descriptorCount    = 1,
         .stageFlags         = vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
 };
 
-inline constexpr std::array<vk::DescriptorPoolSize, 1> kTextureDescriptorPoolSizes = {
+inline constexpr std::array<vk::DescriptorPoolSize, 2> kTextureDescriptorPoolSizes = {
     vk::DescriptorPoolSize{
-        .type            = vk::DescriptorType::eCombinedImageSampler,
+        .type            = vk::DescriptorType::eSampledImage,
+        .descriptorCount = 1,
+    },
+    vk::DescriptorPoolSize{
+        .type            = vk::DescriptorType::eSampler,
         .descriptorCount = 1,
     },
 };

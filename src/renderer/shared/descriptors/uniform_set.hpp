@@ -48,6 +48,11 @@ public:
                                        vk::Sampler   sampler,
                                        vk::ImageLayout image_layout
                                        = vk::ImageLayout::eShaderReadOnlyOptimal) const;
+    void update_sampled_image(std::uint32_t binding,
+                              vk::ImageView image_view,
+                              vk::ImageLayout image_layout
+                              = vk::ImageLayout::eShaderReadOnlyOptimal) const;
+    void update_sampler(std::uint32_t binding, vk::Sampler sampler) const;
 
     void bind(vk::CommandBuffer  cmd,
               vk::PipelineLayout pipeline_layout,

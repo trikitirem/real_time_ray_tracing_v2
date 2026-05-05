@@ -57,6 +57,53 @@ void update_combined_image_sampler_descriptor(const vk::raii::Device& device,
     device.updateDescriptorSets(writes, {});
 }
 
+void update_sampled_image_descriptor(const vk::raii::Device& device,
+                                     const vk::DescriptorSet set,
+                                     const std::uint32_t     binding,
+                                     const vk::ImageView     image_view,
+                                     const vk::ImageLayout   image_layout)
+{
+    const vk::DescriptorImageInfo image_info{
+        .sampler     = vk::Sampler{},
+        .imageView   = image_view,
+        .imageLayout = image_layout,
+    };
+
+    vk::WriteDescriptorSet write{};
+    write.dstSet          = set;
+    write.dstBinding      = binding;
+    write.dstArrayElement = 0;
+    write.descriptorCount = 1;
+    write.descriptorType  = vk::DescriptorType::eSampledImage;
+    write.pImageInfo      = &image_info;
+
+    const std::array<vk::WriteDescriptorSet, 1> writes = { write };
+    device.updateDescriptorSets(writes, {});
+}
+
+void update_sampler_descriptor(const vk::raii::Device& device,
+                               const vk::DescriptorSet set,
+                               const std::uint32_t     binding,
+                               const vk::Sampler       sampler)
+{
+    const vk::DescriptorImageInfo image_info{
+        .sampler     = sampler,
+        .imageView   = vk::ImageView{},
+        .imageLayout = vk::ImageLayout::eUndefined,
+    };
+
+    vk::WriteDescriptorSet write{};
+    write.dstSet          = set;
+    write.dstBinding      = binding;
+    write.dstArrayElement = 0;
+    write.descriptorCount = 1;
+    write.descriptorType  = vk::DescriptorType::eSampler;
+    write.pImageInfo      = &image_info;
+
+    const std::array<vk::WriteDescriptorSet, 1> writes = { write };
+    device.updateDescriptorSets(writes, {});
+}
+
 } // namespace
 
 UniformSet::UniformSet(const vk::raii::Device& device, const UniformSetConfig& cfg)
@@ -121,6 +168,18 @@ void UniformSet::update_combined_image_sampler(const std::uint32_t binding,
 {
     update_combined_image_sampler_descriptor(*device_, *sets_.front(), binding, image_view, sampler,
                                              image_layout);
+}
+
+void UniformSet::update_sampled_image(const std::uint32_t binding,
+                                      const vk::ImageView image_view,
+                                      const vk::ImageLayout image_layout) const
+{
+    update_sampled_image_descriptor(*device_, *sets_.front(), binding, image_view, image_layout);
+}
+
+void UniformSet::update_sampler(const std::uint32_t binding, const vk::Sampler sampler) const
+{
+    update_sampler_descriptor(*device_, *sets_.front(), binding, sampler);
 }
 
 void UniformSet::bind(const vk::CommandBuffer   cmd,

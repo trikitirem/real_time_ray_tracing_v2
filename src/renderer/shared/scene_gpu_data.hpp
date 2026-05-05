@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #include <glm/mat4x4.hpp>
@@ -12,12 +13,15 @@
 
 namespace renderer {
 
+inline constexpr std::uint32_t kNoTexture = std::numeric_limits<std::uint32_t>::max();
+
 struct DrawItem {
     vk::Buffer vertex_buffer{};
     vk::Buffer index_buffer{};
     std::uint32_t index_count = 0;
     std::uint32_t first_index = 0;
     std::int32_t vertex_offset = 0;
+    std::uint32_t texture_index = kNoTexture;
     glm::mat4 model_matrix = glm::mat4(1.0f);
     std::uint32_t material_index = 0;
 };

@@ -19,6 +19,10 @@ public:
     {
         camera_uniform_set_ = camera_uniform_set;
     }
+    void set_texture_uniform_set(const descriptors::UniformSet* texture_uniform_set)
+    {
+        texture_uniform_set_ = texture_uniform_set;
+    }
 
     void record(vk::CommandBuffer cmd, const FrameRecordContext& ctx) override;
 
@@ -26,6 +30,7 @@ private:
     RasterPipeline& pipeline_;
     const SceneGpuData* scene_data_ = nullptr;
     const descriptors::UniformSet* camera_uniform_set_ = nullptr;
+    const descriptors::UniformSet* texture_uniform_set_ = nullptr;
 };
 
 } // namespace renderer::raster
