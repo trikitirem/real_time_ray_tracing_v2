@@ -1,8 +1,11 @@
 #include "renderer/raster/raster_frame_recorder.hpp"
 
 #include <array>
+#include <iostream>
 
+#include "renderer/raster/raster_gpu_types.hpp"
 #include "renderer/raster/raster_pipeline.hpp"
+#include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/viewport_flip.hpp"
 
 namespace renderer::raster {
@@ -36,16 +39,26 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
     cmd.setScissor(0, make_full_framebuffer_scissor(ctx.extent));
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.pipeline());
+    if (camera_uniform_set_) {
+        camera_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+    }
     if (scene_data_ && scene_data_->valid) {
+        std::cout << scene_data_->draw_items.size() << std::endl;
+
         for (const DrawItem& item : scene_data_->draw_items) {
+
+            const ModelPushConstant push{ .model = item.model_matrix };
+            cmd.pushConstants(*pipeline_.pipeline_layout(),
+                              vk::ShaderStageFlagBits::eVertex,
+                              0,
+                              sizeof(ModelPushConstant),
+                              &push);
             const vk::Buffer vb = item.vertex_buffer;
             const vk::DeviceSize vb_offset = 0;
             cmd.bindVertexBuffers(0, vb, vb_offset);
             cmd.bindIndexBuffer(item.index_buffer, 0, vk::IndexType::eUint32);
             cmd.drawIndexed(item.index_count, 1, item.first_index, item.vertex_offset, 0);
         }
-    } else {
-        cmd.draw(3, 1, 0, 0);
     }
 
     cmd.endRenderPass();

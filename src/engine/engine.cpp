@@ -55,9 +55,9 @@ void Engine::initTestScene()
 
     scene::Transform floor_xf{};
     floor_xf.translate(0.0f, -0.001f, 0.0f);
-    scene_.add_model(scene::primitives::make_plane(10.0f, 10.0f, floor_mat, floor_xf));
+    scene_.add_model(scene::primitives::make_plane(50.0f, 50.0f, floor_mat, floor_xf));
 
-    camera_.position = glm::vec3(0.0f, 1.5f, 4.0f);
+    camera_.position = glm::vec3(0.0f, 1.0f, 4.0f);
 }
 
 void Engine::initWindow()
@@ -76,6 +76,7 @@ void Engine::initVulkan()
     renderer_
         = std::make_unique<renderer::Renderer>(window_.handle(), deviceContext_, useRasterBackend_);
     renderer_->load_scene(scene_);
+    renderer_->set_camera(camera_);
 }
 
 void Engine::mainLoop()
@@ -85,6 +86,7 @@ void Engine::mainLoop()
             framebufferResized_ = false;
             renderer_->notifyFramebufferResized();
         }
+        renderer_->set_camera(camera_);
         renderer_->draw();
         window_.pollEvents();
     }

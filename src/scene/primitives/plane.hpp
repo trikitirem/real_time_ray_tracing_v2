@@ -40,7 +40,7 @@ namespace scene::primitives {
     for (int i = 0; i < 4; ++i) {
         prim.vertices.push_back(util::Vertex{ positions[i], uvs[i], n });
     }
-    prim.indices = { 0, 1, 2, 0, 2, 3 };
+    prim.indices = { 0, 2, 1, 0, 3, 2 };
 
     Mesh mesh{};
     mesh.primitives.push_back(std::move(prim));

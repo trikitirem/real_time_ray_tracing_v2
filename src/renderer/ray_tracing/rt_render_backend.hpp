@@ -18,6 +18,7 @@ public:
     void create(DeviceContext& ctx, const Swapchain& swapchain) override;
     void destroy(DeviceContext& ctx) override;
     void load_scene(SceneGpuData&& scene_data) override;
+    void update_camera(const scene::Camera& camera, vk::Extent2D extent) override;
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:

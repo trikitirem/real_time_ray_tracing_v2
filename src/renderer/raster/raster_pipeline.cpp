@@ -1,9 +1,12 @@
 #include "renderer/raster/raster_pipeline.hpp"
 
+#include "renderer/raster/raster_gpu_types.hpp"
 #include "renderer/raster/shader_config.hpp"
 #include "renderer/shared/device_context.hpp"
 #include "renderer/shared/swapchain.hpp"
+#include "util/vertex.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <stdexcept>
@@ -66,9 +69,15 @@ void RasterPipeline::create(DeviceContext& ctx, const Swapchain& swapchain, cons
     texture_set_layout_            = vk::raii::DescriptorSetLayout(device, texture_layout_ci);
 
     const vk::DescriptorSetLayout set_layouts[] = { *camera_set_layout_, *texture_set_layout_ };
+    vk::PushConstantRange model_push_range{};
+    model_push_range.stageFlags = vk::ShaderStageFlagBits::eVertex;
+    model_push_range.offset = 0;
+    model_push_range.size = sizeof(ModelPushConstant);
     vk::PipelineLayoutCreateInfo  pipeline_layout_ci{};
     pipeline_layout_ci.setLayoutCount = static_cast<std::uint32_t>(std::size(set_layouts));
     pipeline_layout_ci.pSetLayouts    = set_layouts;
+    pipeline_layout_ci.pushConstantRangeCount = 1;
+    pipeline_layout_ci.pPushConstantRanges = &model_push_range;
     pipeline_layout_                  = vk::raii::PipelineLayout(device, pipeline_layout_ci);
     create_raster_graphics_pipeline(device);
     create_framebuffers(device, swapchain, extent);
@@ -177,6 +186,36 @@ void RasterPipeline::create_raster_graphics_pipeline(const vk::raii::Device& dev
 {
     FixedFunctionState ff{};
     ff.init(*shader_module_);
+
+    static const vk::VertexInputBindingDescription binding{
+        .binding = 0,
+        .stride = sizeof(util::Vertex),
+        .inputRate = vk::VertexInputRate::eVertex,
+    };
+    static const vk::VertexInputAttributeDescription attributes[] = {
+        vk::VertexInputAttributeDescription{
+            .location = 0,
+            .binding = 0,
+            .format = vk::Format::eR32G32B32Sfloat,
+            .offset = static_cast<std::uint32_t>(offsetof(util::Vertex, position)),
+        },
+        vk::VertexInputAttributeDescription{
+            .location = 1,
+            .binding = 0,
+            .format = vk::Format::eR32G32Sfloat,
+            .offset = static_cast<std::uint32_t>(offsetof(util::Vertex, uv)),
+        },
+        vk::VertexInputAttributeDescription{
+            .location = 2,
+            .binding = 0,
+            .format = vk::Format::eR32G32B32Sfloat,
+            .offset = static_cast<std::uint32_t>(offsetof(util::Vertex, normal)),
+        },
+    };
+    ff.vertex_input.vertexBindingDescriptionCount = 1;
+    ff.vertex_input.pVertexBindingDescriptions = &binding;
+    ff.vertex_input.vertexAttributeDescriptionCount = static_cast<std::uint32_t>(std::size(attributes));
+    ff.vertex_input.pVertexAttributeDescriptions = attributes;
 
     vk::GraphicsPipelineCreateInfo gp{};
     fill_graphics_pipeline_create_info(gp, ff, *pipeline_layout_, *render_pass_, 0);

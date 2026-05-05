@@ -24,7 +24,13 @@ public:
     ~UniformSet()                            = default;
 
     [[nodiscard]] const vk::raii::DescriptorSetLayout& layout() const { return layout_; }
-    [[nodiscard]] vk::DescriptorSet                    set() const { return set_; }
+    [[nodiscard]] vk::DescriptorSet                    set() const
+    {
+        if (sets_.empty()) {
+            return vk::DescriptorSet{};
+        }
+        return *sets_.front();
+    }
     [[nodiscard]] std::uint32_t                        set_index() const { return set_index_; }
 
     void update_uniform_buffer(std::uint32_t binding,
@@ -53,7 +59,7 @@ private:
 
     vk::raii::DescriptorPool      pool_   = nullptr;
     vk::raii::DescriptorSetLayout layout_ = nullptr;
-    vk::DescriptorSet             set_    = nullptr;
+    vk::raii::DescriptorSets      sets_   = nullptr;
 };
 
 } // namespace renderer::descriptors

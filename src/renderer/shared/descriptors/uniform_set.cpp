@@ -79,6 +79,7 @@ UniformSet::UniformSet(const vk::raii::Device& device, const UniformSetConfig& c
     layout_                = vk::raii::DescriptorSetLayout(device, layout_ci);
 
     vk::DescriptorPoolCreateInfo pool_ci{};
+    pool_ci.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
     pool_ci.maxSets       = cfg.max_sets;
     pool_ci.poolSizeCount = static_cast<std::uint32_t>(cfg.pool_sizes.size());
     pool_ci.pPoolSizes    = cfg.pool_sizes.data();
@@ -89,7 +90,10 @@ UniformSet::UniformSet(const vk::raii::Device& device, const UniformSetConfig& c
     alloc_info.descriptorPool     = *pool_;
     alloc_info.descriptorSetCount = static_cast<std::uint32_t>(layouts.size());
     alloc_info.pSetLayouts        = layouts.data();
-    set_ = device.allocateDescriptorSets(alloc_info).front();
+    sets_ = vk::raii::DescriptorSets(device, alloc_info);
+    if (sets_.empty()) {
+        throw std::runtime_error("UniformSet: descriptor set allocation returned no sets");
+    }
 }
 
 void UniformSet::update_uniform_buffer(const std::uint32_t binding,
@@ -97,7 +101,7 @@ void UniformSet::update_uniform_buffer(const std::uint32_t binding,
                                        const vk::DeviceSize range,
                                        const vk::DeviceSize offset) const
 {
-    update_buffer_descriptor(*device_, set_, binding, vk::DescriptorType::eUniformBuffer, buffer,
+    update_buffer_descriptor(*device_, *sets_.front(), binding, vk::DescriptorType::eUniformBuffer, buffer,
                              range, offset);
 }
 
@@ -106,7 +110,7 @@ void UniformSet::update_storage_buffer(const std::uint32_t binding,
                                        const vk::DeviceSize range,
                                        const vk::DeviceSize offset) const
 {
-    update_buffer_descriptor(*device_, set_, binding, vk::DescriptorType::eStorageBuffer, buffer,
+    update_buffer_descriptor(*device_, *sets_.front(), binding, vk::DescriptorType::eStorageBuffer, buffer,
                              range, offset);
 }
 
@@ -115,7 +119,7 @@ void UniformSet::update_combined_image_sampler(const std::uint32_t binding,
                                                const vk::Sampler   sampler,
                                                const vk::ImageLayout image_layout) const
 {
-    update_combined_image_sampler_descriptor(*device_, set_, binding, image_view, sampler,
+    update_combined_image_sampler_descriptor(*device_, *sets_.front(), binding, image_view, sampler,
                                              image_layout);
 }
 
@@ -123,7 +127,7 @@ void UniformSet::bind(const vk::CommandBuffer   cmd,
                       const vk::PipelineLayout  pipeline_layout,
                       const vk::PipelineBindPoint bind_point) const
 {
-    const std::array<vk::DescriptorSet, 1> sets = { set_ };
+    const std::array<vk::DescriptorSet, 1> sets = { *sets_.front() };
     cmd.bindDescriptorSets(bind_point, pipeline_layout, set_index_, sets, {});
 }
 

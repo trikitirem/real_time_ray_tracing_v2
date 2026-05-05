@@ -10,6 +10,7 @@
 #include "renderer/shared/device_context.hpp"
 #include "renderer/shared/graphics_pipeline.hpp"
 #include "renderer/shared/swapchain.hpp"
+#include "scene/camera.hpp"
 #include "util/shader_paths.hpp"
 
 namespace renderer::ray_tracing {
@@ -63,6 +64,12 @@ void RtRenderBackend::destroy(DeviceContext& ctx)
 void RtRenderBackend::load_scene(SceneGpuData&& scene_data)
 {
     scene_data_ = std::move(scene_data);
+}
+
+void RtRenderBackend::update_camera(const scene::Camera& camera, vk::Extent2D extent)
+{
+    (void)camera;
+    (void)extent;
 }
 
 void RtRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx)

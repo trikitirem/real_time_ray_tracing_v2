@@ -5,6 +5,7 @@
 #include "renderer/ray_tracing/rt_render_backend.hpp"
 #include "renderer/ray_tracing/rt_scene_gpu_builder.hpp"
 #include "renderer/shared/device_context.hpp"
+#include "scene/camera.hpp"
 #include "scene/scene.hpp"
 
 #include <cstdint>
@@ -59,6 +60,12 @@ void Renderer::load_scene(const scene::Scene& scene)
         ray_tracing::RtSceneGpuBuilder builder{};
         backend_->load_scene(builder.build(ctx_, scene));
     }
+}
+
+void Renderer::set_camera(const scene::Camera& camera)
+{
+    camera_ = &camera;
+    backend_->update_camera(camera, swapchain_.extent());
 }
 
 void Renderer::create_command_pool_and_buffers()
@@ -168,6 +175,10 @@ void Renderer::draw()
     if (frames_.empty() || render_finished_.empty()
         || command_buffers_.size() < kMaxFramesInFlight) {
         return;
+    }
+
+    if (camera_ != nullptr) {
+        backend_->update_camera(*camera_, swapchain_.extent());
     }
 
     FrameSync& frame = frames_[current_frame_];

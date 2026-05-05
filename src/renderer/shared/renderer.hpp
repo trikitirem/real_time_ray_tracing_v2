@@ -13,6 +13,7 @@ struct GLFWwindow;
 
 namespace scene {
 class Scene;
+class Camera;
 }
 
 namespace renderer {
@@ -30,6 +31,7 @@ public:
     ~Renderer();
 
     void load_scene(const scene::Scene& scene);
+    void set_camera(const scene::Camera& camera);
     void draw();
 
     void notifyFramebufferResized() { framebuffer_resized_ = true; }
@@ -64,6 +66,7 @@ private:
     std::vector<FrameSync>             frames_{};
     std::vector<vk::raii::Semaphore>   render_finished_{};
     const scene::Scene* loaded_scene_ = nullptr;
+    const scene::Camera* camera_ = nullptr;
 
     std::uint32_t current_frame_        = 0;
     bool          framebuffer_resized_ = false;

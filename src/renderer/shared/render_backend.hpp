@@ -3,6 +3,10 @@
 #include "renderer/shared/render_frame_recorder.hpp"
 #include "renderer/shared/scene_gpu_data.hpp"
 
+namespace scene {
+class Camera;
+}
+
 namespace renderer {
 
 class DeviceContext;
@@ -18,6 +22,7 @@ public:
     virtual void create(DeviceContext& ctx, const Swapchain& swapchain) = 0;
     virtual void destroy(DeviceContext& ctx) = 0;
     virtual void load_scene(SceneGpuData&& scene_data) = 0;
+    virtual void update_camera(const scene::Camera& camera, vk::Extent2D extent) = 0;
     virtual void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) = 0;
 };
 
