@@ -88,6 +88,7 @@ void Engine::mainLoop()
         window_.pollEvents();
         input_.begin_frame();
         input_.poll();
+        camera_.update_from_input(input_);
         if (framebufferResized_) {
             framebufferResized_ = false;
             renderer_->notifyFramebufferResized();

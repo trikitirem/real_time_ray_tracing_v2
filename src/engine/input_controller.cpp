@@ -38,6 +38,19 @@ void InputController::poll()
         return;
     }
 
+    if (glfwGetWindowAttrib(window_, GLFW_FOCUSED) == 0) {
+        move_forward_ = false;
+        move_backward_ = false;
+        move_left_ = false;
+        move_right_ = false;
+        move_up_ = false;
+        move_down_ = false;
+        first_mouse_sample_ = true;
+        mouse_dx_ = 0.0f;
+        mouse_dy_ = 0.0f;
+        return;
+    }
+
     move_forward_ = key_down(window_, GLFW_KEY_W);
     move_backward_ = key_down(window_, GLFW_KEY_S);
     move_left_ = key_down(window_, GLFW_KEY_A);
