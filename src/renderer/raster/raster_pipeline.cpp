@@ -70,7 +70,7 @@ void RasterPipeline::create(DeviceContext& ctx, const Swapchain& swapchain, cons
 
     const vk::DescriptorSetLayout set_layouts[] = { *camera_set_layout_, *texture_set_layout_ };
     vk::PushConstantRange model_push_range{};
-    model_push_range.stageFlags = vk::ShaderStageFlagBits::eVertex;
+    model_push_range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
     model_push_range.offset = 0;
     model_push_range.size = sizeof(ModelPushConstant);
     vk::PipelineLayoutCreateInfo  pipeline_layout_ci{};

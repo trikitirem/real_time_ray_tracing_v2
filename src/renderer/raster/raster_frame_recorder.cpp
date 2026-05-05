@@ -1,7 +1,6 @@
 #include "renderer/raster/raster_frame_recorder.hpp"
 
 #include <array>
-#include <iostream>
 
 #include "renderer/raster/raster_gpu_types.hpp"
 #include "renderer/raster/raster_pipeline.hpp"
@@ -43,13 +42,17 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
         camera_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
     }
     if (scene_data_ && scene_data_->valid) {
-        std::cout << scene_data_->draw_items.size() << std::endl;
-
         for (const DrawItem& item : scene_data_->draw_items) {
-
-            const ModelPushConstant push{ .model = item.model_matrix };
+            const glm::vec4 albedo
+                = item.material_index < scene_data_->material_albedos.size()
+                      ? scene_data_->material_albedos[item.material_index]
+                      : glm::vec4(1.0f);
+            const ModelPushConstant push{
+                .model = item.model_matrix,
+                .albedo = albedo,
+            };
             cmd.pushConstants(*pipeline_.pipeline_layout(),
-                              vk::ShaderStageFlagBits::eVertex,
+                              vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
                               0,
                               sizeof(ModelPushConstant),
                               &push);

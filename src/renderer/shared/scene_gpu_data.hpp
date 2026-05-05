@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <glm/mat4x4.hpp>
+#include <glm/vec4.hpp>
 #include <vulkan/vulkan.hpp>
 
 #include "renderer/shared/buffers/gpu_buffer.hpp"
@@ -27,6 +28,7 @@ struct SceneGpuData {
     std::vector<textures::TextureResource> textures{};
 
     std::vector<DrawItem> draw_items{};
+    std::vector<glm::vec4> material_albedos{};
     vk::Buffer material_buffer{};
     std::vector<vk::ImageView> texture_views{};
     vk::Sampler texture_sampler{};

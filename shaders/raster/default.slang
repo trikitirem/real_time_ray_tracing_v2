@@ -4,6 +4,7 @@ struct CameraUbo {
 
 struct ModelPushConstant {
     float4x4 model;
+    float4 albedo;
 };
 
 struct VsInput {
@@ -36,6 +37,5 @@ VertexOutput vertMain(VsInput input) {
 
 [shader("fragment")]
 float4 fragMain(VertexOutput v) : SV_Target {
-    float n = saturate(normalize(v.normal).z * 0.5 + 0.5);
-    return float4(0.9f, 0.9f, 0.9f, 1.0f);
+    return float4(gModel.albedo.rgb, 1.0f);
 }

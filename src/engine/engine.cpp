@@ -39,7 +39,7 @@ void Engine::initTestScene()
     scene::Material cube_mat{};
     cube_mat.texture_location
         = util::AssetLocation{ std::filesystem::path("images"), "textue.jpg" };
-    cube_mat.base_color = glm::vec3(1.0f);
+    cube_mat.base_color = glm::vec3(1.0f, 0.0f, 0.0f);
     cube_mat.metalness  = 0.0f;
     cube_mat.roughness  = 0.7f;
 
@@ -49,7 +49,7 @@ void Engine::initTestScene()
         scene::primitives::make_cube(1.0f, 1.0f, 1.0f, cube_mat, cube_xf));
 
     scene::Material floor_mat{};
-    floor_mat.base_color = glm::vec3(0.12f, 0.12f, 0.12f);
+    floor_mat.base_color = glm::vec3(0.9f, 0.9f, 0.9f);
     floor_mat.metalness  = 1.0f;
     floor_mat.roughness  = 0.05f;
 
@@ -57,7 +57,7 @@ void Engine::initTestScene()
     floor_xf.translate(0.0f, -0.001f, 0.0f);
     scene_.add_model(scene::primitives::make_plane(50.0f, 50.0f, floor_mat, floor_xf));
 
-    camera_.position = glm::vec3(0.0f, 1.0f, 4.0f);
+    camera_.position = glm::vec3(0.0f, 1.5f, 4.0f);
 }
 
 void Engine::initWindow()

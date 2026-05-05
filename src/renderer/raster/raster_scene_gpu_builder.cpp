@@ -45,6 +45,9 @@ SceneGpuData RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
 
             const auto vb_idx = out.vertex_buffers.size() - 1;
             const auto ib_idx = out.index_buffers.size() - 1;
+            const std::uint32_t material_index
+                = static_cast<std::uint32_t>(out.material_albedos.size());
+            out.material_albedos.push_back(glm::vec4(primitive.material.base_color, 1.0f));
             out.draw_items.push_back(DrawItem{
                 .vertex_buffer = *out.vertex_buffers[vb_idx].buffer(),
                 .index_buffer = *out.index_buffers[ib_idx].buffer(),
@@ -52,12 +55,12 @@ SceneGpuData RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
                 .first_index = 0,
                 .vertex_offset = 0,
                 .model_matrix = model.transform.matrix,
-                .material_index = 0,
+                .material_index = material_index,
             });
         }
     }
 
-    out.material_count = 1;
+    out.material_count = static_cast<std::uint32_t>(out.material_albedos.size());
     out.valid = !out.draw_items.empty();
     return out;
 }
