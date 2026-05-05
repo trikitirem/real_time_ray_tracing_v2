@@ -2,6 +2,13 @@
 
 namespace renderer::ray_tracing {
 
+void RayTracingPipeline::destroy()
+{
+    pipeline_        = nullptr;
+    shader_module_   = nullptr;
+    pipeline_layout_ = nullptr;
+}
+
 void RayTracingPipeline::create(const vk::raii::Device&        device,
                                 const vk::raii::PhysicalDevice& physicalDevice,
                                 vk::Format                     colorFormat,

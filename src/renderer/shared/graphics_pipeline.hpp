@@ -7,8 +7,6 @@
 
 namespace renderer {
 
-// Shader module, empty pipeline layout, default fixed-function state for vertMain/fragMain
-// (triangle / fullscreen-style). Inherited pipelines attach VkRenderPass or PipelineRenderingCreateInfo.
 class GraphicsPipeline {
 public:
     GraphicsPipeline()                     = default;
@@ -20,8 +18,9 @@ public:
     [[nodiscard]] const vk::raii::PipelineLayout& pipeline_layout() const { return pipeline_layout_; }
     [[nodiscard]] const vk::raii::Pipeline&       pipeline() const { return pipeline_; }
 
-protected:
     [[nodiscard]] static vk::Format find_depth_format(const vk::raii::PhysicalDevice& pd);
+
+protected:
 
     void load_shader_module(const vk::raii::Device& device, const std::filesystem::path& spirv_path);
     void create_empty_pipeline_layout(const vk::raii::Device& device);

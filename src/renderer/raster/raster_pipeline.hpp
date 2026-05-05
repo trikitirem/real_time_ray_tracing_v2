@@ -17,7 +17,6 @@ class Swapchain;
 
 namespace renderer::raster {
 
-// Classic render pass + depth + one framebuffer per swap image. Extends shared fixed-function + shader path.
 class RasterPipeline : public renderer::GraphicsPipeline {
 public:
     RasterPipeline() = default;
@@ -27,6 +26,7 @@ public:
     RasterPipeline& operator=(RasterPipeline&&)      = delete;
 
     void create(DeviceContext& ctx, const Swapchain& swapchain, const std::filesystem::path& spirv_path);
+    void destroy();
 
     [[nodiscard]] vk::Format depth_format() const { return depth_format_; }
 

@@ -159,6 +159,8 @@ void DeviceContext::createInstance()
     };
 
     instance_ = vk::raii::Instance(context_, instanceCreateInfo);
+
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Instance{ *instance_ });
 }
 
 void DeviceContext::setupDebugMessenger()
@@ -245,6 +247,8 @@ void DeviceContext::createLogicalDevice()
     device_        = vk::raii::Device(physicalDevice_, di);
     graphicsQueue_ = vk::raii::Queue(device_, graphicsQueueFamily_, 0);
     presentQueue_  = vk::raii::Queue(device_, presentQueueFamily_, 0);
+
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Device{ *device_ });
 }
 
 } // namespace renderer

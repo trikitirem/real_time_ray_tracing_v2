@@ -1,9 +1,11 @@
 #pragma once
 
+#include <memory>
+
 #include "engine/window.hpp"
 #include "renderer/shared/device_config.hpp"
 #include "renderer/shared/device_context.hpp"
-#include "renderer/shared/swapchain.hpp"
+#include "renderer/shared/renderer.hpp"
 
 namespace engine {
 
@@ -26,7 +28,7 @@ private:
 
     Window                  window_;
     renderer::DeviceContext deviceContext_;
-    renderer::Swapchain     swapchain_;
+    std::unique_ptr<renderer::Renderer> renderer_;
 
     bool framebufferResized_ = false;
 };

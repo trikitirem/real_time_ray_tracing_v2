@@ -1,5 +1,4 @@
 #include "engine/engine.hpp"
-#include "util/shader_paths.hpp"
 
 int main()
 {

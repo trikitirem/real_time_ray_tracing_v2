@@ -75,8 +75,11 @@ add_executable(real_time_ray_tracing_v2
         src/renderer/shared/swapchain.cpp
         src/renderer/shared/shader_module_util.cpp
         src/renderer/shared/graphics_pipeline.cpp
+        src/renderer/shared/renderer.cpp
         src/renderer/raster/raster_pipeline.cpp
+        src/renderer/raster/raster_frame_recorder.cpp
         src/renderer/ray_tracing/rt_pipeline.cpp
+        src/renderer/ray_tracing/rt_frame_recorder.cpp
         src/renderer/ray_tracing/device_config.hpp
         src/renderer/shared/viewport_flip.hpp
 )

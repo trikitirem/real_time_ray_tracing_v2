@@ -27,6 +27,19 @@ std::uint32_t find_memory_type(const vk::raii::PhysicalDevice&  physicalDevice,
 
 } // namespace
 
+void RasterPipeline::destroy()
+{
+    framebuffers_.clear();
+    pipeline_      = nullptr;
+    render_pass_   = nullptr;
+    depth_view_    = nullptr;
+    depth_image_   = nullptr;
+    depth_memory_  = nullptr;
+    shader_module_   = nullptr;
+    pipeline_layout_ = nullptr;
+    depth_format_    = vk::Format::eUndefined;
+}
+
 void RasterPipeline::create(DeviceContext& ctx, const Swapchain& swapchain, const std::filesystem::path& spirv_path)
 {
     const vk::raii::Device&         device   = ctx.device();

@@ -20,6 +20,7 @@ public:
                 const vk::raii::PhysicalDevice& physicalDevice,
                 vk::Format                     colorFormat,
                 const std::filesystem::path&   spirv_path);
+    void destroy();
 };
 
 } // namespace renderer::ray_tracing

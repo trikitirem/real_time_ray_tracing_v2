@@ -1,0 +1,44 @@
+#include "renderer/raster/raster_frame_recorder.hpp"
+
+#include <array>
+
+#include "renderer/raster/raster_pipeline.hpp"
+#include "renderer/shared/viewport_flip.hpp"
+
+namespace renderer::raster {
+
+RasterFrameRecorder::RasterFrameRecorder(RasterPipeline& pipeline)
+    : pipeline_(pipeline)
+{
+}
+
+void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext& ctx)
+{
+    vk::ClearValue clear_color{};
+    clear_color.color
+        = vk::ClearColorValue{ std::array<float, 4>{ 0.53f, 0.81f, 0.98f, 1.0f } };
+    vk::ClearValue clear_depth{};
+    clear_depth.depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
+
+    const vk::ClearValue clears[] = { clear_color, clear_depth };
+
+    vk::RenderPassBeginInfo begin{};
+    begin.renderPass        = *pipeline_.render_pass();
+    begin.framebuffer       = *pipeline_.framebuffers()[ctx.imageIndex];
+    begin.renderArea.offset = vk::Offset2D{ 0, 0 };
+    begin.renderArea.extent = ctx.extent;
+    begin.clearValueCount   = static_cast<std::uint32_t>(std::size(clears));
+    begin.pClearValues      = clears;
+
+    cmd.beginRenderPass(begin, vk::SubpassContents::eInline);
+
+    cmd.setViewport(0, make_viewport_y_up_ndc(ctx.extent));
+    cmd.setScissor(0, make_full_framebuffer_scissor(ctx.extent));
+
+    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.pipeline());
+    cmd.draw(3, 1, 0, 0);
+
+    cmd.endRenderPass();
+}
+
+} // namespace renderer::raster

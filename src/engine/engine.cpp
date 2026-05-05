@@ -42,24 +42,18 @@ void Engine::initVulkan()
         useRasterBackend_ ? rasterConfig_ : rayTracingConfig_;
     deviceContext_.init(window_.handle(), cfg);
 
-    int fbW = 0;
-    int fbH = 0;
-    window_.framebufferSize(fbW, fbH);
-    swapchain_.create(deviceContext_, fbW, fbH);
+    renderer_
+        = std::make_unique<renderer::Renderer>(window_.handle(), deviceContext_, useRasterBackend_);
 }
 
 void Engine::mainLoop()
 {
     while (!window_.shouldClose()) {
         if (framebufferResized_) {
-            framebufferResized_    = false;
-            int w = 0;
-            int h = 0;
-            window_.framebufferSize(w, h);
-            if (w > 0 && h > 0) {
-                swapchain_.recreate(deviceContext_, window_.handle());
-            }
+            framebufferResized_ = false;
+            renderer_->notifyFramebufferResized();
         }
+        renderer_->draw();
         window_.pollEvents();
     }
 }

@@ -11,6 +11,7 @@ namespace detail {
 struct RayTracingFeatureChain {
     vk::PhysicalDeviceRayQueryFeaturesKHR               rayQuery{};
     vk::PhysicalDeviceAccelerationStructureFeaturesKHR   asFeat{};
+    vk::PhysicalDeviceVulkan11Features                v11{};
     vk::PhysicalDeviceVulkan12Features                v12{};
     vk::PhysicalDeviceVulkan13Features                v13{};
     vk::PhysicalDeviceFeatures2                       features2{};
@@ -29,7 +30,10 @@ struct RayTracingFeatureChain {
         v12.scalarBlockLayout               = vk::True;
         v12.bufferDeviceAddress             = vk::True;
 
-        v13.pNext            = &v12;
+        v11.pNext               = &v12;
+        v11.shaderDrawParameters = vk::True;
+
+        v13.pNext            = &v11;
         v13.synchronization2 = vk::True;
         v13.dynamicRendering = vk::True;
 
