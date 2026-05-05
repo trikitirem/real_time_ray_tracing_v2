@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "engine/camera.hpp"
+#include "engine/input_controller.hpp"
 #include "engine/window.hpp"
 #include "renderer/shared/device_config.hpp"
 #include "renderer/shared/device_context.hpp"
@@ -34,6 +35,7 @@ private:
     std::unique_ptr<renderer::Renderer> renderer_;
     scene::Scene            scene_{};
     Camera                  camera_{};
+    InputController         input_{};
 
     bool framebufferResized_ = false;
 };

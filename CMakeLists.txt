@@ -80,6 +80,7 @@ FetchContent_MakeAvailable(glm)
 add_executable(real_time_ray_tracing_v2
         main.cpp
         src/engine/window.cpp
+        src/engine/input_controller.cpp
         src/engine/engine.cpp
         src/renderer/shared/device_context.cpp
         src/renderer/shared/vulkan_dynamic_dispatch.cpp

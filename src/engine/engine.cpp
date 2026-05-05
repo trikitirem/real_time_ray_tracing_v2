@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <filesystem>
 
+#include "engine/delta_time.hpp"
 #include "renderer/raster/device_config.hpp"
 #include "renderer/ray_tracing/device_config.hpp"
 #include "scene/primitives/cube.hpp"
@@ -65,6 +66,7 @@ void Engine::initWindow()
     window_.init(kInitialWidth, kInitialHeight, "real_time_ray_tracing_v2");
     window_.setResizeCallback(
         [this](int /*w*/, int /*h*/) { framebufferResized_ = true; });
+    input_.attach(window_.handle());
 }
 
 void Engine::initVulkan()
@@ -82,13 +84,16 @@ void Engine::initVulkan()
 void Engine::mainLoop()
 {
     while (!window_.shouldClose()) {
+        DeltaTime::instance().tick();
+        window_.pollEvents();
+        input_.begin_frame();
+        input_.poll();
         if (framebufferResized_) {
             framebufferResized_ = false;
             renderer_->notifyFramebufferResized();
         }
         renderer_->set_camera(camera_);
         renderer_->draw();
-        window_.pollEvents();
     }
 }
 
