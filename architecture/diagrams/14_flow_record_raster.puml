@@ -1,0 +1,51 @@
+@startuml 14_flow_record_raster
+' Generate (z architecture/diagrams): plantuml -tsvg -tpng -o ../out 14_flow_record_raster.puml
+
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+}
+
+title RasterFrameRecorder::record
+
+start
+
+:begin command buffer\n(Renderer);
+
+:RasterFrameRecorder.record(cmd, ctx);
+
+:beginRenderPass\n(clear color + depth);
+
+:setViewport / setScissor;
+
+:bindPipeline(graphics);
+
+if (camera_uniform_set?) then (tak)
+  :bind camera descriptors;
+endif
+
+if (scene_data valid?) then (tak)
+  while (kazdy RasterDrawItem?) is (tak)
+    if (ma teksture?) then (tak)
+      :update + bind texture descriptors;
+    endif
+    :pushConstants(model, albedo);
+    :bindVertexBuffers;
+    :bindIndexBuffer;
+    :drawIndexed;
+  endwhile (nie)
+else (nie)
+endif
+
+:endRenderPass;
+
+:end command buffer;
+
+stop
+
+@enduml

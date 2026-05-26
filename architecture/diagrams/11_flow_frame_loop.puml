@@ -1,0 +1,46 @@
+@startuml 11_flow_frame_loop
+' Generate (z architecture/diagrams): plantuml -tsvg -tpng -o ../out 11_flow_frame_loop.puml
+
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+}
+skinparam activityDiamond {
+  BackgroundColor #FFFBEB
+  BorderColor #F59E0B
+}
+
+title Petla glowna (Engine::mainLoop)
+
+start
+
+while (window.shouldClose == false?) is (tak)
+
+  :DeltaTime.tick;
+
+  :Window.pollEvents;
+
+  :InputController.begin_frame;
+  :InputController.poll;
+
+  :Camera.update_from_input;
+
+  if (framebufferResized?) then (tak)
+    :Renderer.notifyFramebufferResized;
+  else (nie)
+  endif
+
+  :Renderer.set_camera;
+
+  :Renderer.draw;
+
+endwhile (nie)
+
+stop
+
+@enduml

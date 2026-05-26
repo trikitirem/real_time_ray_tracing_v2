@@ -1,0 +1,42 @@
+@startuml 13_flow_load_scene
+' Generate (z architecture/diagrams): plantuml -tsvg -tpng -o ../out 13_flow_load_scene.puml
+
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam sequenceArrowThickness 1.2
+skinparam participant {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+}
+
+title Renderer::load_scene
+
+participant Engine
+participant Renderer
+participant SceneGpuBuilder
+participant ScenePayload
+participant IRenderBackend
+
+Engine -> Renderer : load_scene(Scene)
+
+alt use_raster
+  Renderer -> SceneGpuBuilder : RasterSceneGpuBuilder.build(ctx, scene)
+else ray tracing
+  Renderer -> SceneGpuBuilder : RtSceneGpuBuilder.build(ctx, scene)
+end
+
+SceneGpuBuilder --> ScenePayload : ScenePayload
+
+Renderer -> IRenderBackend : load_scene(payload)
+
+alt raster backend
+  IRenderBackend -> IRenderBackend : RasterSceneGpuData\nget_if + przeniesienie
+else RT backend
+  IRenderBackend -> IRenderBackend : RtSceneGpuData\nget_if + przeniesienie
+  IRenderBackend -> IRenderBackend : aktualizacja descriptorow
+  IRenderBackend -> IRenderBackend : rebuild_acceleration_structures()\nBLAS + TLAS
+end
+
+@enduml

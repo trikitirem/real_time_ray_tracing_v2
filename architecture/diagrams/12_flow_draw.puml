@@ -1,0 +1,55 @@
+@startuml 12_flow_draw
+' Generate (z architecture/diagrams): plantuml -tsvg -tpng -o ../out 12_flow_draw.puml
+
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam sequenceArrowThickness 1.2
+skinparam participant {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+}
+skinparam sequenceLifeLineBorderColor #CBD5E1
+
+title Renderer::draw (klatka)
+
+participant Engine
+participant Renderer
+participant Vulkan
+participant IRenderBackend
+
+Engine -> Renderer : draw()
+
+alt framebuffer_resized
+  Renderer -> Renderer : recreate_swapchain()
+end
+
+Renderer -> IRenderBackend : update_camera()
+
+Renderer -> Vulkan : waitForFences(in_flight)
+
+Renderer -> Vulkan : acquireNextImageKHR()
+
+alt acquire out of date
+  Renderer -> Renderer : recreate_swapchain()
+  Renderer --> Engine : return
+end
+
+Renderer -> Vulkan : resetFences()
+
+Renderer -> Renderer : record_command_buffer()
+
+Renderer -> IRenderBackend : record(cmd, frame_ctx)
+
+Renderer -> Vulkan : queue.submit(wait image_available,\nsignal render_finished)
+
+Renderer -> Vulkan : queue.presentKHR()
+
+alt present out of date / suboptimal
+  Renderer -> Renderer : recreate_swapchain()
+end
+
+Renderer -> Renderer : current_frame++
+
+@enduml

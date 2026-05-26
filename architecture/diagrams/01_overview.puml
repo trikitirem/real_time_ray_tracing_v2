@@ -1,0 +1,104 @@
+@startuml 01_overview
+' Generate: plantuml -tsvg -tpng -o architecture/out architecture/diagrams/01_overview.puml
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam handwritten false
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam ArrowThickness 1.2
+skinparam linetype ortho
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+  BorderThickness 1
+}
+
+skinparam classAbstract {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+  FontStyle italic
+}
+
+skinparam package {
+  BackgroundColor #E0F2FE
+  BorderColor #0284C7
+  FontColor #0F172A
+  FontStyle bold
+  BorderThickness 1.5
+}
+
+skinparam title {
+  FontColor #1E293B
+  FontSize 16
+  FontStyle bold
+}
+
+title Wysokopoziomowa architektura silnika
+
+package engine {
+
+  class Engine {
+    + run() : int
+  }
+
+  class Window
+  class Camera
+  class InputController
+}
+
+class "Scene (CPU)" as SceneCPU #ECFDF5;line:059669;text:064E3B {
+  modele, meshe, materialy
+}
+
+package renderer #F8FAFC;line:64748B;text:334155 {
+
+  class DeviceContext {
+    Vulkan instance / device
+    DeviceConfig zalezny od trybu
+  }
+
+  class Renderer {
+    - use_raster_ : bool
+    + load_scene()
+    + set_camera()
+    + draw()
+  }
+
+  abstract class IRenderBackend {
+    + create()
+    + destroy()
+    + load_scene()
+    + update_camera()
+    + record()
+  }
+
+  abstract class SceneGpuBuilderBase {
+    + build() : ScenePayload
+  }
+
+  class ScenePayload {
+    + backend : BackendKind
+    + type-erased GPU data
+  }
+}
+
+Engine *-- Window
+Engine *-- Camera
+Engine *-- InputController
+Engine *-- SceneCPU
+Engine *-- DeviceContext
+Engine o-- Renderer
+
+Renderer o--> IRenderBackend
+Renderer ..> SceneCPU
+Renderer ..> Camera
+Renderer ..> DeviceContext
+
+SceneGpuBuilderBase ..> ScenePayload
+IRenderBackend ..> ScenePayload
+Renderer ..> SceneGpuBuilderBase
+
+@enduml

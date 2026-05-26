@@ -1,0 +1,158 @@
+@startuml 07_ray_tracing_backend
+' Generate: plantuml -tsvg -tpng -o architecture/out architecture/diagrams/07_ray_tracing_backend.puml
+
+left to right direction
+skinparam linetype ortho
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam handwritten false
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam ArrowThickness 1.2
+skinparam nodesep 40
+skinparam ranksep 35
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+  BorderThickness 1
+}
+
+skinparam classAbstract {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+  FontStyle italic
+}
+
+skinparam package {
+  BackgroundColor #F5F3FF
+  BorderColor #7C3AED
+  FontColor #4C1D95
+  FontStyle bold
+  BorderThickness 1.5
+}
+
+skinparam title {
+  FontColor #1E293B
+  FontSize 16
+  FontStyle bold
+}
+
+title Renderer - RayTracing
+
+class Scene #ECFDF5;line:059669;text:064E3B {
+  scene::Scene
+}
+
+class DeviceContext #F8FAFC;line:64748B;text:334155
+
+package "renderer::ray_tracing" {
+
+  together {
+    abstract class SceneGpuBuilderBase
+    class RtSceneGpuBuilder {
+      + build() : ScenePayload
+    }
+  }
+
+  class ScenePayload {
+    + backend
+    + set()
+    + get_if()
+  }
+
+  together {
+    abstract class IRenderBackend
+    class RtRenderBackend {
+      + create()
+      + destroy()
+      + load_scene()
+      + update_camera()
+      + record()
+    }
+  }
+
+  class RtSceneGpuData {
+    + draw_items
+    + vertex_buffers
+    + index_buffers
+    + reflection buffers
+    + valid
+  }
+
+  class RtDrawItem
+
+  class ReflectionInstanceLutEntry
+
+  together {
+    class BlasBuilder {
+      + build()
+    }
+    class BlasBuildResult
+  }
+
+  together {
+    class TlasBuilder {
+      + build()
+    }
+    class TlasBuildResult
+  }
+
+  together {
+    abstract class GraphicsPipeline
+    class RayTracingPipeline {
+      + create()
+      + destroy()
+    }
+  }
+
+  together {
+    abstract class FrameRecorder
+    class RayTracingFrameRecorder {
+      + record()
+      + set_scene_data()
+    }
+  }
+
+  together {
+    class CameraUbo
+    class MaterialGpu
+  }
+
+  SceneGpuBuilderBase -[hidden]right- ScenePayload
+  ScenePayload -[hidden]right- IRenderBackend
+  IRenderBackend -[hidden]right- RtSceneGpuData
+  RtSceneGpuData -[hidden]right- RtDrawItem
+  RtDrawItem -[hidden]right- BlasBuilder
+  BlasBuilder -[hidden]right- TlasBuilder
+  TlasBuilder -[hidden]right- GraphicsPipeline
+  GraphicsPipeline -[hidden]right- FrameRecorder
+}
+
+SceneGpuBuilderBase <|-- RtSceneGpuBuilder
+IRenderBackend <|-- RtRenderBackend
+GraphicsPipeline <|-- RayTracingPipeline
+FrameRecorder <|-- RayTracingFrameRecorder
+
+RtSceneGpuBuilder ..> Scene
+RtSceneGpuBuilder ..> ScenePayload
+RtRenderBackend ..> ScenePayload
+
+RtRenderBackend *-- RayTracingPipeline
+RtRenderBackend *-- RayTracingFrameRecorder
+RtRenderBackend o-- RtSceneGpuData
+RtRenderBackend *-- BlasBuilder
+RtRenderBackend *-- TlasBuilder
+RtRenderBackend o-- BlasBuildResult
+RtRenderBackend o-- TlasBuildResult
+
+RtSceneGpuData *-- RtDrawItem
+BlasBuilder ..> RtSceneGpuData
+TlasBuilder ..> BlasBuildResult
+
+DeviceContext ..> RtSceneGpuBuilder
+DeviceContext ..> RtRenderBackend
+
+@enduml

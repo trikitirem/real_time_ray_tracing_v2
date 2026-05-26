@@ -1,0 +1,117 @@
+@startuml 04_renderer_facade_di
+' Generate: plantuml -tsvg -tpng -o architecture/out architecture/diagrams/04_renderer_facade_di.puml
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam handwritten false
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam ArrowThickness 1.2
+skinparam linetype ortho
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+  BorderThickness 1
+}
+
+skinparam classAbstract {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+  FontStyle italic
+}
+
+skinparam package {
+  BackgroundColor #F8FAFC
+  BorderColor #64748B
+  FontColor #334155
+  FontStyle bold
+  BorderThickness 1.5
+}
+
+skinparam title {
+  FontColor #1E293B
+  FontSize 16
+  FontStyle bold
+}
+
+title Renderer
+
+class Scene #ECFDF5;line:059669;text:064E3B {
+  scene::Scene
+}
+
+class Camera {
+  engine::Camera
+}
+
+package "renderer::shared" {
+
+  class Renderer {
+    - use_raster_ : bool
+    - backend_
+    - swapchain_
+    + load_scene()
+    + set_camera()
+    + draw()
+  }
+
+  abstract class IRenderBackend {
+    + create()
+    + destroy()
+    + load_scene()
+    + update_camera()
+    + record()
+  }
+
+  abstract class SceneGpuBuilderBase {
+    + build() : ScenePayload
+  }
+
+  class ScenePayload {
+    + backend : BackendKind
+    + set()
+    + get_if()
+  }
+
+  enum BackendKind {
+    raster
+    ray_tracing
+  }
+
+  abstract class FrameRecorder {
+    + record()
+  }
+
+  class FrameRecordContext {
+    + extent
+    + frameIndex
+    + imageIndex
+    + swapchainImage
+    + depthImage
+  }
+
+  class DeviceContext
+  class Swapchain
+}
+
+Renderer *-- Swapchain
+Renderer o--> IRenderBackend
+Renderer ..> DeviceContext
+Renderer ..> Scene
+Renderer ..> Camera
+Renderer ..> SceneGpuBuilderBase
+
+SceneGpuBuilderBase ..> ScenePayload
+ScenePayload --> BackendKind
+IRenderBackend ..> ScenePayload
+IRenderBackend ..> FrameRecordContext
+IRenderBackend ..> Camera
+IRenderBackend ..> DeviceContext
+IRenderBackend ..> Swapchain
+
+FrameRecorder ..> FrameRecordContext
+IRenderBackend ..> FrameRecorder
+
+@enduml

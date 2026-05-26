@@ -1,0 +1,97 @@
+@startuml Warstwa "Engine"
+' Generate: plantuml -tsvg -tpng -o architecture/out architecture/diagrams/02_engine.puml
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam handwritten false
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam ArrowThickness 1.2
+skinparam linetype ortho
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+  BorderThickness 1
+}
+
+skinparam package {
+  BackgroundColor #E0F2FE
+  BorderColor #0284C7
+  FontColor #0F172A
+  FontStyle bold
+  BorderThickness 1.5
+}
+
+skinparam title {
+  FontColor #1E293B
+  FontSize 16
+  FontStyle bold
+}
+
+title Warstwa engine
+
+package engine {
+
+  class Engine {
+    - useRasterBackend_ : bool
+    - rasterConfig_ : DeviceConfig
+    - rayTracingConfig_ : DeviceConfig
+    - framebufferResized_ : bool
+    + run() : int
+    - initTestScene()
+    - initWindow()
+    - initVulkan()
+    - mainLoop()
+  }
+
+  class Window {
+    + init()
+    + handle() : GLFWwindow*
+    + shouldClose()
+    + pollEvents()
+    + setResizeCallback()
+  }
+
+  class Camera {
+    + position
+    + orientation
+    + update_from_input()
+    + view_matrix()
+    + projection_matrix()
+  }
+
+  class InputController {
+    + attach()
+    + begin_frame()
+    + poll()
+  }
+
+  class DeltaTime {
+    + {static} instance()
+    + tick()
+    + seconds() : float
+  }
+}
+
+class GLFWwindow <<external>> #F1F5F9;line:94A3B8;text:475569
+
+class Renderer <<external>> #F8FAFC;line:64748B;text:334155 {
+  renderer::Renderer
+}
+
+Engine *-- Window
+Engine *-- Camera
+Engine *-- InputController
+Engine o-- Renderer
+
+Window ..> GLFWwindow
+InputController ..> GLFWwindow
+
+Camera ..> InputController
+Camera ..> DeltaTime
+
+Engine ..> DeltaTime
+
+@enduml

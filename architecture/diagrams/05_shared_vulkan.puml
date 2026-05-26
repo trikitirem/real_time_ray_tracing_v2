@@ -1,0 +1,151 @@
+@startuml 05_shared_vulkan
+' Generate: plantuml -tsvg -tpng -o architecture/out architecture/diagrams/05_shared_vulkan.puml
+
+left to right direction
+skinparam linetype ortho
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam handwritten false
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam ArrowThickness 1.2
+skinparam nodesep 28
+skinparam ranksep 65
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+  BorderThickness 1
+}
+
+skinparam classAbstract {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+  FontStyle italic
+}
+
+skinparam package {
+  BackgroundColor #F8FAFC
+  BorderColor #64748B
+  FontColor #334155
+  FontStyle bold
+  BorderThickness 1.5
+}
+
+skinparam title {
+  FontColor #1E293B
+  FontSize 16
+  FontStyle bold
+}
+
+title Współdzielone - infrastruktura Vulkan
+
+package "renderer::shared" #F8FAFC;line:64748B;text:334155 {
+
+  class DeviceContext {
+    + init()
+    + instance()
+    + physicalDevice()
+    + device()
+    + graphicsQueue()
+    + presentQueue()
+  }
+
+  class DeviceConfig {
+    + instanceLayers
+    + deviceExtensions
+    + deviceFeaturesChainHead
+  }
+
+  DeviceContext -[hidden]down- DeviceConfig
+
+  class Swapchain {
+    + create()
+    + recreate()
+    + extent()
+    + imageViews()
+  }
+
+  abstract class GraphicsPipeline {
+    + pipeline()
+    + pipeline_layout()
+    + find_depth_format()
+  }
+
+  class UniformSet {
+    + layout()
+    + set()
+    + bind()
+    + update_uniform_buffer()
+    + update_storage_buffer()
+  }
+}
+
+package "renderer::buffers" #F1F5F9;line:94A3B8;text:475569 {
+
+  abstract class BaseBuffer {
+    + buffer()
+    + size_bytes()
+    + kind()
+  }
+
+  class GpuBuffer {
+    + device_address()
+  }
+
+  class HostVisibleBuffer {
+    + update()
+    + write_bytes()
+  }
+
+  GpuBuffer -[hidden]down- HostVisibleBuffer
+
+  enum BufferKind {
+    vertex
+    index
+    rt_vertex_as_input
+    rt_index_as_input
+    uniform
+    storage
+  }
+}
+
+package "renderer::textures" #F1F5F9;line:94A3B8;text:475569 {
+
+  class TextureResource {
+    + {static} load_from_asset_location()
+    + view()
+    + sampler()
+  }
+}
+
+class AssetLocation #ECFDF5;line:059669;text:064E3B {
+  util::AssetLocation
+}
+
+abstract class IRenderBackend #E0F2FE;line:0284C7;text:0F172A {
+  uzywa shared
+}
+
+DeviceContext ..> DeviceConfig
+Swapchain ..> DeviceContext
+TextureResource ..> DeviceContext
+TextureResource ..> AssetLocation
+
+GpuBuffer --|> BaseBuffer
+HostVisibleBuffer --|> BaseBuffer
+BaseBuffer --> BufferKind
+
+DeviceContext -[hidden]right- Swapchain
+Swapchain -[hidden]right- BaseBuffer
+BaseBuffer -[hidden]right- TextureResource
+
+IRenderBackend ..> DeviceContext
+IRenderBackend ..> Swapchain
+IRenderBackend ..> GraphicsPipeline
+IRenderBackend ..> UniformSet
+IRenderBackend ..> GpuBuffer
+
+@enduml

@@ -1,0 +1,67 @@
+@startuml 10_flow_startup
+' Generate (z architecture/diagrams): plantuml -tsvg -tpng -o ../out 10_flow_startup.puml
+
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+}
+skinparam activityDiamond {
+  BackgroundColor #FFFBEB
+  BorderColor #F59E0B
+}
+
+title Uruchomienie aplikacji (Engine)
+
+start
+
+:Engine(useRasterBackend);
+note right
+  konstruktor:
+  initTestScene()
+end note
+
+:initTestScene();
+note right
+  scena testowa CPU
+  pozycja kamery
+end note
+
+:initWindow();
+note right
+  GLFW, resize callback
+  InputController.attach
+end note
+
+if (useRasterBackend?) then (tak)
+  :DeviceConfig raster;
+else (nie)
+  :DeviceConfig ray tracing;
+endif
+
+:DeviceContext.init(window, cfg);
+
+:utworz Renderer(window, ctx, flaga);
+
+if (useRasterBackend?) then (raster)
+  :RasterRenderBackend;
+else (RT)
+  :RtRenderBackend;
+endif
+
+:swapchain.create;
+:backend.create;
+:command pool + sync;
+
+:load_scene(scene);
+:set_camera(camera);
+
+:mainLoop();
+
+stop
+
+@enduml

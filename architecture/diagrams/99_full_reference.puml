@@ -1,0 +1,429 @@
+@startuml real_time_ray_tracing_v2_classes
+' Full class diagram (reference only — too dense for daily use)
+' Generate: plantuml -tsvg -tpng -o architecture/out architecture/diagrams/99_full_reference.puml
+
+title real_time_ray_tracing_v2 - class diagram (full reference)
+
+package engine {
+
+  class Engine {
+    - useRasterBackend_ : bool
+    - rasterConfig_ : DeviceConfig
+    - rayTracingConfig_ : DeviceConfig
+    - window_ : Window
+    - deviceContext_ : DeviceContext
+    - renderer_ : unique_ptr Renderer
+    - scene_ : Scene
+    - camera_ : Camera
+    - input_ : InputController
+    + run() : int
+  }
+
+  class Window {
+    + init()
+    + handle() : GLFWwindow*
+    + pollEvents()
+  }
+
+  class Camera {
+    + position
+    + orientation
+    + view_matrix()
+    + projection_matrix()
+    + update_from_input()
+  }
+
+  class InputController {
+    + attach()
+    + poll()
+  }
+
+  class DeltaTime {
+    + {static} instance()
+    + tick()
+    + seconds() : float
+  }
+}
+
+package "scene (CPU)" {
+
+  class Scene {
+    + add_model()
+    + models()
+  }
+
+  class Model {
+    + mesh : Mesh
+    + transform : Transform
+  }
+
+  class Mesh {
+    + primitives
+  }
+
+  class MeshPrimitive {
+    + vertices
+    + indices
+    + material : Material
+  }
+
+  class Material {
+    + texture_location
+    + base_color
+    + metalness
+    + roughness
+  }
+
+  class Transform {
+    + matrix
+    + translate()
+    + rotate_y()
+  }
+
+  note as NPrimitives
+    scene::primitives
+    make_cube()
+    make_plane()
+  end note
+}
+
+package util {
+
+  class Vertex {
+    + position
+    + uv
+    + normal
+  }
+
+  class AssetLocation {
+    + directory
+    + filename
+  }
+}
+
+package "renderer::shared" {
+
+  abstract class IRenderBackend {
+    + {abstract} create()
+    + {abstract} destroy()
+    + {abstract} load_scene()
+    + {abstract} update_camera()
+    + {abstract} record()
+  }
+
+  class Renderer {
+    - use_raster_ : bool
+    - backend_ : unique_ptr IRenderBackend
+    - swapchain_ : Swapchain
+    + load_scene()
+    + set_camera()
+    + draw()
+  }
+
+  abstract class SceneGpuBuilderBase {
+    + {abstract} build() : ScenePayload
+  }
+
+  class ScenePayload {
+    + backend : BackendKind
+    + set(value)
+    + get_if()
+  }
+
+  enum BackendKind {
+    raster
+    ray_tracing
+  }
+
+  abstract class FrameRecorder {
+    + {abstract} record()
+  }
+
+  class FrameRecordContext {
+    + extent
+    + frameIndex
+    + imageIndex
+    + swapchainImage
+    + depthImage
+  }
+
+  class DeviceContext {
+    + init()
+    + device()
+    + physicalDevice()
+    + graphicsQueue()
+  }
+
+  class DeviceConfig {
+    + instanceLayers
+    + deviceExtensions
+    + deviceFeaturesChainHead
+  }
+
+  class Swapchain {
+    + create()
+    + recreate()
+    + extent()
+    + imageViews()
+  }
+
+  abstract class GraphicsPipeline {
+    + pipeline()
+    + pipeline_layout()
+  }
+
+  abstract class BaseBuffer {
+    + buffer()
+    + size_bytes()
+    + kind()
+  }
+
+  class GpuBuffer {
+    + device_address()
+  }
+
+  class HostVisibleBuffer {
+    + update()
+    + write_bytes()
+  }
+
+  enum BufferKind {
+    vertex
+    index
+    rt_vertex_as_input
+    rt_index_as_input
+    uniform
+    storage
+  }
+
+  class UniformSet {
+    + layout()
+    + set()
+    + bind()
+    + update_uniform_buffer()
+  }
+
+  class TextureResource {
+    + {static} load_from_asset_location()
+    + view()
+    + sampler()
+  }
+}
+
+package "renderer::raster" {
+
+  class RasterRenderBackend {
+    - pipeline_
+    - frame_recorder_
+    - scene_data_
+    - camera_buffer_
+    - texture_uniform_sets_
+  }
+
+  class RasterSceneGpuBuilder {
+    + build() : ScenePayload
+  }
+
+  class RasterPipeline {
+    + create()
+    + render_pass()
+    + framebuffers()
+    + depth_format()
+  }
+
+  class RasterFrameRecorder {
+    + set_scene_data()
+    + set_camera_uniform_set()
+    + record()
+  }
+
+  class RasterSceneGpuData {
+    + vertex_buffers
+    + index_buffers
+    + draw_items
+    + textures
+    + valid
+  }
+
+  class RasterDrawItem {
+    + vertex_buffer
+    + index_buffer
+    + model_matrix
+    + texture_index
+  }
+
+  class CameraUbo
+  class ModelPushConstant
+}
+
+package "renderer::ray_tracing" {
+
+  class RtRenderBackend {
+    - pipeline_
+    - frame_recorder_
+    - scene_data_
+    - blas_builder_
+    - tlas_builder_
+    - blas_build_
+    - tlas_build_
+  }
+
+  class RtSceneGpuBuilder {
+    + build() : ScenePayload
+  }
+
+  class RayTracingPipeline {
+    + create()
+    + destroy()
+  }
+
+  class RayTracingFrameRecorder {
+    + set_scene_data()
+    + record()
+  }
+
+  class RtSceneGpuData {
+    + vertex_buffers
+    + draw_items
+    + reflection_instance_lut
+    + material_buffer
+    + valid
+  }
+
+  class RtDrawItem {
+    + vertex_buffer
+    + index_buffer
+    + material_index
+  }
+
+  class BlasBuilder {
+    + build() : BlasBuildResult
+  }
+
+  class TlasBuilder {
+    + build() : TlasBuildResult
+  }
+
+  class BlasBuildResult
+  class TlasBuildResult
+  class MaterialGpu
+}
+
+class GLFWwindow
+
+Engine *-- Window
+Engine *-- DeviceContext
+Engine o-- Renderer : creates
+Engine *-- Scene
+Engine *-- Camera
+Engine *-- InputController
+Camera ..> InputController : uses
+Camera ..> DeltaTime : uses
+Window ..> GLFWwindow : uses
+InputController ..> GLFWwindow : uses
+
+DeviceContext ..> DeviceConfig : references
+
+note as NDI
+  Backend switch (DI)
+  Engine.useRasterBackend_
+  -> DeviceConfig preset
+  -> Renderer -> IRenderBackend
+  -> SceneGpuBuilder on load_scene
+end note
+
+Engine .. NDI
+
+Scene "1" *-- "0..*" Model
+Model *-- Mesh
+Model *-- Transform
+Mesh "1" *-- "0..*" MeshPrimitive
+MeshPrimitive --> Material
+MeshPrimitive ..> Vertex : uses
+Material ..> AssetLocation : uses
+NPrimitives .. Scene
+
+Renderer o--> IRenderBackend
+Renderer *-- Swapchain
+Renderer ..> Scene : load_scene
+Renderer ..> Camera : set_camera
+
+IRenderBackend <|-- RasterRenderBackend
+IRenderBackend <|-- RtRenderBackend
+
+SceneGpuBuilderBase <|-- RasterSceneGpuBuilder
+SceneGpuBuilderBase <|-- RtSceneGpuBuilder
+
+SceneGpuBuilderBase ..> ScenePayload : build()
+ScenePayload --> BackendKind
+ScenePayload ..> RasterSceneGpuData : set / get_if
+ScenePayload ..> RtSceneGpuData : set / get_if
+
+IRenderBackend ..> ScenePayload : load_scene()
+IRenderBackend ..> Camera : update_camera()
+IRenderBackend ..> FrameRecordContext : record()
+IRenderBackend ..> DeviceContext
+IRenderBackend ..> Swapchain
+
+Renderer ..> RasterSceneGpuBuilder : if raster
+Renderer ..> RtSceneGpuBuilder : if RT
+
+RasterRenderBackend *-- RasterPipeline
+RasterRenderBackend *-- RasterFrameRecorder
+RasterRenderBackend o-- RasterSceneGpuData
+
+RasterPipeline --|> GraphicsPipeline
+RasterFrameRecorder --|> FrameRecorder
+RasterFrameRecorder --> RasterPipeline
+RasterFrameRecorder --> RasterSceneGpuData
+RasterFrameRecorder ..> UniformSet
+
+RasterSceneGpuData *-- GpuBuffer
+RasterSceneGpuData *-- TextureResource
+RasterSceneGpuData *-- RasterDrawItem
+
+RasterSceneGpuBuilder ..> Scene : reads
+RasterSceneGpuBuilder ..> DeviceContext
+
+RtRenderBackend *-- RayTracingPipeline
+RtRenderBackend *-- RayTracingFrameRecorder
+RtRenderBackend o-- RtSceneGpuData
+RtRenderBackend *-- BlasBuilder
+RtRenderBackend *-- TlasBuilder
+RtRenderBackend o-- BlasBuildResult
+RtRenderBackend o-- TlasBuildResult
+
+RayTracingPipeline --|> GraphicsPipeline
+RayTracingFrameRecorder --|> FrameRecorder
+RayTracingFrameRecorder --> RayTracingPipeline
+RayTracingFrameRecorder --> RtSceneGpuData
+RayTracingFrameRecorder ..> Swapchain
+RayTracingFrameRecorder ..> UniformSet
+
+RtSceneGpuData *-- GpuBuffer
+RtSceneGpuData *-- TextureResource
+RtSceneGpuData *-- RtDrawItem
+
+BlasBuilder ..> RtSceneGpuData
+TlasBuilder ..> BlasBuildResult
+
+RtSceneGpuBuilder ..> Scene : reads
+RtSceneGpuBuilder ..> DeviceContext
+
+GpuBuffer --|> BaseBuffer
+HostVisibleBuffer --|> BaseBuffer
+BaseBuffer --> BufferKind
+
+RasterRenderBackend o-- HostVisibleBuffer
+RasterRenderBackend o-- UniformSet
+RtRenderBackend o-- HostVisibleBuffer
+RtRenderBackend o-- GpuBuffer
+RtRenderBackend o-- UniformSet
+
+TextureResource ..> AssetLocation
+TextureResource ..> DeviceContext
+
+Swapchain ..> DeviceContext
+Renderer ..> DeviceContext
+
+@enduml

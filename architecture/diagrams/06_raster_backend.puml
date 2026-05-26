@@ -1,0 +1,134 @@
+@startuml 06_raster_backend
+' Generate: plantuml -tsvg -tpng -o architecture/out architecture/diagrams/06_raster_backend.puml
+
+left to right direction
+skinparam linetype ortho
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam handwritten false
+skinparam backgroundColor #F4F6F9
+skinparam ArrowColor #64748B
+skinparam ArrowThickness 1.2
+skinparam nodesep 40
+skinparam ranksep 35
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #1E293B
+  BorderThickness 1
+}
+
+skinparam classAbstract {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+  FontStyle italic
+}
+
+skinparam package {
+  BackgroundColor #EEF2FF
+  BorderColor #4F46E5
+  FontColor #312E81
+  FontStyle bold
+  BorderThickness 1.5
+}
+
+skinparam title {
+  FontColor #1E293B
+  FontSize 16
+  FontStyle bold
+}
+
+title Renderer - Raster
+
+class Scene #ECFDF5;line:059669;text:064E3B {
+  scene::Scene
+}
+
+class DeviceContext #F8FAFC;line:64748B;text:334155
+
+package "renderer::raster" {
+
+  together {
+    abstract class SceneGpuBuilderBase
+    class RasterSceneGpuBuilder {
+      + build() : ScenePayload
+    }
+  }
+
+  class ScenePayload {
+    + backend
+    + set()
+    + get_if()
+  }
+
+  together {
+    abstract class IRenderBackend
+    class RasterRenderBackend {
+      + create()
+      + destroy()
+      + load_scene()
+      + update_camera()
+      + record()
+    }
+  }
+
+  together {
+    abstract class GraphicsPipeline
+    class RasterPipeline {
+      + create()
+      + render_pass()
+      + framebuffers()
+    }
+  }
+
+  together {
+    abstract class FrameRecorder
+    class RasterFrameRecorder {
+      + record()
+      + set_scene_data()
+    }
+  }
+
+  class RasterSceneGpuData {
+    + draw_items
+    + vertex_buffers
+    + index_buffers
+    + textures
+    + valid
+  }
+
+  class RasterDrawItem
+
+  together {
+    class CameraUbo
+    class ModelPushConstant
+  }
+
+  SceneGpuBuilderBase -[hidden]right- ScenePayload
+  ScenePayload -[hidden]right- IRenderBackend
+  IRenderBackend -[hidden]right- GraphicsPipeline
+  GraphicsPipeline -[hidden]right- FrameRecorder
+  FrameRecorder -[hidden]right- RasterSceneGpuData
+  RasterSceneGpuData -[hidden]right- RasterDrawItem
+}
+
+SceneGpuBuilderBase <|-- RasterSceneGpuBuilder
+IRenderBackend <|-- RasterRenderBackend
+GraphicsPipeline <|-- RasterPipeline
+FrameRecorder <|-- RasterFrameRecorder
+
+RasterSceneGpuBuilder ..> Scene
+RasterSceneGpuBuilder ..> ScenePayload
+RasterRenderBackend ..> ScenePayload
+
+RasterRenderBackend *-- RasterPipeline
+RasterRenderBackend *-- RasterFrameRecorder
+RasterRenderBackend o-- RasterSceneGpuData
+RasterSceneGpuData *-- RasterDrawItem
+
+DeviceContext ..> RasterSceneGpuBuilder
+DeviceContext ..> RasterRenderBackend
+
+@enduml
