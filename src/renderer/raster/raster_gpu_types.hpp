@@ -22,4 +22,15 @@ struct ModelPushConstant {
     std::uint32_t _pad2 = 0;
 };
 
+struct ShadowPushConstant {
+    glm::mat4 light_space_matrix{ 1.0f };
+    glm::mat4 model{ 1.0f };
+};
+
+struct LightUbo {
+    glm::mat4 light_space_matrix{ 1.0f };
+    glm::vec3 light_dir_to_light{ 0.0f, 1.0f, 1.0f };
+    float _pad0 = 0.0f;
+};
+
 } // namespace renderer::raster

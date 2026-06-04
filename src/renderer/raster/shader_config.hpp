@@ -59,4 +59,48 @@ inline constexpr std::array<vk::DescriptorPoolSize, 2> kTextureDescriptorPoolSiz
     },
 };
 
+inline constexpr std::uint32_t kLightSetIndex = 2;
+inline constexpr std::uint32_t kLightUboBinding = 0;
+inline constexpr std::uint32_t kShadowMapBinding = 1;
+inline constexpr std::uint32_t kShadowSamplerBinding = 2;
+
+inline constexpr std::array<vk::DescriptorSetLayoutBinding, 3> kLightDescriptorBindings = {
+    vk::DescriptorSetLayoutBinding{
+        .binding            = kLightUboBinding,
+        .descriptorType     = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount    = 1,
+        .stageFlags         = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+        .pImmutableSamplers = nullptr,
+    },
+    vk::DescriptorSetLayoutBinding{
+        .binding            = kShadowMapBinding,
+        .descriptorType     = vk::DescriptorType::eSampledImage,
+        .descriptorCount    = 1,
+        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .pImmutableSamplers = nullptr,
+    },
+    vk::DescriptorSetLayoutBinding{
+        .binding            = kShadowSamplerBinding,
+        .descriptorType     = vk::DescriptorType::eSampler,
+        .descriptorCount    = 1,
+        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .pImmutableSamplers = nullptr,
+    },
+};
+
+inline constexpr std::array<vk::DescriptorPoolSize, 3> kLightDescriptorPoolSizes = {
+    vk::DescriptorPoolSize{
+        .type            = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount = 1,
+    },
+    vk::DescriptorPoolSize{
+        .type            = vk::DescriptorType::eSampledImage,
+        .descriptorCount = 1,
+    },
+    vk::DescriptorPoolSize{
+        .type            = vk::DescriptorType::eSampler,
+        .descriptorCount = 1,
+    },
+};
+
 } // namespace renderer::raster

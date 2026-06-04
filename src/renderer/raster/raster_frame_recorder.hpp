@@ -2,6 +2,7 @@
 
 #include "renderer/shared/render_frame_recorder.hpp"
 #include "renderer/raster/raster_scene_gpu_data.hpp"
+#include "renderer/raster/raster_gpu_types.hpp"
 
 namespace renderer::descriptors {
 class UniformSet;
@@ -23,6 +24,14 @@ public:
     {
         texture_uniform_set_ = texture_uniform_set;
     }
+    void set_light_uniform_set(const descriptors::UniformSet* light_uniform_set)
+    {
+        light_uniform_set_ = light_uniform_set;
+    }
+    void set_shadow_push_constant(const ShadowPushConstant& shadow_push)
+    {
+        shadow_push_ = shadow_push;
+    }
 
     void record(vk::CommandBuffer cmd, const FrameRecordContext& ctx) override;
 
@@ -31,6 +40,8 @@ private:
     const RasterSceneGpuData* scene_data_ = nullptr;
     const descriptors::UniformSet* camera_uniform_set_ = nullptr;
     const descriptors::UniformSet* texture_uniform_set_ = nullptr;
+    const descriptors::UniformSet* light_uniform_set_ = nullptr;
+    ShadowPushConstant shadow_push_{};
 };
 
 } // namespace renderer::raster

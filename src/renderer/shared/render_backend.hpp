@@ -23,6 +23,7 @@ public:
     virtual void destroy(DeviceContext& ctx) = 0;
     virtual void load_scene(ScenePayload&& scene_payload) = 0;
     virtual void update_camera(const engine::Camera& camera, vk::Extent2D extent) = 0;
+    virtual void update_light(vk::Extent2D extent) {}
     virtual void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) = 0;
 };
 
