@@ -60,6 +60,7 @@ void Renderer::load_scene(const scene::Scene& scene)
         ray_tracing::RtSceneGpuBuilder builder{};
         backend_->load_scene(builder.build(ctx_, scene));
     }
+    backend_->update_light(swapchain_.extent());
 }
 
 void Renderer::set_camera(const engine::Camera& camera)

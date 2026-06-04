@@ -23,6 +23,7 @@ public:
     void destroy(DeviceContext& ctx) override;
     void load_scene(ScenePayload&& scene_payload) override;
     void update_camera(const engine::Camera& camera, vk::Extent2D extent) override;
+    void update_light(vk::Extent2D extent);
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:
@@ -34,6 +35,8 @@ private:
     std::optional<buffers::HostVisibleBuffer> camera_buffer_;
     std::optional<descriptors::UniformSet> camera_uniform_set_;
     std::vector<descriptors::UniformSet> texture_uniform_sets_{};
+    std::optional<buffers::HostVisibleBuffer> light_buffer_;
+    std::optional<descriptors::UniformSet> light_uniform_set_;
 };
 
 } // namespace renderer::raster
