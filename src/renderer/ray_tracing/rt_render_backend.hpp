@@ -16,6 +16,7 @@
 #include "renderer/shared/buffers/host_visible_buffer.hpp"
 #include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/render_backend.hpp"
+#include "renderer/shared/textures/texture_resource.hpp"
 
 namespace renderer::ray_tracing {
 
@@ -37,6 +38,7 @@ private:
     void destroy_depth_resources();
     void rebuild_acceleration_structures();
     void update_acceleration_structure_descriptor();
+    void update_texture_descriptors();
 
     std::unique_ptr<RayTracingPipeline> pipeline_;
     std::unique_ptr<RayTracingFrameRecorder> frame_recorder_;
@@ -55,6 +57,7 @@ private:
     TlasBuilder tlas_builder_{};
     BlasBuildResult blas_build_{};
     TlasBuildResult tlas_build_{};
+    textures::TextureResource default_albedo_{};
 };
 
 } // namespace renderer::ray_tracing

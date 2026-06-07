@@ -25,6 +25,16 @@ public:
         const vk::raii::Queue&          graphics_queue,
         const util::AssetLocation&      location);
 
+    static TextureResource create_solid_rgba(
+        const vk::raii::PhysicalDevice& physical_device,
+        const vk::raii::Device&         device,
+        const vk::raii::CommandPool&    command_pool,
+        const vk::raii::Queue&          graphics_queue,
+        std::uint8_t                    r,
+        std::uint8_t                    g,
+        std::uint8_t                    b,
+        std::uint8_t                    a = 255);
+
     [[nodiscard]] const vk::raii::Image&       image() const { return image_; }
     [[nodiscard]] const vk::raii::ImageView&   view() const { return view_; }
     [[nodiscard]] const vk::raii::Sampler&     sampler() const { return sampler_; }

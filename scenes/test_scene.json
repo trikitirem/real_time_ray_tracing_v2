@@ -1,0 +1,31 @@
+{
+  "name": "Test",
+  "kind": "viewing",
+  "benchmark": { "duration_seconds": 180.0 },
+  "initial_camera": {
+    "position": [0.0, 1.5, 4.0],
+    "euler_degrees": [0.0, 0.0, 0.0]
+  },
+  "camera_presets": [],
+  "primitives": [
+    {
+      "type": "cube",
+      "position": [0.0, 1.5, 0.0],
+      "scale": [1.0, 1.0, 1.0],
+      "color": [1.0, 0.0, 0.0],
+      "metalness": 0.0,
+      "roughness": 0.7,
+      "texture": "images/texture.jpg"
+    },
+    {
+      "type": "plane",
+      "position": [0.0, -0.001, 0.0],
+      "scale": [50.0, 1.0, 50.0],
+      "color": [0.9, 0.9, 0.9],
+      "metalness": 1.0,
+      "roughness": 0.05
+    }
+  ],
+  "models": [],
+  "stress": { "enabled": false }
+}

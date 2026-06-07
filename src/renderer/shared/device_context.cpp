@@ -1,5 +1,7 @@
 #include "renderer/shared/device_context.hpp"
 
+#include "renderer/ray_tracing/device_config.hpp"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -80,7 +82,87 @@ bool checkDeviceExtensionSupport(const vk::raii::PhysicalDevice& dev,
     return missing.empty();
 }
 
+bool findSuitableDevice(const vk::raii::Instance&          instance,
+                        const vk::raii::SurfaceKHR&      surface,
+                        const std::vector<const char*>&    required_extensions,
+                        vk::raii::PhysicalDevice*          out_device = nullptr)
+{
+    const auto devices = instance.enumeratePhysicalDevices();
+
+    for (const auto& dev : devices) {
+        if (!checkDeviceExtensionSupport(dev, required_extensions)) {
+            continue;
+        }
+
+        const auto    qf       = dev.getQueueFamilyProperties();
+        std::uint32_t graphics = UINT32_MAX;
+        std::uint32_t present  = UINT32_MAX;
+        for (std::uint32_t i = 0; i < qf.size(); ++i) {
+            if (qf[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+                graphics = i;
+            }
+            if (dev.getSurfaceSupportKHR(i, *surface)) {
+                present = i;
+            }
+            if (graphics != UINT32_MAX && present != UINT32_MAX) {
+                break;
+            }
+        }
+        if (graphics == UINT32_MAX || present == UINT32_MAX) {
+            continue;
+        }
+
+        if (out_device != nullptr) {
+            *out_device = dev;
+        }
+        return true;
+    }
+    return false;
+}
+
 } // namespace
+
+bool probeRayTracingSupport(GLFWwindow* window)
+{
+    if (window == nullptr) {
+        return false;
+    }
+
+    static std::once_flag dispatch_init;
+    std::call_once(dispatch_init, []() {
+        VULKAN_HPP_DEFAULT_DISPATCHER.init();
+    });
+
+    vk::raii::Context context{};
+
+    vk::ApplicationInfo app{
+        .pApplicationName   = "real_time_ray_tracing_v2_probe",
+        .applicationVersion = VK_MAKE_API_VERSION(0, 0, 1, 0),
+        .pEngineName        = "rtrt_v2",
+        .engineVersion      = VK_MAKE_API_VERSION(0, 0, 1, 0),
+        .apiVersion         = VK_API_VERSION_1_3,
+    };
+
+    const auto glfw_extensions = getGlfwRequiredInstanceExtensions();
+    vk::InstanceCreateInfo instance_create_info{
+        .pApplicationInfo        = &app,
+        .enabledExtensionCount   = static_cast<std::uint32_t>(glfw_extensions.size()),
+        .ppEnabledExtensionNames = glfw_extensions.data(),
+    };
+
+    const vk::raii::Instance instance(context, instance_create_info);
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Instance{ *instance });
+
+    VkSurfaceKHR raw_surface = VK_NULL_HANDLE;
+    if (glfwCreateWindowSurface(static_cast<VkInstance>(*instance), window, nullptr, &raw_surface)
+        != VK_SUCCESS) {
+        return false;
+    }
+    const vk::raii::SurfaceKHR surface(instance, raw_surface);
+
+    const auto& rt_extensions = ray_tracing::makeRayTracingDeviceConfig().deviceExtensions;
+    return findSuitableDevice(instance, surface, rt_extensions, nullptr);
+}
 
 DeviceContext::DeviceContext()
     : context_()

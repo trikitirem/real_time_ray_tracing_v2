@@ -15,10 +15,27 @@
 
 namespace renderer::raster {
 
+namespace {
+
+descriptors::UniformSet make_texture_uniform_set(const vk::raii::Device& device)
+{
+    return descriptors::UniformSet(
+        device,
+        descriptors::UniformSetConfig{
+            .bindings   = kTextureDescriptorBindings,
+            .pool_sizes = kTextureDescriptorPoolSizes,
+            .set_index  = kTextureSetIndex,
+            .max_sets   = 1,
+        });
+}
+
+} // namespace
+
 RasterRenderBackend::~RasterRenderBackend() = default;
 
 void RasterRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
 {
+    ctx_ = &ctx;
     pipeline_ = std::make_unique<RasterPipeline>();
     pipeline_->create(ctx, swapchain, util::raster_shader("default.spv").full_path());
     frame_recorder_ = std::make_unique<RasterFrameRecorder>(*pipeline_);
@@ -41,19 +58,6 @@ void RasterRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
         kCameraBinding,
         *camera_buffer_->buffer(),
         sizeof(CameraUbo));
-
-    texture_uniform_sets_.clear();
-    texture_uniform_sets_.reserve(kFramesInFlight);
-    for (std::uint32_t i = 0; i < kFramesInFlight; ++i) {
-        texture_uniform_sets_.emplace_back(
-            ctx.device(),
-            descriptors::UniformSetConfig{
-                .bindings = kTextureDescriptorBindings,
-                .pool_sizes = kTextureDescriptorPoolSizes,
-                .set_index = kTextureSetIndex,
-                .max_sets = 1,
-            });
-    }
 
     light_buffer_.emplace(
         ctx.physicalDevice(),
@@ -83,18 +87,35 @@ void RasterRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
         kShadowSamplerBinding,
         pipeline_->shadow_sampler_handle());
 
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.queueFamilyIndex = ctx.graphicsQueueFamily();
+    const vk::raii::CommandPool command_pool(ctx.device(), pool_info);
+    default_albedo_ = textures::TextureResource::create_solid_rgba(
+        ctx.physicalDevice(), ctx.device(), command_pool, ctx.graphicsQueue(), 255, 255, 255, 255);
+
+    default_texture_uniform_set_ = make_texture_uniform_set(ctx.device());
+    default_texture_uniform_set_->update_sampled_image(
+        kTextureImageBinding,
+        *default_albedo_.view(),
+        vk::ImageLayout::eShaderReadOnlyOptimal);
+    default_texture_uniform_set_->update_sampler(
+        kTextureSamplerBinding,
+        *default_albedo_.sampler());
+
     frame_recorder_->set_camera_uniform_set(&*camera_uniform_set_);
     frame_recorder_->set_light_uniform_set(&*light_uniform_set_);
-    if (!texture_uniform_sets_.empty()) {
-        frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_.front());
-    }
+    frame_recorder_->set_default_texture_uniform_set(&*default_texture_uniform_set_);
+    frame_recorder_->set_per_texture_uniform_sets(&per_texture_uniform_sets_);
 }
 
 void RasterRenderBackend::destroy(DeviceContext& ctx)
 {
     (void)ctx;
     scene_data_ = {};
-    texture_uniform_sets_.clear();
+    default_albedo_ = {};
+    per_texture_uniform_sets_.clear();
+    default_texture_uniform_set_.reset();
     light_uniform_set_.reset();
     light_buffer_.reset();
     camera_uniform_set_.reset();
@@ -104,6 +125,7 @@ void RasterRenderBackend::destroy(DeviceContext& ctx)
         pipeline_->destroy();
         pipeline_.reset();
     }
+    ctx_ = nullptr;
 }
 
 void RasterRenderBackend::load_scene(ScenePayload&& scene_payload)
@@ -116,13 +138,37 @@ void RasterRenderBackend::load_scene(ScenePayload&& scene_payload)
         throw std::runtime_error("RasterRenderBackend::load_scene payload type mismatch");
     }
     scene_data_ = std::move(*typed);
+    build_texture_descriptor_sets();
     if (frame_recorder_) {
         frame_recorder_->set_scene_data(&scene_data_);
-        if (!texture_uniform_sets_.empty()) {
-            frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_.front());
-        } else {
-            frame_recorder_->set_texture_uniform_set(nullptr);
-        }
+        frame_recorder_->set_default_texture_uniform_set(
+            default_texture_uniform_set_ ? &*default_texture_uniform_set_ : nullptr);
+        frame_recorder_->set_per_texture_uniform_sets(&per_texture_uniform_sets_);
+    }
+}
+
+void RasterRenderBackend::build_texture_descriptor_sets()
+{
+    if (ctx_ == nullptr || default_albedo_.view() == nullptr) {
+        per_texture_uniform_sets_.clear();
+        return;
+    }
+
+    per_texture_uniform_sets_.clear();
+    per_texture_uniform_sets_.reserve(scene_data_.texture_views.size());
+
+    const vk::Sampler sampler_to_use = scene_data_.texture_sampler != vk::Sampler{}
+                                           ? scene_data_.texture_sampler
+                                           : *default_albedo_.sampler();
+
+    for (const vk::ImageView view : scene_data_.texture_views) {
+        descriptors::UniformSet texture_set = make_texture_uniform_set(ctx_->device());
+        texture_set.update_sampled_image(
+            kTextureImageBinding,
+            view,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+        texture_set.update_sampler(kTextureSamplerBinding, sampler_to_use);
+        per_texture_uniform_sets_.push_back(std::move(texture_set));
     }
 }
 
@@ -187,18 +233,16 @@ void RasterRenderBackend::update_light(vk::Extent2D /*extent*/)
 
 void RasterRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx)
 {
+    (void)frame_ctx;
     if (frame_recorder_) {
         frame_recorder_->set_scene_data(&scene_data_);
         frame_recorder_->set_camera_uniform_set(
             camera_uniform_set_ ? &*camera_uniform_set_ : nullptr);
         frame_recorder_->set_light_uniform_set(
             light_uniform_set_ ? &*light_uniform_set_ : nullptr);
-        if (!texture_uniform_sets_.empty()) {
-            const std::size_t idx = static_cast<std::size_t>(frame_ctx.frameIndex % texture_uniform_sets_.size());
-            frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_[idx]);
-        } else {
-            frame_recorder_->set_texture_uniform_set(nullptr);
-        }
+        frame_recorder_->set_default_texture_uniform_set(
+            default_texture_uniform_set_ ? &*default_texture_uniform_set_ : nullptr);
+        frame_recorder_->set_per_texture_uniform_sets(&per_texture_uniform_sets_);
     }
     frame_recorder_->record(cmd, frame_ctx);
 }

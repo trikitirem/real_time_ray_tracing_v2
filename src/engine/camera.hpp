@@ -43,6 +43,12 @@ public:
         return projection_matrix(aspect) * view_matrix();
     }
 
+    void reset_pitch_state()
+    {
+        const glm::vec3 euler = glm::eulerAngles(orientation);
+        pitch_accumulated_rad_ = euler.x;
+    }
+
     void update_from_input(const InputController& input)
     {
         const float dt = DeltaTime::instance().seconds();

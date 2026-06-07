@@ -10,6 +10,8 @@ struct GLFWwindow;
 
 namespace renderer {
 
+[[nodiscard]] bool probeRayTracingSupport(GLFWwindow* window);
+
 // Reads DeviceConfig via reference passed to init(); does not copy DeviceConfig.
 // The referenced object must outlive DeviceContext (e.g. Engine member configs declared before deviceContext_).
 class DeviceContext {

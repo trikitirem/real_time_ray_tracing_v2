@@ -94,7 +94,7 @@ VertexOutput vertMain(VsInput input) {
 
 [shader("fragment")]
 float4 fragMain(VertexOutput v) : SV_Target {
-    const float3 lightDirToLight = normalize(float3(0.7, 1.0, 0.2));
+    const float3 lightDirToLight = normalize(float3(0.0, 1.0, 1.0));
     const float3 lightColor = float3(1.0, 1.0, 1.0);
     const float ambientStrength = 0.12;
     const float specularStrength = 0.7;

@@ -10,3 +10,6 @@ out/
 
 # Local notes, diagram plan, exports (not tracked)
 docs/
+
+# Benchmark measurement outputs
+measurements/*.json

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <vulkan/vulkan_raii.hpp>
@@ -36,6 +37,10 @@ public:
     void load_scene(const scene::Scene& scene);
     void set_camera(const engine::Camera& camera);
     void draw();
+    void switch_backend(bool use_raster);
+
+    [[nodiscard]] vk::Extent2D swapchain_extent() const { return swapchain_.extent(); }
+    [[nodiscard]] std::string present_mode_string() const;
 
     void notifyFramebufferResized() { framebuffer_resized_ = true; }
 
@@ -52,7 +57,7 @@ private:
 
     GLFWwindow*      window_;
     DeviceContext&   ctx_;
-    const bool       use_raster_;
+    bool             use_raster_;
 
     Swapchain swapchain_;
     std::unique_ptr<IRenderBackend> backend_;

@@ -11,12 +11,33 @@
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <system_error>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 namespace renderer {
+
+namespace {
+
+std::string present_mode_to_string(const vk::PresentModeKHR mode)
+{
+    switch (mode) {
+    case vk::PresentModeKHR::eImmediate:
+        return "immediate";
+    case vk::PresentModeKHR::eMailbox:
+        return "mailbox";
+    case vk::PresentModeKHR::eFifo:
+        return "fifo";
+    case vk::PresentModeKHR::eFifoRelaxed:
+        return "fifo_relaxed";
+    default:
+        return "unknown";
+    }
+}
+
+} // namespace
 
 Renderer::Renderer(GLFWwindow* window, DeviceContext& ctx, bool useRasterBackend)
     : window_(window)
@@ -67,6 +88,35 @@ void Renderer::set_camera(const engine::Camera& camera)
 {
     camera_ = &camera;
     backend_->update_camera(camera, swapchain_.extent());
+}
+
+std::string Renderer::present_mode_string() const
+{
+    return present_mode_to_string(swapchain_.presentMode());
+}
+
+void Renderer::switch_backend(const bool use_raster)
+{
+    ctx_.device().waitIdle();
+
+    destroy_sync_objects();
+    destroy_command_pool_and_buffers();
+    backend_->destroy(ctx_);
+
+    use_raster_ = use_raster;
+    if (use_raster) {
+        backend_ = std::make_unique<raster::RasterRenderBackend>();
+    } else {
+        backend_ = std::make_unique<ray_tracing::RtRenderBackend>();
+    }
+    backend_->create(ctx_, swapchain_);
+
+    if (loaded_scene_ != nullptr) {
+        load_scene(*loaded_scene_);
+    }
+
+    create_command_pool_and_buffers();
+    create_sync_objects();
 }
 
 void Renderer::create_command_pool_and_buffers()
