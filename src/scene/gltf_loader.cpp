@@ -26,6 +26,7 @@ Transform make_instance_transform(const ModelConfig& config)
 {
     Transform xf{};
     xf.translate(config.position.x, config.position.y, config.position.z);
+    xf.apply_euler_degrees(config.euler_degrees);
     xf.scale(config.scale.x, config.scale.y, config.scale.z);
     return xf;
 }

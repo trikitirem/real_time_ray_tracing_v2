@@ -39,6 +39,7 @@ enum class SceneKind {
 struct PrimitiveConfig {
     std::string type;
     glm::vec3   position{ 0.0f };
+    glm::vec3   euler_degrees{ 0.0f };
     glm::vec3   scale{ 1.0f };
     glm::vec3   color{ 1.0f };
     float       metalness  = 0.0f;
@@ -49,6 +50,7 @@ struct PrimitiveConfig {
 struct ModelConfig {
     std::string gltf_path;
     glm::vec3   position{ 0.0f };
+    glm::vec3   euler_degrees{ 0.0f };
     glm::vec3   scale{ 1.0f };
 };
 

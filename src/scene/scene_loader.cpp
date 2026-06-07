@@ -50,8 +50,10 @@ PrimitiveConfig parse_primitive(const nlohmann::json& j)
 {
     PrimitiveConfig prim{};
     prim.type      = j.at("type").get<std::string>();
-    prim.position  = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
-    prim.scale     = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
+    prim.position      = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
+    prim.euler_degrees = j.contains("euler_degrees") ? read_vec3(j.at("euler_degrees"))
+                                                       : glm::vec3(0.0f);
+    prim.scale         = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
     prim.color     = j.contains("color") ? read_vec3(j.at("color")) : glm::vec3(1.0f);
     prim.metalness = j.value("metalness", 0.0f);
     prim.roughness = j.value("roughness", 0.5f);
@@ -65,8 +67,10 @@ ModelConfig parse_model(const nlohmann::json& j)
 {
     ModelConfig model{};
     model.gltf_path = j.at("gltf_path").get<std::string>();
-    model.position  = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
-    model.scale     = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
+    model.position      = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
+    model.euler_degrees = j.contains("euler_degrees") ? read_vec3(j.at("euler_degrees"))
+                                                        : glm::vec3(0.0f);
+    model.scale         = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
     return model;
 }
 
@@ -84,6 +88,7 @@ Model build_primitive(const PrimitiveConfig& prim, const std::filesystem::path& 
 
     Transform xf{};
     xf.translate(prim.position.x, prim.position.y, prim.position.z);
+    xf.apply_euler_degrees(prim.euler_degrees);
     xf.scale(prim.scale.x, prim.scale.y, prim.scale.z);
 
     if (prim.type == "cube") {
