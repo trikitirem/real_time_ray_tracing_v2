@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "renderer/shared/render_frame_recorder.hpp"
 #include "renderer/raster/raster_scene_gpu_data.hpp"
 #include "renderer/raster/raster_gpu_types.hpp"
@@ -20,9 +22,13 @@ public:
     {
         camera_uniform_set_ = camera_uniform_set;
     }
-    void set_texture_uniform_set(const descriptors::UniformSet* texture_uniform_set)
+    void set_default_texture_uniform_set(const descriptors::UniformSet* default_texture_uniform_set)
     {
-        texture_uniform_set_ = texture_uniform_set;
+        default_texture_uniform_set_ = default_texture_uniform_set;
+    }
+    void set_per_texture_uniform_sets(const std::vector<descriptors::UniformSet>* per_texture_uniform_sets)
+    {
+        per_texture_uniform_sets_ = per_texture_uniform_sets;
     }
     void set_light_uniform_set(const descriptors::UniformSet* light_uniform_set)
     {
@@ -39,7 +45,8 @@ private:
     RasterPipeline& pipeline_;
     const RasterSceneGpuData* scene_data_ = nullptr;
     const descriptors::UniformSet* camera_uniform_set_ = nullptr;
-    const descriptors::UniformSet* texture_uniform_set_ = nullptr;
+    const descriptors::UniformSet* default_texture_uniform_set_ = nullptr;
+    const std::vector<descriptors::UniformSet>* per_texture_uniform_sets_ = nullptr;
     const descriptors::UniformSet* light_uniform_set_ = nullptr;
     ShadowPushConstant shadow_push_{};
 };

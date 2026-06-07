@@ -1,0 +1,26 @@
+{
+  "name": "StressTest",
+  "kind": "benchmark",
+  "benchmark": { "duration_seconds": 180.0 },
+  "benchmark_path": {
+    "from": [0.0, 3.0, 15.0],
+    "to": [0.0, 3.0, -15.0],
+    "look_at": [0.0, 1.0, 0.0],
+    "duration_seconds": 30.0
+  },
+  "primitives": [
+    { "type": "plane", "position": [0,0,0], "scale": [100,1,100],
+      "color": [0.7,0.7,0.7], "metalness": 0.3, "roughness": 0.5 }
+  ],
+  "models": [],
+  "stress": {
+    "enabled": true,
+    "initial_count": 1000,
+    "step": 1000,
+    "min_count": 0,
+    "max_count": 100000,
+    "spread": 100.0,
+    "color": [0.6, 0.4, 0.2],
+    "rng_seed": 42
+  }
+}

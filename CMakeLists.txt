@@ -52,6 +52,22 @@ add_custom_target(rtrt_images ALL
         COMMENT "Copy images -> build/images"
 )
 
+add_custom_target(rtrt_scenes ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/scenes"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/scenes"
+            "${CMAKE_BINARY_DIR}/scenes"
+        COMMENT "Copy scenes -> build/scenes"
+)
+
+add_custom_target(rtrt_models ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/models"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/models"
+            "${CMAKE_BINARY_DIR}/models"
+        COMMENT "Copy models -> build/models"
+)
+
 # GLFW
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
@@ -75,6 +91,24 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+# nlohmann/json
+FetchContent_Declare(
+        json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG        v3.11.3
+        GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(json)
+
+# tinygltf (header-only)
+FetchContent_Declare(
+        tinygltf
+        GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+        GIT_TAG        v2.9.3
+        GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(tinygltf)
+
 # STBImage
 
 add_executable(real_time_ray_tracing_v2
@@ -82,6 +116,12 @@ add_executable(real_time_ray_tracing_v2
         src/engine/window.cpp
         src/engine/input_controller.cpp
         src/engine/engine.cpp
+        src/engine/benchmark.cpp
+        src/engine/camera_animator.cpp
+        src/util/asset_root.cpp
+        src/scene/scene_registry.cpp
+        src/scene/scene_loader.cpp
+        src/scene/gltf_loader.cpp
         src/renderer/shared/device_context.cpp
         src/renderer/shared/vulkan_dynamic_dispatch.cpp
         src/renderer/shared/swapchain.cpp
@@ -113,17 +153,27 @@ add_executable(real_time_ray_tracing_v2
 
 add_dependencies(real_time_ray_tracing_v2 rtrt_shaders)
 add_dependencies(real_time_ray_tracing_v2 rtrt_images)
+add_dependencies(real_time_ray_tracing_v2 rtrt_scenes)
+add_dependencies(real_time_ray_tracing_v2 rtrt_models)
 
 target_include_directories(real_time_ray_tracing_v2 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/external
+        ${tinygltf_SOURCE_DIR}
         ${Vulkan_INCLUDE_DIRS}
 )
 
 target_link_libraries(real_time_ray_tracing_v2 PRIVATE
         glfw
         glm::glm
+        nlohmann_json::nlohmann_json
         Vulkan::Vulkan
+)
+
+add_custom_command(TARGET real_time_ray_tracing_v2 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${CMAKE_BINARY_DIR}/measurements"
+        COMMENT "Create measurements directory"
 )
 
 target_compile_definitions(real_time_ray_tracing_v2 PRIVATE

@@ -1,10 +1,13 @@
-#include "renderer/shared/textures/texture_resource.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
+#include "renderer/shared/textures/texture_resource.hpp"
+#include "util/path_io.hpp"
+
+#include <cstdio>
 #include <cstring>
 #include <stdexcept>
 #include <string>
-
-#include <stb_image.h>
 
 namespace renderer::textures {
 
@@ -150,14 +153,21 @@ TextureResource TextureResource::load_from_asset_location(
     TextureResource out{};
 
     const std::filesystem::path full_path = location.full_path();
-    const std::string           path_str  = full_path.string();
 
-    int      width = 0;
-    int      height = 0;
+    FILE* file = util::open_binary_file(full_path);
+    if (file == nullptr) {
+        throw std::runtime_error("TextureResource: failed to open image: "
+                                 + util::path_to_display_string(full_path));
+    }
+
+    int      width    = 0;
+    int      height   = 0;
     int      channels = 0;
-    stbi_uc* pixels = stbi_load(path_str.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+    stbi_uc* pixels   = stbi_load_from_file(file, &width, &height, &channels, STBI_rgb_alpha);
+    std::fclose(file);
     if (pixels == nullptr) {
-        throw std::runtime_error("TextureResource: failed to load image: " + path_str);
+        throw std::runtime_error("TextureResource: failed to load image: "
+                                 + util::path_to_display_string(full_path));
     }
 
     const vk::DeviceSize image_size
@@ -251,6 +261,111 @@ TextureResource TextureResource::load_from_asset_location(
     sampler_ci.borderColor = vk::BorderColor::eIntOpaqueBlack;
     sampler_ci.unnormalizedCoordinates = vk::False;
     out.sampler_ = vk::raii::Sampler(device, sampler_ci);
+
+    return out;
+}
+
+TextureResource TextureResource::create_solid_rgba(
+    const vk::raii::PhysicalDevice& physical_device,
+    const vk::raii::Device&         device,
+    const vk::raii::CommandPool&    command_pool,
+    const vk::raii::Queue&          graphics_queue,
+    const std::uint8_t              r,
+    const std::uint8_t              g,
+    const std::uint8_t              b,
+    const std::uint8_t              a)
+{
+    TextureResource out{};
+    const std::uint8_t pixel[4] = { r, g, b, a };
+    constexpr vk::DeviceSize image_size = 4;
+
+    vk::BufferCreateInfo staging_ci{};
+    staging_ci.size        = image_size;
+    staging_ci.usage       = vk::BufferUsageFlagBits::eTransferSrc;
+    staging_ci.sharingMode = vk::SharingMode::eExclusive;
+    vk::raii::Buffer staging_buffer(device, staging_ci);
+
+    const vk::MemoryRequirements staging_req = staging_buffer.getMemoryRequirements();
+    const vk::PhysicalDeviceMemoryProperties mem_props = physical_device.getMemoryProperties();
+    const std::uint32_t staging_mem_type = find_memory_type(
+        mem_props, staging_req.memoryTypeBits,
+        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+    vk::MemoryAllocateInfo staging_alloc{};
+    staging_alloc.allocationSize  = staging_req.size;
+    staging_alloc.memoryTypeIndex = staging_mem_type;
+    vk::raii::DeviceMemory staging_memory(device, staging_alloc);
+    staging_buffer.bindMemory(*staging_memory, 0);
+
+    void* mapped = staging_memory.mapMemory(0, image_size);
+    std::memcpy(mapped, pixel, sizeof(pixel));
+    staging_memory.unmapMemory();
+
+    out.extent_ = vk::Extent2D{ 1, 1 };
+    out.format_ = vk::Format::eR8G8B8A8Srgb;
+
+    vk::ImageCreateInfo image_ci{};
+    image_ci.imageType     = vk::ImageType::e2D;
+    image_ci.extent        = vk::Extent3D{ 1, 1, 1 };
+    image_ci.mipLevels     = 1;
+    image_ci.arrayLayers   = 1;
+    image_ci.format        = out.format_;
+    image_ci.tiling        = vk::ImageTiling::eOptimal;
+    image_ci.initialLayout = vk::ImageLayout::eUndefined;
+    image_ci.usage         = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+    image_ci.samples       = vk::SampleCountFlagBits::e1;
+    image_ci.sharingMode   = vk::SharingMode::eExclusive;
+    out.image_             = vk::raii::Image(device, image_ci);
+
+    const vk::MemoryRequirements image_req = out.image_.getMemoryRequirements();
+    const std::uint32_t image_mem_type     = find_memory_type(
+        mem_props, image_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+    vk::MemoryAllocateInfo image_alloc{};
+    image_alloc.allocationSize  = image_req.size;
+    image_alloc.memoryTypeIndex = image_mem_type;
+    out.memory_                 = vk::raii::DeviceMemory(device, image_alloc);
+    out.image_.bindMemory(*out.memory_, 0);
+
+    transition_image_layout_one_shot(device, command_pool, graphics_queue, *out.image_,
+                                     vk::ImageLayout::eUndefined,
+                                     vk::ImageLayout::eTransferDstOptimal);
+    copy_buffer_to_image_one_shot(device, command_pool, graphics_queue, *staging_buffer,
+                                  *out.image_, out.extent_);
+    transition_image_layout_one_shot(device, command_pool, graphics_queue, *out.image_,
+                                     vk::ImageLayout::eTransferDstOptimal,
+                                     vk::ImageLayout::eShaderReadOnlyOptimal);
+
+    const vk::ImageViewCreateInfo view_ci{
+        .image            = *out.image_,
+        .viewType         = vk::ImageViewType::e2D,
+        .format           = out.format_,
+        .subresourceRange = vk::ImageSubresourceRange{
+            .aspectMask     = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel   = 0,
+            .levelCount     = 1,
+            .baseArrayLayer = 0,
+            .layerCount     = 1,
+        },
+    };
+    out.view_ = vk::raii::ImageView(device, view_ci);
+
+    const vk::PhysicalDeviceProperties properties = physical_device.getProperties();
+    vk::SamplerCreateInfo sampler_ci{};
+    sampler_ci.magFilter               = vk::Filter::eLinear;
+    sampler_ci.minFilter               = vk::Filter::eLinear;
+    sampler_ci.mipmapMode              = vk::SamplerMipmapMode::eLinear;
+    sampler_ci.addressModeU            = vk::SamplerAddressMode::eRepeat;
+    sampler_ci.addressModeV            = vk::SamplerAddressMode::eRepeat;
+    sampler_ci.addressModeW            = vk::SamplerAddressMode::eRepeat;
+    sampler_ci.mipLodBias              = 0.0f;
+    sampler_ci.anisotropyEnable        = vk::True;
+    sampler_ci.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
+    sampler_ci.compareEnable           = vk::False;
+    sampler_ci.compareOp               = vk::CompareOp::eAlways;
+    sampler_ci.minLod                  = 0.0f;
+    sampler_ci.maxLod                  = 0.0f;
+    sampler_ci.borderColor             = vk::BorderColor::eIntOpaqueBlack;
+    sampler_ci.unnormalizedCoordinates = vk::False;
+    out.sampler_                       = vk::raii::Sampler(device, sampler_ci);
 
     return out;
 }

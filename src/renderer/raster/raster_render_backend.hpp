@@ -11,6 +11,7 @@
 #include "renderer/shared/buffers/host_visible_buffer.hpp"
 #include "renderer/shared/descriptors/uniform_set.hpp"
 #include "renderer/shared/render_backend.hpp"
+#include "renderer/shared/textures/texture_resource.hpp"
 
 namespace renderer::raster {
 
@@ -27,16 +28,19 @@ public:
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:
-    static constexpr std::uint32_t kFramesInFlight = 2;
+    void build_texture_descriptor_sets();
 
+    DeviceContext* ctx_ = nullptr;
     std::unique_ptr<RasterPipeline> pipeline_;
     std::unique_ptr<RasterFrameRecorder> frame_recorder_;
     RasterSceneGpuData scene_data_{};
     std::optional<buffers::HostVisibleBuffer> camera_buffer_;
     std::optional<descriptors::UniformSet> camera_uniform_set_;
-    std::vector<descriptors::UniformSet> texture_uniform_sets_{};
+    std::optional<descriptors::UniformSet> default_texture_uniform_set_;
+    std::vector<descriptors::UniformSet> per_texture_uniform_sets_{};
     std::optional<buffers::HostVisibleBuffer> light_buffer_;
     std::optional<descriptors::UniformSet> light_uniform_set_;
+    textures::TextureResource default_albedo_{};
 };
 
 } // namespace renderer::raster

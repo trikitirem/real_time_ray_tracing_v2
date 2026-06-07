@@ -15,6 +15,11 @@ struct Transform {
 
     void scale(float factor) { matrix = glm::scale(matrix, glm::vec3(factor)); }
 
+    void scale(float x, float y, float z)
+    {
+        matrix = glm::scale(matrix, glm::vec3(x, y, z));
+    }
+
     void rotate_y(float angle_rad)
     {
         matrix = glm::rotate(matrix, angle_rad, glm::vec3(0.0f, 1.0f, 0.0f));

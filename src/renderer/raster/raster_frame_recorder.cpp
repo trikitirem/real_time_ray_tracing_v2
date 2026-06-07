@@ -101,20 +101,16 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
 
         if (scene_data_ && scene_data_->valid) {
             for (const RasterDrawItem& item : scene_data_->draw_items) {
-                const bool has_texture =
-                    item.texture_index != kNoTexture
-                    && item.texture_index < scene_data_->texture_views.size()
-                    && texture_uniform_set_ != nullptr;
+                const bool has_texture = item.texture_index != kNoTexture
+                                         && item.texture_index < scene_data_->texture_views.size()
+                                         && per_texture_uniform_sets_ != nullptr
+                                         && item.texture_index < per_texture_uniform_sets_->size();
 
                 if (has_texture) {
-                    texture_uniform_set_->update_sampled_image(
-                        kTextureImageBinding,
-                        scene_data_->texture_views[item.texture_index],
-                        vk::ImageLayout::eShaderReadOnlyOptimal);
-                    texture_uniform_set_->update_sampler(
-                        kTextureSamplerBinding,
-                        scene_data_->texture_sampler);
-                    texture_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+                    (*per_texture_uniform_sets_)[item.texture_index].bind(
+                        cmd, *pipeline_.pipeline_layout());
+                } else if (default_texture_uniform_set_ != nullptr) {
+                    default_texture_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
                 }
 
                 const glm::vec4 albedo =
