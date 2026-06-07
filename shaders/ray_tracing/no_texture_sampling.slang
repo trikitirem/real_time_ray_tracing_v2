@@ -17,8 +17,8 @@ struct MaterialGpu {
     float4 albedo;
     uint textureIndex;
     uint hasTexture;
-    uint _pad0;
-    uint _pad1;
+    float metalness;
+    float roughness;
 };
 
 struct VsInput {
@@ -87,7 +87,7 @@ VertexOutput vertMain(VsInput input) {
     float4 worldPos = mul(gModel.model, float4(input.position, 1.0));
     o.position = mul(gCamera.viewProj, worldPos);
     o.uv = input.uv;
-    o.normal = input.normal;
+    o.normal = normalize(mul((float3x3)gModel.model, input.normal));
     o.worldPos = worldPos.xyz;
     return o;
 }
@@ -101,13 +101,19 @@ float4 fragMain(VertexOutput v) : SV_Target {
     const float shininess = 24.0;
 
     float3 baseColor = gModel.albedo.rgb;
+    MaterialGpu drawMaterial;
+    drawMaterial.albedo = float4(1.0, 1.0, 1.0, 1.0);
+    drawMaterial.textureIndex = 0;
+    drawMaterial.hasTexture = 0;
+    drawMaterial.metalness = 0.0;
+    drawMaterial.roughness = 0.5;
     uint materialCount = 0;
     uint materialStride = 0;
     gMaterials.GetDimensions(materialCount, materialStride);
     if (gModel.materialIndex < materialCount) {
-        MaterialGpu material = gMaterials[gModel.materialIndex];
-        if (material.hasTexture != 0) {
-            float4 tex = gTextures[NonUniformResourceIndex(material.textureIndex)].Sample(gAlbedoSampler, v.uv);
+        drawMaterial = gMaterials[gModel.materialIndex];
+        if (drawMaterial.hasTexture != 0) {
+            float4 tex = gTextures[NonUniformResourceIndex(drawMaterial.textureIndex)].Sample(gAlbedoSampler, v.uv);
             baseColor = tex.rgb;
         }
     }
@@ -142,9 +148,10 @@ float4 fragMain(VertexOutput v) : SV_Target {
     }
 
     float3 litColor = ambient + diffuse + specular;
-    if (gModel.hasTexture == 0) {
+    float reflectivity = drawMaterial.metalness * (1.0 - drawMaterial.roughness);
+    if (reflectivity > 0.0) {
         float3 reflected = sampleReflectionColor(v.worldPos, N, V);
-        litColor = lerp(litColor, reflected, 0.65);
+        litColor = lerp(litColor, reflected, reflectivity);
     }
     return float4(litColor, 1.0f);
 }

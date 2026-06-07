@@ -149,6 +149,12 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
                 *scene_data_.reflection_uv_buffer->buffer(),
                 scene_data_.reflection_uv_buffer->size_bytes());
         }
+        if (scene_data_.reflection_normal_buffer) {
+            camera_uniform_set_->update_storage_buffer(
+                kReflectionNormalBufferBinding,
+                *scene_data_.reflection_normal_buffer->buffer(),
+                scene_data_.reflection_normal_buffer->size_bytes());
+        }
         if (!scene_data_.reflection_instance_lut.empty() && ctx_ != nullptr) {
             std::vector<ReflectionInstanceLutGpu> reflection_lut_gpu{};
             reflection_lut_gpu.reserve(scene_data_.reflection_instance_lut.size());

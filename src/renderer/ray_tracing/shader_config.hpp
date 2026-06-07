@@ -15,12 +15,13 @@ inline constexpr std::uint32_t kMaterialBufferBinding = 2;
 inline constexpr std::uint32_t kReflectionIndexBufferBinding = 3;
 inline constexpr std::uint32_t kReflectionUvBufferBinding = 4;
 inline constexpr std::uint32_t kReflectionInstanceLutBufferBinding = 5;
+inline constexpr std::uint32_t kReflectionNormalBufferBinding      = 6;
 inline constexpr std::uint32_t kTextureSetIndex = 1;
 inline constexpr std::uint32_t kTextureImageBinding  = 0;
 inline constexpr std::uint32_t kTextureSamplerBinding  = 1;
 inline constexpr std::uint32_t kMaxBindlessTextures = 256;
 
-inline constexpr std::array<vk::DescriptorSetLayoutBinding, 6> kCameraDescriptorBindings = {
+inline constexpr std::array<vk::DescriptorSetLayoutBinding, 7> kCameraDescriptorBindings = {
     vk::DescriptorSetLayoutBinding{
         .binding            = kCameraBinding,
         .descriptorType     = vk::DescriptorType::eUniformBuffer,
@@ -63,6 +64,13 @@ inline constexpr std::array<vk::DescriptorSetLayoutBinding, 6> kCameraDescriptor
         .stageFlags         = vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
+    vk::DescriptorSetLayoutBinding{
+        .binding            = kReflectionNormalBufferBinding,
+        .descriptorType     = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount    = 1,
+        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .pImmutableSamplers = nullptr,
+    },
 };
 
 inline constexpr std::array<vk::DescriptorPoolSize, 3> kCameraDescriptorPoolSizes = {
@@ -76,7 +84,7 @@ inline constexpr std::array<vk::DescriptorPoolSize, 3> kCameraDescriptorPoolSize
     },
     vk::DescriptorPoolSize{
         .type            = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 4,
+        .descriptorCount = 5,
     },
 };
 

@@ -17,9 +17,8 @@ struct MaterialGpu {
     float4 albedo;
     uint textureIndex;
     uint hasTexture;
-    uint _pad0;
-    uint _pad1;
-    uint _pad2;
+    float metalness;
+    float roughness;
 };
 
 struct ReflectionInstanceLutGpu {
@@ -58,6 +57,9 @@ StructuredBuffer<float2> gReflectionUvs;
 [[vk::binding(5, 0)]]
 StructuredBuffer<ReflectionInstanceLutGpu> gReflectionInstanceLut;
 
+[[vk::binding(6, 0)]]
+StructuredBuffer<float4> gReflectionNormals;
+
 [[vk::push_constant]]
 ModelPushConstant gModel;
 
@@ -69,6 +71,22 @@ SamplerState gAlbedoSampler;
 
 static const float kEpsilon = 0.01;
 static const float3 kSkyColor = float3(0.53, 0.81, 0.98);
+static const float3 kLightDirToLight = normalize(float3(0.0, 1.0, 1.0));
+static const float kShadowStrength = 0.2;
+
+bool traceShadow(float3 origin, float3 lightDir) {
+    RayDesc shadowRayDesc;
+    shadowRayDesc.Origin = origin;
+    shadowRayDesc.Direction = lightDir;
+    shadowRayDesc.TMin = kEpsilon;
+    shadowRayDesc.TMax = 1e4;
+
+    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> sq;
+    let shadowRayFlags = RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
+    sq.TraceRayInline(gAccelerationStructure, shadowRayFlags, 0xFF, shadowRayDesc);
+    sq.Proceed();
+    return sq.CommittedStatus() == COMMITTED_TRIANGLE_HIT;
+}
 
 float2 intersectionUv(uint instanceID, uint primitiveIndex, float2 barycentrics) {
     uint lutCount = 0;
@@ -108,6 +126,44 @@ float2 intersectionUv(uint instanceID, uint primitiveIndex, float2 barycentrics)
     return w0 * uv0 + w1 * uv1 + w2 * uv2;
 }
 
+float3 intersectionNormal(uint instanceID, uint primitiveIndex, float2 barycentrics) {
+    uint lutCount = 0;
+    uint lutStride = 0;
+    gReflectionInstanceLut.GetDimensions(lutCount, lutStride);
+    if (instanceID >= lutCount) {
+        return float3(0.0, 1.0, 0.0);
+    }
+
+    ReflectionInstanceLutGpu lutEntry = gReflectionInstanceLut[instanceID];
+    uint baseIndex = lutEntry.indexOffset + primitiveIndex * 3;
+
+    uint indexCount = 0;
+    uint indexStride = 0;
+    gReflectionIndices.GetDimensions(indexCount, indexStride);
+    if (baseIndex + 2 >= indexCount) {
+        return float3(0.0, 1.0, 0.0);
+    }
+
+    uint i0 = gReflectionIndices[baseIndex + 0];
+    uint i1 = gReflectionIndices[baseIndex + 1];
+    uint i2 = gReflectionIndices[baseIndex + 2];
+
+    uint normalCount = 0;
+    uint normalStride = 0;
+    gReflectionNormals.GetDimensions(normalCount, normalStride);
+    if (i0 >= normalCount || i1 >= normalCount || i2 >= normalCount) {
+        return float3(0.0, 1.0, 0.0);
+    }
+
+    float3 n0 = gReflectionNormals[i0].xyz;
+    float3 n1 = gReflectionNormals[i1].xyz;
+    float3 n2 = gReflectionNormals[i2].xyz;
+    float w0 = 1.0 - barycentrics.x - barycentrics.y;
+    float w1 = barycentrics.x;
+    float w2 = barycentrics.y;
+    return normalize(w0 * n0 + w1 * n1 + w2 * n2);
+}
+
 float3 sampleReflectionColor(float3 worldPos, float3 N, float3 V) {
     RayDesc reflectionRayDesc;
     reflectionRayDesc.Origin = worldPos + N * kEpsilon;
@@ -140,14 +196,25 @@ float3 sampleReflectionColor(float3 worldPos, float3 N, float3 V) {
         return kSkyColor;
     }
 
-    MaterialGpu hitMaterial = gMaterials[materialIndex];
-    if (hitMaterial.hasTexture != 0) {
-        uint primitiveIndex = rq.CommittedPrimitiveIndex();
-        float2 bary = rq.CommittedTriangleBarycentrics();
-        float2 hitUv = intersectionUv(instanceID, primitiveIndex, bary);
-        return gTextures[NonUniformResourceIndex(hitMaterial.textureIndex)].SampleLevel(gAlbedoSampler, hitUv, 0).rgb;
+    const uint primitiveIndex = rq.CommittedPrimitiveIndex();
+    const float2 bary = rq.CommittedTriangleBarycentrics();
+    const float3 hitPos = reflectionRayDesc.Origin + rq.CommittedRayT() * reflectionRayDesc.Direction;
+    float3 hitN = intersectionNormal(instanceID, primitiveIndex, bary);
+    if (dot(hitN, reflectionRayDesc.Direction) > 0.0) {
+        hitN = -hitN;
     }
-    return hitMaterial.albedo.rgb;
+
+    MaterialGpu hitMaterial = gMaterials[materialIndex];
+    float3 hitColor = hitMaterial.albedo.rgb;
+    if (hitMaterial.hasTexture != 0) {
+        float2 hitUv = intersectionUv(instanceID, primitiveIndex, bary);
+        hitColor = gTextures[NonUniformResourceIndex(hitMaterial.textureIndex)].SampleLevel(gAlbedoSampler, hitUv, 0).rgb;
+    }
+
+    if (traceShadow(hitPos + hitN * kEpsilon, kLightDirToLight)) {
+        hitColor *= kShadowStrength;
+    }
+    return hitColor;
 }
 
 [shader("vertex")]
@@ -156,14 +223,13 @@ VertexOutput vertMain(VsInput input) {
     float4 worldPos = mul(gModel.model, float4(input.position, 1.0));
     o.position = mul(gCamera.viewProj, worldPos);
     o.uv = input.uv;
-    o.normal = input.normal;
+    o.normal = normalize(mul((float3x3)gModel.model, input.normal));
     o.worldPos = worldPos.xyz;
     return o;
 }
 
 [shader("fragment")]
 float4 fragMain(VertexOutput v) : SV_Target {
-    const float3 lightDirToLight = normalize(float3(0.0, 1.0, 1.0));
     const float3 lightColor = float3(1.0, 1.0, 1.0);
     const float ambientStrength = 0.12;
     const float specularStrength = 0.7;
@@ -174,8 +240,8 @@ float4 fragMain(VertexOutput v) : SV_Target {
     drawMaterial.albedo = float4(1.0, 1.0, 1.0, 1.0);
     drawMaterial.textureIndex = 0;
     drawMaterial.hasTexture = 0;
-    drawMaterial._pad0 = 0;
-    drawMaterial._pad1 = 0;
+    drawMaterial.metalness = 0.0;
+    drawMaterial.roughness = 0.5;
     uint materialCount = 0;
     uint materialStride = 0;
     gMaterials.GetDimensions(materialCount, materialStride);
@@ -188,10 +254,9 @@ float4 fragMain(VertexOutput v) : SV_Target {
     }
 
     float3 N = normalize(v.normal);
-    float3 L = lightDirToLight;
+    float3 L = kLightDirToLight;
     float3 V = normalize(gCamera.viewPosition - v.worldPos);
     float3 H = normalize(L + V);
-    const float shadowStrength = 0.2;
 
     float3 ambient = ambientStrength * lightColor * baseColor;
     float ndotl = saturate(dot(N, L));
@@ -199,27 +264,16 @@ float4 fragMain(VertexOutput v) : SV_Target {
     float spec = pow(saturate(dot(N, H)), shininess);
     float3 specular = specularStrength * spec * lightColor;
 
-    RayDesc shadowRayDesc;
-    shadowRayDesc.Origin = v.worldPos;
-    shadowRayDesc.Direction = normalize(lightDirToLight);
-    shadowRayDesc.TMin = 0.01;
-    shadowRayDesc.TMax = 1e4;
-
-    RayQuery<RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> sq;
-    let shadowRayFlags = RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
-    sq.TraceRayInline(gAccelerationStructure, shadowRayFlags, 0xFF, shadowRayDesc);
-    sq.Proceed();
-
-    bool inShadow = (sq.CommittedStatus() == COMMITTED_TRIANGLE_HIT);
-    if (inShadow) {
-        diffuse *= shadowStrength;
-        specular *= shadowStrength;
+    if (traceShadow(v.worldPos + N * kEpsilon, kLightDirToLight)) {
+        diffuse *= kShadowStrength;
+        specular *= kShadowStrength;
     }
 
     float3 litColor = ambient + diffuse + specular;
-    if (gModel.hasTexture == 0) {
+    float reflectivity = drawMaterial.metalness * (1.0 - drawMaterial.roughness);
+    if (reflectivity > 0.0) {
         float3 reflected = sampleReflectionColor(v.worldPos, N, V);
-        litColor = lerp(litColor, reflected, 0.65);
+        litColor = lerp(litColor, reflected, reflectivity);
     }
     return float4(litColor, 1.0f);
 }

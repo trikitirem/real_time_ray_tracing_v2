@@ -40,11 +40,14 @@ struct RtSceneGpuData {
     std::optional<buffers::GpuBuffer> material_buffer{};
     std::optional<buffers::GpuBuffer> reflection_index_buffer{};
     std::optional<buffers::GpuBuffer> reflection_uv_buffer{};
+    std::optional<buffers::GpuBuffer> reflection_normal_buffer{};
     std::vector<textures::TextureResource> textures{};
 
     std::vector<RtDrawItem> draw_items{};
     std::vector<ReflectionInstanceLutEntry> reflection_instance_lut{};
     std::vector<glm::vec4> material_albedos{};
+    std::vector<float>     material_metalness{};
+    std::vector<float>     material_roughness{};
     std::vector<vk::ImageView> texture_views{};
     vk::Sampler texture_sampler{};
     std::uint32_t material_count = 0;
