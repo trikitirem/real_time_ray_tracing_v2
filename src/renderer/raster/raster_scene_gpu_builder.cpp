@@ -58,6 +58,7 @@ ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
             const std::uint32_t material_index
                 = static_cast<std::uint32_t>(out.material_albedos.size());
             out.material_albedos.push_back(glm::vec4(primitive.material.base_color, 1.0f));
+            out.material_roughness.push_back(primitive.material.roughness);
             std::uint32_t texture_index = kNoTexture;
             if (!primitive.material.texture_location.file_name.empty()) {
                 texture_index = load_texture(primitive.material.texture_location);

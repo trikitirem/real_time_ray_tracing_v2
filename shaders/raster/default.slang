@@ -14,9 +14,9 @@ struct ModelPushConstant {
     float4x4 model;
     float4 albedo;
     uint hasTexture;
+    float roughness;
     uint _pad0;
     uint _pad1;
-    uint _pad2;
 };
 
 struct VsInput {
@@ -101,7 +101,7 @@ float4 fragMain(VertexOutput v) : SV_Target {
     
     float3 diffuse = shadow * ndotl * lightColor * baseColor;
     float spec = pow(saturate(dot(N, H)), shininess);
-    float3 specular = shadow * specularStrength * spec * lightColor;
+    float3 specular = shadow * specularStrength * (1.0 - gModel.roughness) * spec * lightColor;
 
     return float4(ambient + diffuse + specular, 1.0f);
 }

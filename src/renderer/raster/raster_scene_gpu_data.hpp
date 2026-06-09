@@ -33,6 +33,7 @@ struct RasterSceneGpuData {
 
     std::vector<RasterDrawItem> draw_items{};
     std::vector<glm::vec4> material_albedos{};
+    std::vector<float> material_roughness{};
     vk::Buffer material_buffer{};
     std::vector<vk::ImageView> texture_views{};
     vk::Sampler texture_sampler{};

@@ -117,11 +117,16 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
                     item.material_index < scene_data_->material_albedos.size()
                         ? scene_data_->material_albedos[item.material_index]
                         : glm::vec4(1.0f);
+                const float roughness =
+                    item.material_index < scene_data_->material_roughness.size()
+                        ? scene_data_->material_roughness[item.material_index]
+                        : 0.5f;
 
                 const ModelPushConstant push{
                     .model = item.model_matrix,
                     .albedo = albedo,
                     .has_texture = has_texture ? 1u : 0u,
+                    .roughness = roughness,
                 };
                 cmd.pushConstants(
                     *pipeline_.pipeline_layout(),

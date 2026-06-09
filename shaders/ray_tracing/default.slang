@@ -73,6 +73,10 @@ static const float kEpsilon = 0.01;
 static const float3 kSkyColor = float3(0.53, 0.81, 0.98);
 static const float3 kLightDirToLight = normalize(float3(0.0, 1.0, 1.0));
 static const float kShadowStrength = 0.2;
+static const float3 kLightColor = float3(1.0, 1.0, 1.0);
+static const float kAmbientStrength = 0.12;
+static const float kSpecularStrength = 0.7;
+static const float kShininess = 24.0;
 
 bool traceShadow(float3 origin, float3 lightDir) {
     RayDesc shadowRayDesc;
@@ -86,6 +90,23 @@ bool traceShadow(float3 origin, float3 lightDir) {
     sq.TraceRayInline(gAccelerationStructure, shadowRayFlags, 0xFF, shadowRayDesc);
     sq.Proceed();
     return sq.CommittedStatus() == COMMITTED_TRIANGLE_HIT;
+}
+
+float3 shadePhong(float3 worldPos, float3 N, float3 baseColor, float3 V, float metalness, float roughness) {
+    float3 L = kLightDirToLight;
+    float3 H = normalize(L + V);
+
+    float3 ambient = kAmbientStrength * kLightColor * baseColor;
+    float3 diffuse = saturate(dot(N, L)) * kLightColor * baseColor;
+    float specularWeight = 1.0 - roughness;
+    float3 specular = kSpecularStrength * specularWeight
+                      * pow(saturate(dot(N, H)), kShininess) * kLightColor;
+
+    if (traceShadow(worldPos + N * kEpsilon, kLightDirToLight)) {
+        diffuse *= kShadowStrength;
+        specular *= kShadowStrength;
+    }
+    return ambient + diffuse + specular;
 }
 
 float2 intersectionUv(uint instanceID, uint primitiveIndex, float2 barycentrics) {
@@ -211,10 +232,8 @@ float3 sampleReflectionColor(float3 worldPos, float3 N, float3 V) {
         hitColor = gTextures[NonUniformResourceIndex(hitMaterial.textureIndex)].SampleLevel(gAlbedoSampler, hitUv, 0).rgb;
     }
 
-    if (traceShadow(hitPos + hitN * kEpsilon, kLightDirToLight)) {
-        hitColor *= kShadowStrength;
-    }
-    return hitColor;
+    float3 V_hit = normalize(gCamera.viewPosition - hitPos);
+    return shadePhong(hitPos, hitN, hitColor, V_hit, hitMaterial.metalness, hitMaterial.roughness);
 }
 
 [shader("vertex")]
@@ -230,11 +249,6 @@ VertexOutput vertMain(VsInput input) {
 
 [shader("fragment")]
 float4 fragMain(VertexOutput v) : SV_Target {
-    const float3 lightColor = float3(1.0, 1.0, 1.0);
-    const float ambientStrength = 0.12;
-    const float specularStrength = 0.7;
-    const float shininess = 24.0;
-
     float3 baseColor = gModel.albedo.rgb;
     MaterialGpu drawMaterial;
     drawMaterial.albedo = float4(1.0, 1.0, 1.0, 1.0);
@@ -254,22 +268,8 @@ float4 fragMain(VertexOutput v) : SV_Target {
     }
 
     float3 N = normalize(v.normal);
-    float3 L = kLightDirToLight;
     float3 V = normalize(gCamera.viewPosition - v.worldPos);
-    float3 H = normalize(L + V);
-
-    float3 ambient = ambientStrength * lightColor * baseColor;
-    float ndotl = saturate(dot(N, L));
-    float3 diffuse = ndotl * lightColor * baseColor;
-    float spec = pow(saturate(dot(N, H)), shininess);
-    float3 specular = specularStrength * spec * lightColor;
-
-    if (traceShadow(v.worldPos + N * kEpsilon, kLightDirToLight)) {
-        diffuse *= kShadowStrength;
-        specular *= kShadowStrength;
-    }
-
-    float3 litColor = ambient + diffuse + specular;
+    float3 litColor = shadePhong(v.worldPos, N, baseColor, V, drawMaterial.metalness, drawMaterial.roughness);
     float reflectivity = drawMaterial.metalness * (1.0 - drawMaterial.roughness);
     if (reflectivity > 0.0) {
         float3 reflected = sampleReflectionColor(v.worldPos, N, V);
