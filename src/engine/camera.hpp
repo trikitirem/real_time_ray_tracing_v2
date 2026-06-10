@@ -22,7 +22,7 @@ public:
 
     float fov_y_rad = 1.0471975511965977461542144610932f; // ~60°
     float z_near    = 0.1f;
-    float z_far     = 100.0f;
+    float z_far     = 300.0f;
     float move_speed = 4.5f;
     float mouse_sensitivity = 0.0025f;
 

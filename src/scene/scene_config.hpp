@@ -62,6 +62,8 @@ struct StressConfig {
     int       max_count     = 10000;
     float     spread        = 10.0f;
     glm::vec3 color{ 0.5f };
+    float     metalness     = 0.0f;
+    float     roughness     = 0.5f;
     int       rng_seed      = 42;
 };
 

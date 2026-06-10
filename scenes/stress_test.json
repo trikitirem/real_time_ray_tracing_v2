@@ -21,6 +21,8 @@
     "max_count": 100000,
     "spread": 100.0,
     "color": [0.6, 0.4, 0.2],
+    "metalness": 0.9,
+    "roughness": 0.1,
     "rng_seed": 42
   }
 }

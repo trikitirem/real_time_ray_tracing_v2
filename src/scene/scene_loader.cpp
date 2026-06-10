@@ -122,6 +122,14 @@ void validate_config(const SceneConfig& cfg)
         if (cfg.stress.step <= 0) {
             throw std::runtime_error("Scene '" + cfg.name + "': stress.step must be > 0");
         }
+        if (cfg.stress.metalness < 0.0f || cfg.stress.metalness > 1.0f) {
+            throw std::runtime_error("Scene '" + cfg.name
+                                     + "': stress.metalness must be in [0, 1]");
+        }
+        if (cfg.stress.roughness < 0.0f || cfg.stress.roughness > 1.0f) {
+            throw std::runtime_error("Scene '" + cfg.name
+                                     + "': stress.roughness must be in [0, 1]");
+        }
     }
 }
 
@@ -194,6 +202,8 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
         if (s.contains("color")) {
             cfg.stress.color = read_vec3(s.at("color"));
         }
+        cfg.stress.metalness = s.value("metalness", 0.0f);
+        cfg.stress.roughness = s.value("roughness", 0.5f);
     }
 
     validate_config(cfg);
@@ -239,8 +249,8 @@ std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,
 
         Material stress_mat{};
         stress_mat.base_color = cfg.stress.color;
-        stress_mat.metalness  = 0.0f;
-        stress_mat.roughness  = 0.5f;
+        stress_mat.metalness  = cfg.stress.metalness;
+        stress_mat.roughness  = cfg.stress.roughness;
 
         std::mt19937                          rng(static_cast<std::uint32_t>(cfg.stress.rng_seed));
         std::uniform_real_distribution<float> dist(-cfg.stress.spread, cfg.stress.spread);
