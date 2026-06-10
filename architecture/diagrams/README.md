@@ -1,7 +1,18 @@
 # Diagramy PlantUML
 
-Źródła: `*.puml` w tym katalogu.  
-Plan, checklista i **konwencje (styling, brak podpisów na strzałkach)** (lokalnie, nie w git): [`docs/DIAGRAM_PLAN.md`](../../docs/DIAGRAM_PLAN.md).
+Źródła: `*.puml` w tym katalogu.
+
+## Diagramy
+
+| Plik | Opis |
+|------|------|
+| `01_overview.puml` | Wysokopoziomowa architektura silnika |
+| `02_engine.puml` | Warstwa engine |
+| `03_scene_cpu.puml` | Model sceny (CPU) i ładowanie |
+| `04_renderer_facade_di.puml` | Fasada renderera |
+| `05_shared_vulkan.puml` | Współdzielona infrastruktura Vulkan |
+| `06_raster_backend.puml` | Backend rastrowy |
+| `07_ray_tracing_backend.puml` | Backend ray tracing |
 
 ## Generowanie wszystkich diagramów
 
@@ -15,8 +26,6 @@ chmod +x architecture/generate_diagrams.sh   # raz, po sklonowaniu
 Opcje: `--png-only`, `--svg-only`, `--checkonly`, `--help`.
 
 Wynik trafia do `architecture/out/` (katalog `out/` jest ignorowany przez git).
-
-`99_full_reference.puml` zapisuje pliki jako `real_time_ray_tracing_v2_classes.{png,svg}` (nazwa z `@startuml` w pliku).
 
 ## Generowanie jednego diagramu
 
@@ -32,9 +41,3 @@ plantuml -tsvg -tpng -o ../out 01_overview.puml
 ```bash
 ./architecture/generate_diagrams.sh --checkonly
 ```
-
-## Kolejność pracy
-
-Zacznij od `01_overview.puml` — pliki twórz według kolejności w `docs/DIAGRAM_PLAN.md`.
-
-Istniejący pełny diagram referencyjny: `99_full_reference.puml`.

@@ -55,6 +55,7 @@ package "renderer::shared" {
     + load_scene()
     + set_camera()
     + draw()
+    + switch_backend()
   }
 
   abstract class IRenderBackend {
@@ -62,11 +63,12 @@ package "renderer::shared" {
     + destroy()
     + load_scene()
     + update_camera()
+    + update_light()
     + record()
   }
 
   abstract class SceneGpuBuilderBase {
-    + build() : ScenePayload
+    + build(ctx, scene) : ScenePayload
   }
 
   class ScenePayload {

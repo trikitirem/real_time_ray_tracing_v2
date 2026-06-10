@@ -36,6 +36,33 @@ skinparam title {
 
 title Model sceny (CPU)
 
+package "scene loading" #E0F2FE;line:0284C7;text:0F172A {
+
+  class SceneRegistry {
+    + scene_json_path()
+    + scene_display_name()
+  }
+
+  class SceneLoader {
+    + load_scene_config()
+    + build_scene()
+    + count_scene_stats()
+  }
+
+  class SceneConfig {
+    + primitives, models
+    + camera_presets
+    + benchmark, stress
+  }
+
+  class GltfLoader {
+    + load_gltf_models()
+  }
+
+  SceneRegistry -[hidden]down- SceneLoader
+  SceneLoader -[hidden]down- SceneConfig
+}
+
 package scene #ECFDF5;line:059669;text:064E3B {
 
   class Scene {
@@ -88,11 +115,16 @@ package util #F1F5F9;line:94A3B8;text:475569 {
 
   class AssetLocation {
     + directory
-    + filename
+    + file_name
   }
 
   Vertex -[hidden]down- AssetLocation
 }
+
+SceneLoader ..> SceneConfig
+SceneLoader ..> Scene
+SceneLoader ..> GltfLoader
+GltfLoader ..> Model
 
 Scene "1" *-- "0..*" Model
 Model *-- Mesh

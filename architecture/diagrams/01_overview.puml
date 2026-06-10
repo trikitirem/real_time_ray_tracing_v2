@@ -47,10 +47,31 @@ package engine {
   class Window
   class Camera
   class InputController
+
+  class "Benchmark & pomiary" as Benchmark #FFFBEB;line:F59E0B;text:92400E {
+    pomiar FPS (F5)
+    eksport JSON -> measurements/
+    animacja kamery po benchmark_path
+  }
+}
+
+package "scene loading" #ECFDF5;line:059669;text:064E3B {
+
+  class "SceneLoader / Registry" as SceneLoading {
+    JSON sceny -> SceneConfig
+    GLTF -> modele CPU
+  }
 }
 
 class "Scene (CPU)" as SceneCPU #ECFDF5;line:059669;text:064E3B {
   modele, meshe, materialy
+}
+
+package util #F1F5F9;line:94A3B8;text:475569 {
+
+  class "sciezki assetow i shaderow" as UtilPaths {
+    asset_root, shader_paths, path_io
+  }
 }
 
 package renderer #F8FAFC;line:64748B;text:334155 {
@@ -65,6 +86,7 @@ package renderer #F8FAFC;line:64748B;text:334155 {
     + load_scene()
     + set_camera()
     + draw()
+    + switch_backend()
   }
 
   abstract class IRenderBackend {
@@ -90,7 +112,12 @@ Engine *-- Camera
 Engine *-- InputController
 Engine *-- SceneCPU
 Engine *-- DeviceContext
+Engine *-- Benchmark
 Engine o-- Renderer
+
+Engine ..> SceneLoading
+SceneLoading ..> SceneCPU
+SceneLoading ..> UtilPaths
 
 Renderer o--> IRenderBackend
 Renderer ..> SceneCPU

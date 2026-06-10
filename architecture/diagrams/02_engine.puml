@@ -35,15 +35,19 @@ title Warstwa engine
 package engine {
 
   class Engine {
-    - useRasterBackend_ : bool
+    - useRasterBackendFromMain_ : bool
     - rasterConfig_ : DeviceConfig
     - rayTracingConfig_ : DeviceConfig
+    - deviceContext_ : DeviceContext
     - framebufferResized_ : bool
     + run() : int
-    - initTestScene()
+    - load_scene_content()
     - initWindow()
     - initVulkan()
     - mainLoop()
+    - reload_scene_gpu()
+    - toggle_backend()
+    - handle_benchmark_input()
   }
 
   class Window {
@@ -73,6 +77,19 @@ package engine {
     + tick()
     + seconds() : float
   }
+
+  class Benchmark {
+    + start()
+    + stop()
+    + tick()
+    + stats()
+  }
+
+  class CameraAnimator {
+    + start()
+    + stop()
+    + update()
+  }
 }
 
 class GLFWwindow <<external>> #F1F5F9;line:94A3B8;text:475569
@@ -81,9 +98,16 @@ class Renderer <<external>> #F8FAFC;line:64748B;text:334155 {
   renderer::Renderer
 }
 
+class DeviceContext <<external>> #F8FAFC;line:64748B;text:334155 {
+  renderer::DeviceContext
+}
+
 Engine *-- Window
 Engine *-- Camera
 Engine *-- InputController
+Engine *-- DeviceContext
+Engine *-- Benchmark
+Engine *-- CameraAnimator
 Engine o-- Renderer
 
 Window ..> GLFWwindow
@@ -91,6 +115,7 @@ InputController ..> GLFWwindow
 
 Camera ..> InputController
 Camera ..> DeltaTime
+CameraAnimator ..> Camera
 
 Engine ..> DeltaTime
 
