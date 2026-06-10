@@ -21,7 +21,8 @@ struct InitialCamera {
 };
 
 struct BenchmarkSettings {
-    float duration_seconds = engine::kDefaultBenchmarkDurationS;
+    float duration_seconds       = engine::kDefaultBenchmarkDurationS;
+    bool  rt_reflections_enabled = true;
 };
 
 struct BenchmarkPath {

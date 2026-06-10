@@ -24,6 +24,8 @@ struct BenchmarkMeta {
     std::string gpu_name;
     std::uint32_t window_width  = 0;
     std::uint32_t window_height = 0;
+
+    bool rt_reflections_enabled = true;
 };
 
 struct BenchmarkStats {
@@ -38,6 +40,7 @@ public:
     void start(BenchmarkMeta meta);
     void stop();
     [[nodiscard]] bool tick(float frame_dt);
+    [[nodiscard]] bool consume_finished();
     [[nodiscard]] bool is_running() const { return running_; }
     [[nodiscard]] float elapsed_s() const { return elapsed_s_; }
     [[nodiscard]] const BenchmarkMeta& meta() const { return meta_; }
@@ -48,6 +51,7 @@ private:
 
     BenchmarkMeta meta_{};
     bool          running_          = false;
+    bool          just_finished_    = false;
     float         elapsed_s_          = 0.0f;
     int           warmup_remaining_   = kWarmupFrames;
     std::vector<float> frame_times_{};

@@ -1,10 +1,10 @@
 {
   "name": "StressTest",
   "kind": "benchmark",
-  "benchmark": { "duration_seconds": 180.0 },
+  "benchmark": { "duration_seconds": 60.0, "rt_reflections_enabled": false },
   "benchmark_path": {
-    "from": [0.0, 3.0, 15.0],
-    "to": [0.0, 3.0, -15.0],
+    "from": [0.0, 3.0, 100.0],
+    "to": [0.0, 3.0, -100.0],
     "look_at": [0.0, 1.0, 0.0],
     "duration_seconds": 30.0
   },
@@ -18,7 +18,7 @@
     "initial_count": 5000,
     "step": 5000,
     "min_count": 0,
-    "max_count": 10000000000,
+    "max_count": 100000,
     "spread": 100.0,
     "color": [0.6, 0.4, 0.2],
     "metalness": 0.9,

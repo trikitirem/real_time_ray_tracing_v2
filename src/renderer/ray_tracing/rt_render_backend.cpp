@@ -201,8 +201,9 @@ void RtRenderBackend::update_camera(const engine::Camera& camera, vk::Extent2D e
                                              : static_cast<float>(extent.width)
                                                    / static_cast<float>(extent.height);
     const CameraUbo ubo{
-        .view_proj = camera.view_projection(aspect),
-        .view_position = camera.position,
+        .view_proj           = camera.view_projection(aspect),
+        .view_position       = camera.position,
+        .reflections_enabled = rt_reflections_enabled_ ? 1u : 0u,
     };
 
     if (!camera_buffer_) {

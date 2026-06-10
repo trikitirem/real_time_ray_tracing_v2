@@ -36,6 +36,7 @@ private:
     void load_scene_content(scene::SceneName name);
     void reload_scene_gpu();
     void adjust_stress_count(int delta);
+    void rebuild_stress_scene(int count);
     void toggle_backend();
     void apply_camera_preset(const scene::CameraPreset& preset);
     void log_startup_info() const;
@@ -44,6 +45,8 @@ private:
     void handle_stress_input();
     void handle_backend_input();
     void handle_camera_input(float frame_dt);
+    void start_stress_suite();
+    void advance_stress_suite();
     [[nodiscard]] BenchmarkMeta make_benchmark_meta() const;
     [[nodiscard]] float measure_frame_delta();
 
@@ -70,7 +73,8 @@ private:
     bool is_rendering_paused_      = false;
     bool camera_movement_locked_   = false;
 
-    int current_stress_count_ = 0;
+    int  current_stress_count_ = 0;
+    bool stress_suite_active_  = false;
 
     Benchmark      benchmark_{};
     CameraAnimator animator_{};

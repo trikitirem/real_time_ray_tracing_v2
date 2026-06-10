@@ -95,6 +95,11 @@ void Renderer::set_shadow_half_extent(const float half_extent)
     backend_->set_shadow_half_extent(half_extent);
 }
 
+void Renderer::set_rt_reflections_enabled(const bool enabled)
+{
+    backend_->set_rt_reflections_enabled(enabled);
+}
+
 std::string Renderer::present_mode_string() const
 {
     return present_mode_to_string(swapchain_.presentMode());

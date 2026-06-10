@@ -29,6 +29,7 @@ public:
     void destroy(DeviceContext& ctx) override;
     void load_scene(ScenePayload&& scene_payload) override;
     void update_camera(const engine::Camera& camera, vk::Extent2D extent) override;
+    void set_rt_reflections_enabled(bool enabled) override { rt_reflections_enabled_ = enabled; }
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:
@@ -58,6 +59,7 @@ private:
     BlasBuildResult blas_build_{};
     TlasBuildResult tlas_build_{};
     textures::TextureResource default_albedo_{};
+    bool rt_reflections_enabled_ = true;
 };
 
 } // namespace renderer::ray_tracing

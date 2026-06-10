@@ -1,7 +1,7 @@
 struct CameraUbo {
     float4x4 viewProj;
     float3 viewPosition;
-    uint _pad0;
+    uint reflections_enabled;
 };
 
 struct ModelPushConstant {
@@ -149,7 +149,7 @@ float4 fragMain(VertexOutput v) : SV_Target {
 
     float3 litColor = ambient + diffuse + specular;
     float reflectivity = drawMaterial.metalness * (1.0 - drawMaterial.roughness);
-    if (reflectivity > 0.0) {
+    if (reflectivity > 0.0 && gCamera.reflections_enabled != 0) {
         float3 reflected = sampleReflectionColor(v.worldPos, N, V);
         litColor = lerp(litColor, reflected, reflectivity);
     }

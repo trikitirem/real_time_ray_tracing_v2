@@ -153,6 +153,8 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
     if (j.contains("benchmark")) {
         cfg.benchmark.duration_seconds
             = j.at("benchmark").value("duration_seconds", engine::kDefaultBenchmarkDurationS);
+        cfg.benchmark.rt_reflections_enabled
+            = j.at("benchmark").value("rt_reflections_enabled", true);
     }
 
     if (j.contains("camera_presets")) {

@@ -76,13 +76,23 @@ void Benchmark::stop()
     if (!running_) {
         return;
     }
-    running_ = false;
+    running_       = false;
+    just_finished_ = true;
 
     const auto stats = this->stats();
     save_json();
 
     std::cout << "[Benchmark] avg_fps=" << stats.avg_fps << "  p5_low=" << stats.p5_low_fps
               << "  frames=" << stats.frame_count << '\n';
+}
+
+bool Benchmark::consume_finished()
+{
+    if (just_finished_) {
+        just_finished_ = false;
+        return true;
+    }
+    return false;
 }
 
 bool Benchmark::tick(const float frame_dt)
@@ -147,6 +157,7 @@ void Benchmark::save_json() const
     j["triangle_count"]          = meta_.triangle_count;
     j["stress_count"]            = meta_.stress_count;
     j["stress_rng_seed"]         = meta_.stress_rng_seed;
+    j["rt_reflections_enabled"]  = meta_.rt_reflections_enabled;
     j["stats"]["avg_fps"]        = stats.avg_fps;
     j["stats"]["p5_low_fps"]     = stats.p5_low_fps;
     j["stats"]["p1_low_fps"]     = stats.p1_low_fps;

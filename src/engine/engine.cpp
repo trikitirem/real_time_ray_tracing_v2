@@ -186,6 +186,25 @@ void Engine::apply_camera_preset(const scene::CameraPreset& preset)
     camera_.reset_pitch_state();
 }
 
+void Engine::rebuild_stress_scene(const int count)
+{
+    std::cout << "[Stress] Rebuilding scene: " << current_stress_count_ << " -> " << count
+              << " objects...\n";
+    const auto t0 = Clock::now();
+
+    current_stress_count_ = count;
+    scene_                = scene::Scene{};
+    auto [built_scene, stats]
+        = scene::build_scene(current_scene_config_, util::asset_root(), current_stress_count_);
+    scene_       = std::move(built_scene);
+    scene_stats_ = stats;
+    reload_scene_gpu();
+
+    const float elapsed_s = elapsed_seconds_since(t0);
+    std::cout << "[Stress] Done: " << current_stress_count_ << " objects, "
+              << scene_stats_.vertex_count << " vertices (" << elapsed_s << "s)\n";
+}
+
 void Engine::adjust_stress_count(const int delta)
 {
     if (current_scene_name_ != scene::SceneName::StressTest) {
@@ -213,21 +232,54 @@ void Engine::adjust_stress_count(const int delta)
         return;
     }
 
-    std::cout << "[Stress] Rebuilding scene: " << current_stress_count_ << " -> " << next
-              << " objects (" << (delta >= 0 ? "+" : "") << delta << ")...\n";
-    const auto t0 = Clock::now();
+    rebuild_stress_scene(next);
+}
 
-    current_stress_count_ = next;
-    scene_                = scene::Scene{};
-    auto [built_scene, stats]
-        = scene::build_scene(current_scene_config_, util::asset_root(), current_stress_count_);
-    scene_       = std::move(built_scene);
-    scene_stats_ = stats;
-    reload_scene_gpu();
+void Engine::start_stress_suite()
+{
+    const auto& stress = current_scene_config_.stress;
+    std::cout << "[Suite] Starting stress suite: " << stress.initial_count << " to "
+              << stress.max_count << " step " << stress.step << '\n';
 
-    const float elapsed_s = elapsed_seconds_since(t0);
-    std::cout << "[Stress] Done: " << current_stress_count_ << " objects, "
-              << scene_stats_.vertex_count << " vertices (" << elapsed_s << "s)\n";
+    rebuild_stress_scene(stress.initial_count);
+
+    BenchmarkMeta meta = make_benchmark_meta();
+    renderer_->set_rt_reflections_enabled(meta.rt_reflections_enabled);
+    benchmark_.start(meta);
+
+    if (current_scene_config_.benchmark_path.has_value()) {
+        animator_.start(*current_scene_config_.benchmark_path);
+        camera_.reset_pitch_state();
+    }
+
+    stress_suite_active_ = true;
+    std::cout << "[Suite] Run 1/" << ((stress.max_count - stress.initial_count) / stress.step + 1)
+              << ": " << current_stress_count_ << " objects\n";
+}
+
+void Engine::advance_stress_suite()
+{
+    if (!benchmark_.consume_finished()) {
+        return;
+    }
+
+    const auto& stress = current_scene_config_.stress;
+    const int next     = current_stress_count_ + stress.step;
+
+    if (next > stress.max_count) {
+        stress_suite_active_ = false;
+        animator_.stop();
+        std::cout << "[Suite] All runs complete.\n";
+        return;
+    }
+
+    rebuild_stress_scene(next);
+
+    BenchmarkMeta meta = make_benchmark_meta();
+    renderer_->set_rt_reflections_enabled(meta.rt_reflections_enabled);
+    benchmark_.start(meta);
+
+    std::cout << "[Suite] Next run: " << current_stress_count_ << " objects\n";
 }
 
 void Engine::toggle_backend()
@@ -277,13 +329,14 @@ BenchmarkMeta Engine::make_benchmark_meta() const
     meta.stress_count          = scene_stats_.stress_count;
     meta.stress_rng_seed       = current_scene_config_.stress.rng_seed;
     meta.backend               = backend_name(active_backend_is_raster_);
-    meta.configured_duration_s = current_scene_config_.benchmark.duration_seconds;
-    meta.present_mode          = renderer_->present_mode_string();
-    meta.gpu_name              = std::string(
+    meta.configured_duration_s    = current_scene_config_.benchmark.duration_seconds;
+    meta.present_mode             = renderer_->present_mode_string();
+    meta.gpu_name                 = std::string(
         deviceContext_.physicalDevice().getProperties().deviceName.data());
-    const auto extent          = renderer_->swapchain_extent();
-    meta.window_width          = extent.width;
-    meta.window_height         = extent.height;
+    const auto extent             = renderer_->swapchain_extent();
+    meta.window_width             = extent.width;
+    meta.window_height            = extent.height;
+    meta.rt_reflections_enabled   = current_scene_config_.benchmark.rt_reflections_enabled;
     return meta;
 }
 
@@ -325,11 +378,12 @@ void Engine::handle_benchmark_input(const float /*frame_dt*/)
         return;
     }
 
-    if (benchmark_.is_running()) {
+    if (benchmark_.is_running() || stress_suite_active_) {
         std::cout << "[Benchmark] Stopped early (" << benchmark_.elapsed_s() << "s / "
                   << benchmark_.meta().configured_duration_s << "s)\n";
         benchmark_.stop();
         animator_.stop();
+        stress_suite_active_ = false;
         return;
     }
 
@@ -342,7 +396,13 @@ void Engine::handle_benchmark_input(const float /*frame_dt*/)
         return;
     }
 
+    if (current_scene_name_ == scene::SceneName::StressTest) {
+        start_stress_suite();
+        return;
+    }
+
     BenchmarkMeta meta = make_benchmark_meta();
+    renderer_->set_rt_reflections_enabled(meta.rt_reflections_enabled);
     benchmark_.start(meta);
     if (current_scene_config_.benchmark_path.has_value()) {
         animator_.start(*current_scene_config_.benchmark_path);
@@ -421,6 +481,10 @@ void Engine::mainLoop()
         handle_camera_input(frame_dt);
 
         (void)benchmark_.tick(frame_dt);
+
+        if (stress_suite_active_) {
+            advance_stress_suite();
+        }
 
         if (framebufferResized_) {
             framebufferResized_ = false;

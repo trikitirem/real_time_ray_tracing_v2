@@ -8,9 +8,9 @@
 namespace renderer::ray_tracing {
 
 struct CameraUbo {
-    glm::mat4 view_proj{ 1.0f };
-    glm::vec3 view_position{ 0.0f };
-    std::uint32_t _pad0 = 0;
+    glm::mat4     view_proj{ 1.0f };
+    glm::vec3     view_position{ 0.0f };
+    std::uint32_t reflections_enabled = 1;
 };
 
 struct ModelPushConstant {

@@ -45,16 +45,18 @@ void CameraAnimator::update(Camera& camera, const float dt)
     }
 
     elapsed_s_ += dt;
-    const float t = path_.duration_seconds > 0.0f
-                        ? std::clamp(elapsed_s_ / path_.duration_seconds, 0.0f, 1.0f)
-                        : 1.0f;
 
-    camera.position   = glm::mix(path_.from, path_.to, t);
-    camera.orientation = look_at_orientation(camera.position, path_.look_at);
-
-    if (elapsed_s_ >= path_.duration_seconds) {
-        running_ = false;
+    float t = 0.0f;
+    if (path_.duration_seconds > 0.0f) {
+        const float cycle = path_.duration_seconds * 2.0f;
+        const float phase = std::fmod(elapsed_s_, cycle);
+        t = (phase < path_.duration_seconds)
+            ? phase / path_.duration_seconds
+            : 1.0f - (phase - path_.duration_seconds) / path_.duration_seconds;
     }
+
+    camera.position    = glm::mix(path_.from, path_.to, t);
+    camera.orientation = look_at_orientation(camera.position, path_.look_at);
 }
 
 } // namespace engine

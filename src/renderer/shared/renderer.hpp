@@ -37,6 +37,7 @@ public:
     void load_scene(const scene::Scene& scene);
     void set_camera(const engine::Camera& camera);
     void set_shadow_half_extent(float half_extent);
+    void set_rt_reflections_enabled(bool enabled);
     void draw();
     void switch_backend(bool use_raster);
 
