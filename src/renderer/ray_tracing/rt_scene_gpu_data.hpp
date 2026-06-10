@@ -29,6 +29,18 @@ struct RtDrawItem {
     std::uint32_t material_index = 0;
 };
 
+// One entry per InstancedGroup prototype.
+// The BLAS is built once and reused for all N TLAS instances.
+struct RtInstancedDrawItem {
+    vk::Buffer vertex_buffer{};
+    vk::Buffer index_buffer{};
+    std::uint32_t vertex_count   = 0;
+    std::uint32_t index_count    = 0;
+    std::uint32_t material_index = 0;
+    std::uint32_t texture_index  = kNoTexture;
+    std::vector<glm::mat4> transforms{};
+};
+
 struct ReflectionInstanceLutEntry {
     std::uint32_t material_index = 0;
     std::uint32_t index_offset = 0;
@@ -43,7 +55,8 @@ struct RtSceneGpuData {
     std::optional<buffers::GpuBuffer> reflection_normal_buffer{};
     std::vector<textures::TextureResource> textures{};
 
-    std::vector<RtDrawItem> draw_items{};
+    std::vector<RtDrawItem>          draw_items{};
+    std::vector<RtInstancedDrawItem> instanced_items{};
     std::vector<ReflectionInstanceLutEntry> reflection_instance_lut{};
     std::vector<glm::vec4> material_albedos{};
     std::vector<float>     material_metalness{};

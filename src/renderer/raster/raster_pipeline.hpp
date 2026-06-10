@@ -43,6 +43,23 @@ public:
     [[nodiscard]] const vk::raii::Pipeline&       shadow_pipeline() const { return shadow_pipeline_; }
     [[nodiscard]] const vk::raii::PipelineLayout& shadow_pipeline_layout() const { return shadow_pipeline_layout_; }
 
+    [[nodiscard]] const vk::raii::Pipeline& pipeline_instanced() const
+    {
+        return pipeline_instanced_;
+    }
+    [[nodiscard]] const vk::raii::PipelineLayout& pipeline_instanced_layout() const
+    {
+        return pipeline_instanced_layout_;
+    }
+    [[nodiscard]] const vk::raii::Pipeline& shadow_pipeline_instanced() const
+    {
+        return shadow_pipeline_instanced_;
+    }
+    [[nodiscard]] const vk::raii::PipelineLayout& shadow_pipeline_instanced_layout() const
+    {
+        return shadow_pipeline_instanced_layout_;
+    }
+
 private:
     void create_depth_resources(const vk::raii::Device&         device,
                                 const vk::raii::PhysicalDevice& physical,
@@ -62,6 +79,9 @@ private:
     void create_shadow_framebuffer(const vk::raii::Device& device);
     void create_shadow_pipeline(const vk::raii::Device& device,
                                 const std::filesystem::path& shadow_spirv_path);
+
+    void create_raster_instanced_pipeline(const vk::raii::Device& device);
+    void create_shadow_instanced_pipeline(const vk::raii::Device& device);
 
     vk::Format depth_format_ = vk::Format::eUndefined;
 
@@ -84,6 +104,11 @@ private:
     vk::raii::ShaderModule shadow_shader_module_ = nullptr;
     vk::raii::PipelineLayout shadow_pipeline_layout_ = nullptr;
     vk::raii::Pipeline shadow_pipeline_ = nullptr;
+
+    vk::raii::PipelineLayout pipeline_instanced_layout_        = nullptr;
+    vk::raii::Pipeline       pipeline_instanced_               = nullptr;
+    vk::raii::PipelineLayout shadow_pipeline_instanced_layout_ = nullptr;
+    vk::raii::Pipeline       shadow_pipeline_instanced_        = nullptr;
 };
 
 } // namespace renderer::raster

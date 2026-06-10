@@ -13,6 +13,8 @@
 #include <iterator>
 #include <stdexcept>
 
+#include <glm/mat4x4.hpp>
+
 namespace renderer::raster {
 
 namespace {
@@ -55,6 +57,10 @@ void RasterPipeline::destroy()
     shadow_shader_module_ = nullptr;
     shadow_pipeline_layout_ = nullptr;
     shadow_pipeline_ = nullptr;
+    pipeline_instanced_layout_        = nullptr;
+    pipeline_instanced_               = nullptr;
+    shadow_pipeline_instanced_layout_ = nullptr;
+    shadow_pipeline_instanced_        = nullptr;
     depth_format_    = vk::Format::eUndefined;
 }
 
@@ -97,11 +103,25 @@ void RasterPipeline::create(DeviceContext& ctx, const Swapchain& swapchain, cons
     pipeline_layout_ci.pPushConstantRanges = &model_push_range;
     pipeline_layout_                  = vk::raii::PipelineLayout(device, pipeline_layout_ci);
     create_raster_graphics_pipeline(device);
+
+    vk::PushConstantRange instanced_push_range{};
+    instanced_push_range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+    instanced_push_range.offset = 0;
+    instanced_push_range.size = sizeof(InstancedBatchPushConstant);
+    vk::PipelineLayoutCreateInfo instanced_layout_ci{};
+    instanced_layout_ci.setLayoutCount = static_cast<std::uint32_t>(std::size(set_layouts));
+    instanced_layout_ci.pSetLayouts    = set_layouts;
+    instanced_layout_ci.pushConstantRangeCount = 1;
+    instanced_layout_ci.pPushConstantRanges = &instanced_push_range;
+    pipeline_instanced_layout_ = vk::raii::PipelineLayout(device, instanced_layout_ci);
+    create_raster_instanced_pipeline(device);
+
     create_framebuffers(device, swapchain, extent);
     create_shadow_resources(device, physical);
     create_shadow_render_pass(device);
     create_shadow_framebuffer(device);
     create_shadow_pipeline(device, util::raster_shader("shadow.spv").full_path());
+    create_shadow_instanced_pipeline(device);
 }
 
 void RasterPipeline::create_depth_resources(const vk::raii::Device&         device,
@@ -457,6 +477,140 @@ void RasterPipeline::create_shadow_pipeline(const vk::raii::Device& device,
     gp.subpass = 0;
 
     shadow_pipeline_ = vk::raii::Pipeline(device, nullptr, gp);
+}
+
+void RasterPipeline::create_raster_instanced_pipeline(const vk::raii::Device& device)
+{
+    FixedFunctionState ff{};
+    ff.stages[0].stage  = vk::ShaderStageFlagBits::eVertex;
+    ff.stages[0].module = *shader_module_;
+    ff.stages[0].pName  = "vertMainInstanced";
+    ff.stages[1].stage  = vk::ShaderStageFlagBits::eFragment;
+    ff.stages[1].module = *shader_module_;
+    ff.stages[1].pName  = "fragMainInstanced";
+
+    // Binding 0: per-vertex data (position loc 0, uv loc 1, normal loc 2)
+    // Binding 1: per-instance mat4 (rows at locs 3-6)
+    static const vk::VertexInputBindingDescription bindings[] = {
+        { .binding = 0, .stride = sizeof(util::Vertex), .inputRate = vk::VertexInputRate::eVertex },
+        { .binding = 1, .stride = sizeof(glm::mat4),   .inputRate = vk::VertexInputRate::eInstance },
+    };
+    static const vk::VertexInputAttributeDescription attributes[] = {
+        { .location = 0, .binding = 0, .format = vk::Format::eR32G32B32Sfloat,
+          .offset = static_cast<std::uint32_t>(offsetof(util::Vertex, position)) },
+        { .location = 1, .binding = 0, .format = vk::Format::eR32G32Sfloat,
+          .offset = static_cast<std::uint32_t>(offsetof(util::Vertex, uv)) },
+        { .location = 2, .binding = 0, .format = vk::Format::eR32G32B32Sfloat,
+          .offset = static_cast<std::uint32_t>(offsetof(util::Vertex, normal)) },
+        { .location = 3, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset =  0 },
+        { .location = 4, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset = 16 },
+        { .location = 5, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset = 32 },
+        { .location = 6, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset = 48 },
+    };
+    ff.vertex_input.vertexBindingDescriptionCount
+        = static_cast<std::uint32_t>(std::size(bindings));
+    ff.vertex_input.pVertexBindingDescriptions = bindings;
+    ff.vertex_input.vertexAttributeDescriptionCount
+        = static_cast<std::uint32_t>(std::size(attributes));
+    ff.vertex_input.pVertexAttributeDescriptions = attributes;
+
+    ff.input_asm.topology = vk::PrimitiveTopology::eTriangleList;
+    ff.viewport.viewportCount = 1;
+    ff.viewport.scissorCount  = 1;
+    ff.raster.polygonMode = vk::PolygonMode::eFill;
+    ff.raster.cullMode    = vk::CullModeFlagBits::eBack;
+    ff.raster.frontFace   = vk::FrontFace::eCounterClockwise;
+    ff.raster.lineWidth   = 1.0f;
+    ff.ms.rasterizationSamples = vk::SampleCountFlagBits::e1;
+    ff.ds.depthTestEnable  = vk::True;
+    ff.ds.depthWriteEnable = vk::True;
+    ff.ds.depthCompareOp   = vk::CompareOp::eLess;
+    ff.blend_att.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
+                                  | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    ff.blend.attachmentCount = 1;
+    ff.blend.pAttachments    = &ff.blend_att;
+    ff.dynamics[0] = vk::DynamicState::eViewport;
+    ff.dynamics[1] = vk::DynamicState::eScissor;
+    ff.dyn.dynamicStateCount = 2;
+    ff.dyn.pDynamicStates    = ff.dynamics;
+
+    vk::GraphicsPipelineCreateInfo gp{};
+    fill_graphics_pipeline_create_info(gp, ff, *pipeline_instanced_layout_, *render_pass_, 0);
+    pipeline_instanced_ = vk::raii::Pipeline(device, nullptr, gp);
+}
+
+void RasterPipeline::create_shadow_instanced_pipeline(const vk::raii::Device& device)
+{
+    FixedFunctionState ff{};
+    ff.stages[0].stage  = vk::ShaderStageFlagBits::eVertex;
+    ff.stages[0].module = *shadow_shader_module_;
+    ff.stages[0].pName  = "vertMainInstanced";
+
+    // Binding 0: position only (loc 0); binding 1: per-instance mat4 (locs 3-6).
+    // Locs 1, 2 (uv, normal) are NOT declared — shadow shader has only loc 0 + 3-6.
+    static const vk::VertexInputBindingDescription bindings[] = {
+        { .binding = 0, .stride = sizeof(util::Vertex), .inputRate = vk::VertexInputRate::eVertex },
+        { .binding = 1, .stride = sizeof(glm::mat4),   .inputRate = vk::VertexInputRate::eInstance },
+    };
+    static const vk::VertexInputAttributeDescription attributes[] = {
+        { .location = 0, .binding = 0, .format = vk::Format::eR32G32B32Sfloat,
+          .offset = static_cast<std::uint32_t>(offsetof(util::Vertex, position)) },
+        { .location = 3, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset =  0 },
+        { .location = 4, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset = 16 },
+        { .location = 5, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset = 32 },
+        { .location = 6, .binding = 1, .format = vk::Format::eR32G32B32A32Sfloat, .offset = 48 },
+    };
+    ff.vertex_input.vertexBindingDescriptionCount
+        = static_cast<std::uint32_t>(std::size(bindings));
+    ff.vertex_input.pVertexBindingDescriptions = bindings;
+    ff.vertex_input.vertexAttributeDescriptionCount
+        = static_cast<std::uint32_t>(std::size(attributes));
+    ff.vertex_input.pVertexAttributeDescriptions = attributes;
+
+    ff.input_asm.topology = vk::PrimitiveTopology::eTriangleList;
+    ff.viewport.viewportCount = 1;
+    ff.viewport.scissorCount  = 1;
+    ff.raster.polygonMode = vk::PolygonMode::eFill;
+    ff.raster.cullMode    = vk::CullModeFlagBits::eNone;
+    ff.raster.frontFace   = vk::FrontFace::eCounterClockwise;
+    ff.raster.lineWidth   = 1.0f;
+    ff.raster.depthBiasEnable           = vk::True;
+    ff.raster.depthBiasConstantFactor   = 1.25f;
+    ff.raster.depthBiasSlopeFactor      = 1.75f;
+    ff.ms.rasterizationSamples = vk::SampleCountFlagBits::e1;
+    ff.ds.depthTestEnable  = vk::True;
+    ff.ds.depthWriteEnable = vk::True;
+    ff.ds.depthCompareOp   = vk::CompareOp::eLessOrEqual;
+    ff.blend.attachmentCount = 0;
+    ff.dynamics[0] = vk::DynamicState::eViewport;
+    ff.dynamics[1] = vk::DynamicState::eScissor;
+    ff.dyn.dynamicStateCount = 2;
+    ff.dyn.pDynamicStates    = ff.dynamics;
+
+    vk::PushConstantRange pc_range{};
+    pc_range.stageFlags = vk::ShaderStageFlagBits::eVertex;
+    pc_range.offset = 0;
+    pc_range.size   = sizeof(ShadowInstancedPushConstant);
+    vk::PipelineLayoutCreateInfo layout_ci{};
+    layout_ci.pushConstantRangeCount = 1;
+    layout_ci.pPushConstantRanges    = &pc_range;
+    shadow_pipeline_instanced_layout_ = vk::raii::PipelineLayout(device, layout_ci);
+
+    vk::GraphicsPipelineCreateInfo gp{};
+    gp.stageCount          = 1;
+    gp.pStages             = ff.stages;
+    gp.pVertexInputState   = &ff.vertex_input;
+    gp.pInputAssemblyState = &ff.input_asm;
+    gp.pViewportState      = &ff.viewport;
+    gp.pRasterizationState = &ff.raster;
+    gp.pMultisampleState   = &ff.ms;
+    gp.pDepthStencilState  = &ff.ds;
+    gp.pColorBlendState    = &ff.blend;
+    gp.pDynamicState       = &ff.dyn;
+    gp.layout              = *shadow_pipeline_instanced_layout_;
+    gp.renderPass          = *shadow_render_pass_;
+    gp.subpass             = 0;
+    shadow_pipeline_instanced_ = vk::raii::Pipeline(device, nullptr, gp);
 }
 
 } // namespace renderer::raster

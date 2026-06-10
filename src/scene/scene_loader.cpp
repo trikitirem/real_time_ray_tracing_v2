@@ -2,6 +2,7 @@
 
 #include "engine/benchmark_constants.hpp"
 #include "scene/gltf_loader.hpp"
+#include "scene/instanced_group.hpp"
 #include "scene/primitives/cube.hpp"
 #include "scene/primitives/plane.hpp"
 #include "util/asset_root.hpp"
@@ -213,13 +214,22 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
 SceneStats count_scene_stats(const Scene& scene, const int stress_count)
 {
     SceneStats stats{};
-    stats.object_count = static_cast<int>(scene.model_count());
     stats.stress_count = stress_count;
 
     for (const auto& model : scene.models()) {
+        ++stats.object_count;
         for (const auto& prim : model.mesh.primitives) {
             stats.vertex_count += static_cast<int>(prim.vertices.size());
             stats.triangle_count += static_cast<int>(prim.indices.size() / 3);
+        }
+    }
+
+    for (const auto& group : scene.instanced_groups()) {
+        stats.object_count += static_cast<int>(group.transforms.size());
+        for (const auto& prim : group.prototype.mesh.primitives) {
+            const int n = static_cast<int>(group.transforms.size());
+            stats.vertex_count   += static_cast<int>(prim.vertices.size()) * n;
+            stats.triangle_count += static_cast<int>(prim.indices.size() / 3) * n;
         }
     }
 
@@ -252,13 +262,23 @@ std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,
         stress_mat.metalness  = cfg.stress.metalness;
         stress_mat.roughness  = cfg.stress.roughness;
 
+        const Model prototype = primitives::make_cube(1.0f, 1.0f, 1.0f, stress_mat, Transform{});
+
         std::mt19937                          rng(static_cast<std::uint32_t>(cfg.stress.rng_seed));
         std::uniform_real_distribution<float> dist(-cfg.stress.spread, cfg.stress.spread);
+
+        InstancedGroup stress_group{};
+        stress_group.prototype = prototype;
+        stress_group.transforms.reserve(static_cast<std::size_t>(stress_count));
 
         for (int i = 0; i < stress_count; ++i) {
             Transform xf{};
             xf.translate(dist(rng), dist(rng), dist(rng));
-            scene.add_model(primitives::make_cube(1.0f, 1.0f, 1.0f, stress_mat, xf));
+            stress_group.transforms.push_back(xf.matrix);
+        }
+
+        if (!stress_group.transforms.empty()) {
+            scene.add_instanced_group(std::move(stress_group));
         }
     }
 
