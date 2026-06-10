@@ -197,7 +197,7 @@ void RasterRenderBackend::update_light(vk::Extent2D /*extent*/)
 
     const glm::vec3 light_dir = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
 
-    const float half_size = 10.0f;
+    const float half_size = shadow_half_extent_;
     const glm::mat4 light_proj = glm::ortho(
         -half_size, half_size,
         -half_size, half_size,
@@ -229,6 +229,11 @@ void RasterRenderBackend::update_light(vk::Extent2D /*extent*/)
     };
     if (frame_recorder_)
         frame_recorder_->set_shadow_push_constant(shadow_push);
+}
+
+void RasterRenderBackend::set_shadow_half_extent(const float half_extent)
+{
+    shadow_half_extent_ = half_extent;
 }
 
 void RasterRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx)

@@ -113,6 +113,7 @@ float4 fragMain(VertexOutput v) : SV_Target {
     const float ambientStrength = 0.12;
     const float specularStrength = 0.7;
     const float shininess = 24.0;
+    const float shadowStrength = 0.2;
 
     float3 baseColor = gModel.albedo.rgb;
     if (gModel.hasTexture != 0) {
@@ -128,10 +129,11 @@ float4 fragMain(VertexOutput v) : SV_Target {
     float3 ambient = ambientStrength * lightColor * baseColor;
     float ndotl = saturate(dot(N, L));
     float shadow = sampleShadow(v.lightSpacePos);
-    
-    float3 diffuse = shadow * ndotl * lightColor * baseColor;
+    float directShadow = lerp(shadowStrength, 1.0, shadow);
+
+    float3 diffuse = directShadow * ndotl * lightColor * baseColor;
     float spec = pow(saturate(dot(N, H)), shininess);
-    float3 specular = shadow * specularStrength * (1.0 - gModel.roughness) * spec * lightColor;
+    float3 specular = directShadow * specularStrength * (1.0 - gModel.roughness) * spec * lightColor;
 
     return float4(ambient + diffuse + specular, 1.0f);
 }
@@ -155,6 +157,7 @@ float4 fragMainInstanced(VertexOutput v) : SV_Target {
     const float ambientStrength = 0.12;
     const float specularStrength = 0.7;
     const float shininess = 24.0;
+    const float shadowStrength = 0.2;
 
     float3 baseColor = gBatch.albedo.rgb;
     if (gBatch.hasTexture != 0) {
@@ -170,10 +173,11 @@ float4 fragMainInstanced(VertexOutput v) : SV_Target {
     float3 ambient = ambientStrength * lightColor * baseColor;
     float ndotl = saturate(dot(N, L));
     float shadow = sampleShadow(v.lightSpacePos);
+    float directShadow = lerp(shadowStrength, 1.0, shadow);
 
-    float3 diffuse = shadow * ndotl * lightColor * baseColor;
+    float3 diffuse = directShadow * ndotl * lightColor * baseColor;
     float spec = pow(saturate(dot(N, H)), shininess);
-    float3 specular = shadow * specularStrength * (1.0 - gBatch.roughness) * spec * lightColor;
+    float3 specular = directShadow * specularStrength * (1.0 - gBatch.roughness) * spec * lightColor;
 
     return float4(ambient + diffuse + specular, 1.0f);
 }

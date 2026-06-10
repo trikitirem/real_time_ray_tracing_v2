@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <cmath>
 #include <random>
 #include <stdexcept>
 
@@ -234,6 +235,26 @@ SceneStats count_scene_stats(const Scene& scene, const int stress_count)
     }
 
     return stats;
+}
+
+float compute_shadow_half_extent(const SceneConfig& cfg)
+{
+    constexpr float kDefaultHalfExtent = 10.0f;
+    constexpr float kLightAngleMargin  = 1.05f;
+
+    float half_extent = kDefaultHalfExtent;
+    for (const PrimitiveConfig& prim : cfg.primitives) {
+        if (prim.type != "plane") {
+            continue;
+        }
+
+        const float half_width  = prim.scale.x * 0.5f;
+        const float half_depth  = prim.scale.z * 0.5f;
+        const float diagonal    = std::sqrt(half_width * half_width + half_depth * half_depth);
+        half_extent             = std::max(half_extent, diagonal * kLightAngleMargin);
+    }
+
+    return half_extent;
 }
 
 std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,

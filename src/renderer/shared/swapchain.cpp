@@ -35,6 +35,11 @@ vk::SurfaceFormatKHR chooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>
 vk::PresentModeKHR choosePresentMode(const std::vector<vk::PresentModeKHR>& available)
 {
     for (const auto mode : available) {
+        if (mode == vk::PresentModeKHR::eImmediate) {
+            return mode;
+        }
+    }
+    for (const auto mode : available) {
         if (mode == vk::PresentModeKHR::eMailbox) {
             return mode;
         }

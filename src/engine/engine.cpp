@@ -19,8 +19,8 @@ namespace engine {
 
 namespace {
 
-constexpr std::uint32_t kInitialWidth  = 1280;
-constexpr std::uint32_t kInitialHeight = 720;
+constexpr std::uint32_t kInitialWidth  = 1920;
+constexpr std::uint32_t kInitialHeight = 1080;
 
 glm::quat euler_degrees_to_quat(const glm::vec3& euler_deg)
 {
@@ -144,6 +144,8 @@ void Engine::reload_scene_gpu()
     is_rendering_paused_ = true;
     std::cout << "[Engine] Pausing render, waiting for GPU...\n";
     deviceContext_.device().waitIdle();
+    renderer_->set_shadow_half_extent(
+        scene::compute_shadow_half_extent(current_scene_config_));
     renderer_->load_scene(scene_);
     is_rendering_paused_ = false;
 }
@@ -391,8 +393,8 @@ void Engine::handle_camera_input(const float frame_dt)
         const glm::vec3 euler = glm::degrees(glm::eulerAngles(camera_.orientation));
         std::cout << "[Camera] position: [" << camera_.position.x << ", "
                   << camera_.position.y << ", " << camera_.position.z
-                  << "]  euler_degrees: [" << euler.y << ", " << euler.x << ", " << euler.z
-                  << "]\n";
+                  << "]  euler_degrees: [" << euler.x << ", " << euler.y << ", " << euler.z
+                  << "]  (pitch, yaw, roll — paste into JSON as-is)\n";
     }
 
     if (animator_.is_running()) {

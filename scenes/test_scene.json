@@ -6,7 +6,9 @@
     "position": [0.0, 1.5, 4.0],
     "euler_degrees": [0.0, 0.0, 0.0]
   },
-  "camera_presets": [],
+  "camera_presets": [
+
+  ],
   "primitives": [
     {
       "type": "cube",

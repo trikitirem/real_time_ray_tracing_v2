@@ -2,9 +2,15 @@
   "name": "GraphicsTest",
   "kind": "viewing",
   "benchmark": { "duration_seconds": 180.0 },
+  "initial_camera": {
+    "position": [2.03691, 2.32992, 7.45042],
+    "euler_degrees": [-12.0321, 17.332, 0.0]
+  },
   "camera_presets": [
-    { "name": "front", "position": [0.0, 1.2, 4.0], "euler_degrees": [0.0, 0.0, 0.0] },
-    { "name": "top",   "position": [0.0, 6.0, 0.1],  "euler_degrees": [-89.0, 0.0, 0.0] }
+    { "name": "main_shot", "position": [2.03691, 2.32992, 7.45042], "euler_degrees": [-12.0321, 17.332, 0.0] },
+    { "name": "duck_closeup", "position": [3.13741, 1.52779, 1.10318], "euler_degrees": [-16.0439, 86.9464, 0.0] },
+    { "name": "shadow_closeup", "position": [1.38622, 1.86885, 0.32333], "euler_degrees": [-56.5771, 89.2382, 0.00231021] },
+    { "name": "reflection_closeup", "position": [-0.325579, 2.13806, -6.7632], "euler_degrees": [-11.4594, 69.7577, -0.000514499] }
   ],
   "primitives": [
     {

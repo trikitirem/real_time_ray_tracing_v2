@@ -37,6 +37,7 @@ void Window::init(const std::uint32_t width, const std::uint32_t height, const s
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
     window_ = glfwCreateWindow(static_cast<int>(width),
                                static_cast<int>(height),
@@ -45,6 +46,14 @@ void Window::init(const std::uint32_t width, const std::uint32_t height, const s
                                nullptr);
     if (!window_) {
         throw std::runtime_error("glfwCreateWindow failed");
+    }
+
+    if (GLFWmonitor* monitor = glfwGetPrimaryMonitor()) {
+        if (const GLFWvidmode* mode = glfwGetVideoMode(monitor)) {
+            const int xpos = (mode->width - static_cast<int>(width)) / 2;
+            const int ypos = (mode->height - static_cast<int>(height)) / 2;
+            glfwSetWindowPos(window_, xpos, ypos);
+        }
     }
 
     glfwSetWindowUserPointer(window_, this);

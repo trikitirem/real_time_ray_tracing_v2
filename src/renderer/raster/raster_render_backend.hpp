@@ -24,7 +24,9 @@ public:
     void destroy(DeviceContext& ctx) override;
     void load_scene(ScenePayload&& scene_payload) override;
     void update_camera(const engine::Camera& camera, vk::Extent2D extent) override;
-    void update_light(vk::Extent2D extent);
+    void update_light(vk::Extent2D extent) override;
+    void set_shadow_half_extent(float half_extent);
+
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
 private:
@@ -41,6 +43,8 @@ private:
     std::optional<buffers::HostVisibleBuffer> light_buffer_;
     std::optional<descriptors::UniformSet> light_uniform_set_;
     textures::TextureResource default_albedo_{};
+
+    float shadow_half_extent_ = 10.0f;
 };
 
 } // namespace renderer::raster

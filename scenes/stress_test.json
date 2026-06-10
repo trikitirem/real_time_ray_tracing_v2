@@ -15,10 +15,10 @@
   "models": [],
   "stress": {
     "enabled": true,
-    "initial_count": 1000,
-    "step": 1000,
+    "initial_count": 5000,
+    "step": 5000,
     "min_count": 0,
-    "max_count": 100000,
+    "max_count": 10000000000,
     "spread": 100.0,
     "color": [0.6, 0.4, 0.2],
     "metalness": 0.9,

@@ -17,6 +17,8 @@ struct SceneStats {
 
 [[nodiscard]] SceneConfig load_scene_config(const std::filesystem::path& json_path);
 
+[[nodiscard]] float compute_shadow_half_extent(const SceneConfig& cfg);
+
 [[nodiscard]] std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,
                                                        const std::filesystem::path& asset_root,
                                                        int stress_count_override = -1);

@@ -90,6 +90,11 @@ void Renderer::set_camera(const engine::Camera& camera)
     backend_->update_camera(camera, swapchain_.extent());
 }
 
+void Renderer::set_shadow_half_extent(const float half_extent)
+{
+    backend_->set_shadow_half_extent(half_extent);
+}
+
 std::string Renderer::present_mode_string() const
 {
     return present_mode_to_string(swapchain_.presentMode());
