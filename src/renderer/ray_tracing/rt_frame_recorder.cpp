@@ -139,6 +139,34 @@ void RayTracingFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordCon
             cmd.bindIndexBuffer(item.index_buffer, 0, vk::IndexType::eUint32);
             cmd.drawIndexed(item.index_count, 1, item.first_index, item.vertex_offset, 0);
         }
+
+        for (const RtInstancedDrawItem& batch : scene_data_->instanced_items) {
+            const bool has_texture = batch.texture_index != kNoTexture
+                                     && batch.texture_index < scene_data_->texture_views.size();
+            const glm::vec4 albedo
+                = batch.material_index < scene_data_->material_albedos.size()
+                      ? scene_data_->material_albedos[batch.material_index]
+                      : glm::vec4(1.0f);
+            const vk::Buffer vb = batch.vertex_buffer;
+            const vk::DeviceSize vb_offset = 0;
+            cmd.bindVertexBuffers(0, vb, vb_offset);
+            cmd.bindIndexBuffer(batch.index_buffer, 0, vk::IndexType::eUint32);
+            for (const glm::mat4& transform : batch.transforms) {
+                const ModelPushConstant push{
+                    .model          = transform,
+                    .albedo         = albedo,
+                    .material_index = batch.material_index,
+                    .has_texture    = has_texture ? 1u : 0u,
+                };
+                cmd.pushConstants(*pipeline_.pipeline_layout(),
+                                  vk::ShaderStageFlagBits::eVertex
+                                      | vk::ShaderStageFlagBits::eFragment,
+                                  0,
+                                  sizeof(ModelPushConstant),
+                                  &push);
+                cmd.drawIndexed(batch.index_count, 1, 0, 0, 0);
+            }
+        }
     }
 
     cmd.endRendering();

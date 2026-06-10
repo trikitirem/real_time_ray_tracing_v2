@@ -89,7 +89,7 @@ void end_single_time_commands(const vk::raii::Queue& queue, const vk::raii::Comm
 BlasBuildResult BlasBuilder::build(DeviceContext& ctx, const RtSceneGpuData& scene_data) const
 {
     BlasBuildResult out{};
-    if (scene_data.draw_items.empty()) {
+    if (scene_data.draw_items.empty() && scene_data.instanced_items.empty()) {
         return out;
     }
 
@@ -101,8 +101,13 @@ BlasBuildResult BlasBuilder::build(DeviceContext& ctx, const RtSceneGpuData& sce
     pool_info.queueFamilyIndex = ctx.graphicsQueueFamily();
     const vk::raii::CommandPool command_pool(device, pool_info);
 
-    out.entries.reserve(scene_data.draw_items.size());
-    out.instance_inputs.reserve(scene_data.draw_items.size());
+    // Count total TLAS instances up-front for reservation.
+    std::uint32_t total_instanced = 0;
+    for (const RtInstancedDrawItem& g : scene_data.instanced_items) {
+        total_instanced += static_cast<std::uint32_t>(g.transforms.size());
+    }
+    out.entries.reserve(scene_data.draw_items.size() + scene_data.instanced_items.size());
+    out.instance_inputs.reserve(scene_data.draw_items.size() + total_instanced);
 
     for (std::uint32_t i = 0; i < scene_data.draw_items.size(); ++i) {
         const RtDrawItem& item = scene_data.draw_items[i];
@@ -198,6 +203,112 @@ BlasBuildResult BlasBuilder::build(DeviceContext& ctx, const RtSceneGpuData& sce
             .index_offset = item.first_index,
             .model_matrix = item.model_matrix,
         });
+        out.entries.push_back(std::move(entry));
+    }
+
+    // Instanced groups: one BLAS per prototype, N TLAS entries per group.
+    // geometry_index starts after all legacy draw_items so the RT shader
+    // can index into the combined reflection_instance_lut correctly.
+    std::uint32_t instanced_geometry_base
+        = static_cast<std::uint32_t>(scene_data.draw_items.size());
+
+    for (const RtInstancedDrawItem& item : scene_data.instanced_items) {
+        if (item.index_count == 0 || item.transforms.empty()) {
+            continue;
+        }
+
+        vk::BufferDeviceAddressInfo vertex_addr_info{ .buffer = item.vertex_buffer };
+        const vk::DeviceAddress vertex_addr = device.getBufferAddress(vertex_addr_info);
+        vk::BufferDeviceAddressInfo index_addr_info{ .buffer = item.index_buffer };
+        const vk::DeviceAddress index_addr = device.getBufferAddress(index_addr_info);
+
+        const std::uint32_t primitive_count = item.index_count / 3;
+        const std::uint32_t max_vertex = std::max(1u, item.vertex_count) - 1;
+
+        auto triangles = vk::AccelerationStructureGeometryTrianglesDataKHR{
+            .vertexFormat = vk::Format::eR32G32B32Sfloat,
+            .vertexData   = vertex_addr,
+            .vertexStride = sizeof(util::Vertex),
+            .maxVertex    = max_vertex,
+            .indexType    = vk::IndexType::eUint32,
+            .indexData    = index_addr,
+        };
+        vk::AccelerationStructureGeometryDataKHR geometry_data(triangles);
+        vk::AccelerationStructureGeometryKHR geometry{
+            .geometryType = vk::GeometryTypeKHR::eTriangles,
+            .geometry     = geometry_data,
+            .flags        = vk::GeometryFlagBitsKHR::eOpaque,
+        };
+
+        vk::AccelerationStructureBuildGeometryInfoKHR build_info{
+            .type          = vk::AccelerationStructureTypeKHR::eBottomLevel,
+            .mode          = vk::BuildAccelerationStructureModeKHR::eBuild,
+            .geometryCount = 1,
+            .pGeometries   = &geometry,
+        };
+
+        const vk::AccelerationStructureBuildSizesInfoKHR sizes =
+            device.getAccelerationStructureBuildSizesKHR(
+                vk::AccelerationStructureBuildTypeKHR::eDevice,
+                build_info, { primitive_count });
+
+        vk::raii::Buffer scratch_buffer = nullptr;
+        vk::raii::DeviceMemory scratch_memory = nullptr;
+        create_buffer(physical, device, sizes.buildScratchSize,
+            vk::BufferUsageFlagBits::eStorageBuffer
+                | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            scratch_buffer, scratch_memory);
+        build_info.scratchData.deviceAddress =
+            device.getBufferAddress(vk::BufferDeviceAddressInfo{ .buffer = *scratch_buffer });
+
+        BlasEntry entry{};
+        create_buffer(physical, device, sizes.accelerationStructureSize,
+            vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR
+                | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            entry.buffer, entry.memory);
+
+        entry.handle = device.createAccelerationStructureKHR(
+            vk::AccelerationStructureCreateInfoKHR{
+                .buffer = *entry.buffer,
+                .offset = 0,
+                .size   = sizes.accelerationStructureSize,
+                .type   = vk::AccelerationStructureTypeKHR::eBottomLevel,
+            });
+        build_info.dstAccelerationStructure = *entry.handle;
+
+        vk::AccelerationStructureBuildRangeInfoKHR range_info{
+            .primitiveCount  = primitive_count,
+            .primitiveOffset = 0,
+            .firstVertex     = 0,
+            .transformOffset = 0,
+        };
+
+        auto cmd = begin_single_time_commands(device, command_pool);
+        cmd->buildAccelerationStructuresKHR({ build_info }, { &range_info });
+        end_single_time_commands(ctx.graphicsQueue(), *cmd);
+
+        const vk::DeviceAddress blas_addr =
+            device.getAccelerationStructureAddressKHR(
+                vk::AccelerationStructureDeviceAddressInfoKHR{
+                    .accelerationStructure = *entry.handle });
+
+        // N TLAS instances — all share the same blas_addr, each gets a unique
+        // geometry_index so the RT shader can find its LUT entry.
+        for (std::uint32_t t = 0;
+             t < static_cast<std::uint32_t>(item.transforms.size()); ++t) {
+            out.instance_inputs.push_back(BlasInstanceInput{
+                .geometry_index = instanced_geometry_base + t,
+                .blas_address   = blas_addr,
+                .material_index = item.material_index,
+                .index_offset   = 0,
+                .model_matrix   = item.transforms[t],
+            });
+        }
+        instanced_geometry_base
+            += static_cast<std::uint32_t>(item.transforms.size());
+
         out.entries.push_back(std::move(entry));
     }
 

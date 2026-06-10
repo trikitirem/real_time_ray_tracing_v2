@@ -46,24 +46,47 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
         shadow_scissor.extent = pipeline_.shadow_extent();
         cmd.setScissor(0, shadow_scissor);
 
-        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.shadow_pipeline());
-
         if (scene_data_ && scene_data_->valid) {
-            for (const RasterDrawItem& item : scene_data_->draw_items) {
-                const ShadowPushConstant push{
-                    .light_space_matrix = shadow_push_.light_space_matrix,
-                    .model = item.model_matrix,
-                };
-                cmd.pushConstants(
-                    *pipeline_.shadow_pipeline_layout(),
-                    vk::ShaderStageFlagBits::eVertex,
-                    0, sizeof(ShadowPushConstant), &push);
+            // Instanced shadow draws
+            if (!scene_data_->instanced_items.empty()) {
+                cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                                 *pipeline_.shadow_pipeline_instanced());
+                for (const InstancedDrawItem& batch : scene_data_->instanced_items) {
+                    const ShadowInstancedPushConstant push{
+                        .light_space_matrix = shadow_push_.light_space_matrix,
+                    };
+                    cmd.pushConstants(
+                        *pipeline_.shadow_pipeline_instanced_layout(),
+                        vk::ShaderStageFlagBits::eVertex,
+                        0, sizeof(ShadowInstancedPushConstant), &push);
 
-                const vk::Buffer vb = item.vertex_buffer;
-                const vk::DeviceSize vb_offset = 0;
-                cmd.bindVertexBuffers(0, vb, vb_offset);
-                cmd.bindIndexBuffer(item.index_buffer, 0, vk::IndexType::eUint32);
-                cmd.drawIndexed(item.index_count, 1, item.first_index, item.vertex_offset, 0);
+                    const vk::Buffer bufs[] = { batch.vertex_buffer, batch.instance_buffer };
+                    const vk::DeviceSize offsets[] = { 0, 0 };
+                    cmd.bindVertexBuffers(0, 2, bufs, offsets);
+                    cmd.bindIndexBuffer(batch.index_buffer, 0, vk::IndexType::eUint32);
+                    cmd.drawIndexed(batch.index_count, batch.instance_count, 0, 0, 0);
+                }
+            }
+
+            // Legacy shadow draws
+            if (!scene_data_->draw_items.empty()) {
+                cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.shadow_pipeline());
+                for (const RasterDrawItem& item : scene_data_->draw_items) {
+                    const ShadowPushConstant push{
+                        .light_space_matrix = shadow_push_.light_space_matrix,
+                        .model = item.model_matrix,
+                    };
+                    cmd.pushConstants(
+                        *pipeline_.shadow_pipeline_layout(),
+                        vk::ShaderStageFlagBits::eVertex,
+                        0, sizeof(ShadowPushConstant), &push);
+
+                    const vk::Buffer vb = item.vertex_buffer;
+                    const vk::DeviceSize vb_offset = 0;
+                    cmd.bindVertexBuffers(0, vb, vb_offset);
+                    cmd.bindIndexBuffer(item.index_buffer, 0, vk::IndexType::eUint32);
+                    cmd.drawIndexed(item.index_count, 1, item.first_index, item.vertex_offset, 0);
+                }
             }
         }
 
@@ -91,13 +114,62 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
         cmd.beginRenderPass(begin, vk::SubpassContents::eInline);
         cmd.setViewport(0, make_viewport_y_up_ndc(ctx.extent));
         cmd.setScissor(0, make_full_framebuffer_scissor(ctx.extent));
-        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.pipeline());
+        if (scene_data_ && scene_data_->valid) {
+            // Instanced main draws
+            if (!scene_data_->instanced_items.empty()) {
+                cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.pipeline_instanced());
+                if (camera_uniform_set_)
+                    camera_uniform_set_->bind(cmd, *pipeline_.pipeline_instanced_layout());
+                if (light_uniform_set_)
+                    light_uniform_set_->bind(cmd, *pipeline_.pipeline_instanced_layout());
 
-        if (camera_uniform_set_)
-            camera_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+                for (const InstancedDrawItem& batch : scene_data_->instanced_items) {
+                    const bool has_texture = batch.texture_index != kNoTexture
+                                             && batch.texture_index < scene_data_->texture_views.size()
+                                             && per_texture_uniform_sets_ != nullptr
+                                             && batch.texture_index < per_texture_uniform_sets_->size();
+                    if (has_texture) {
+                        (*per_texture_uniform_sets_)[batch.texture_index].bind(
+                            cmd, *pipeline_.pipeline_instanced_layout());
+                    } else if (default_texture_uniform_set_ != nullptr) {
+                        default_texture_uniform_set_->bind(cmd, *pipeline_.pipeline_instanced_layout());
+                    }
 
-        if (light_uniform_set_)
-            light_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+                    const glm::vec4 albedo
+                        = batch.material_index < scene_data_->material_albedos.size()
+                              ? scene_data_->material_albedos[batch.material_index]
+                              : glm::vec4(1.0f);
+                    const float roughness
+                        = batch.material_index < scene_data_->material_roughness.size()
+                              ? scene_data_->material_roughness[batch.material_index]
+                              : 0.5f;
+                    const InstancedBatchPushConstant push{
+                        .albedo       = albedo,
+                        .has_texture  = has_texture ? 1u : 0u,
+                        .roughness    = roughness,
+                    };
+                    cmd.pushConstants(
+                        *pipeline_.pipeline_instanced_layout(),
+                        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                        0, sizeof(InstancedBatchPushConstant), &push);
+
+                    const vk::Buffer bufs[] = { batch.vertex_buffer, batch.instance_buffer };
+                    const vk::DeviceSize offsets[] = { 0, 0 };
+                    cmd.bindVertexBuffers(0, 2, bufs, offsets);
+                    cmd.bindIndexBuffer(batch.index_buffer, 0, vk::IndexType::eUint32);
+                    cmd.drawIndexed(batch.index_count, batch.instance_count, 0, 0, 0);
+                }
+            }
+
+            // Legacy main draws — always rebind descriptors for legacy layout
+            if (!scene_data_->draw_items.empty()) {
+                cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_.pipeline());
+                if (camera_uniform_set_)
+                    camera_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+                if (light_uniform_set_)
+                    light_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
+            }
+        }
 
         if (scene_data_ && scene_data_->valid) {
             for (const RasterDrawItem& item : scene_data_->draw_items) {

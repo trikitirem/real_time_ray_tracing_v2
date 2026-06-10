@@ -27,6 +27,20 @@ struct ShadowPushConstant {
     glm::mat4 model{ 1.0f };
 };
 
+struct InstancedBatchPushConstant {
+    glm::vec4     albedo{ 1.0f };
+    std::uint32_t has_texture = 0;
+    float         roughness   = 0.5f;
+    std::uint32_t _pad0 = 0;
+    std::uint32_t _pad1 = 0;
+};
+
+static_assert(sizeof(InstancedBatchPushConstant) == 32);
+
+struct ShadowInstancedPushConstant {
+    glm::mat4 light_space_matrix{ 1.0f };
+};
+
 struct LightUbo {
     glm::mat4 light_space_matrix{ 1.0f };
     glm::vec3 light_dir_to_light{ 0.0f, 1.0f, 1.0f };

@@ -22,6 +22,12 @@ foreach(rel IN ITEMS shaders/raster shaders/ray_tracing)
         get_filename_component(name_we ${slang_file} NAME_WE)
         set(out_dir "${CMAKE_BINARY_DIR}/${rel}")
         set(spv "${out_dir}/${name_we}.spv")
+        set(shader_entries -entry vertMain -entry fragMain)
+        if(name_we STREQUAL "default" AND rel STREQUAL "shaders/raster")
+            list(APPEND shader_entries -entry vertMainInstanced -entry fragMainInstanced)
+        elseif(name_we STREQUAL "shadow" AND rel STREQUAL "shaders/raster")
+            list(APPEND shader_entries -entry vertMainInstanced)
+        endif()
         add_custom_command(
                 OUTPUT ${spv}
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
@@ -31,8 +37,7 @@ foreach(rel IN ITEMS shaders/raster shaders/ray_tracing)
                     -profile spirv_1_4
                     -emit-spirv-directly
                     -fvk-use-entrypoint-name
-                    -entry vertMain
-                    -entry fragMain
+                    ${shader_entries}
                     -o ${spv}
                 DEPENDS ${slang_file}
                 COMMENT "Slang ${name_we}.slang -> ${spv}"

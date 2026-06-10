@@ -15,6 +15,16 @@ namespace renderer::raster {
 
 inline constexpr std::uint32_t kNoTexture = std::numeric_limits<std::uint32_t>::max();
 
+struct InstancedDrawItem {
+    vk::Buffer vertex_buffer{};
+    vk::Buffer index_buffer{};
+    vk::Buffer instance_buffer{};
+    std::uint32_t index_count    = 0;
+    std::uint32_t instance_count = 0;
+    std::uint32_t material_index = 0;
+    std::uint32_t texture_index  = kNoTexture;
+};
+
 struct RasterDrawItem {
     vk::Buffer vertex_buffer{};
     vk::Buffer index_buffer{};
@@ -29,16 +39,23 @@ struct RasterDrawItem {
 struct RasterSceneGpuData {
     std::vector<buffers::GpuBuffer> vertex_buffers{};
     std::vector<buffers::GpuBuffer> index_buffers{};
+    std::vector<buffers::GpuBuffer> instance_buffers{};
     std::vector<textures::TextureResource> textures{};
 
-    std::vector<RasterDrawItem> draw_items{};
+    std::vector<RasterDrawItem>    draw_items{};
+    std::vector<InstancedDrawItem> instanced_items{};
     std::vector<glm::vec4> material_albedos{};
-    std::vector<float> material_roughness{};
+    std::vector<float>     material_roughness{};
     vk::Buffer material_buffer{};
     std::vector<vk::ImageView> texture_views{};
     vk::Sampler texture_sampler{};
     std::uint32_t material_count = 0;
     bool valid = false;
 };
+
+inline bool scene_has_draw_work(const RasterSceneGpuData& data)
+{
+    return !data.draw_items.empty() || !data.instanced_items.empty();
+}
 
 } // namespace renderer::raster

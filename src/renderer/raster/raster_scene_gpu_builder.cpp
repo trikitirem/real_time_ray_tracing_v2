@@ -2,6 +2,7 @@
 
 #include "renderer/shared/buffers/buffer_kind.hpp"
 #include "renderer/shared/device_context.hpp"
+#include "scene/instanced_group.hpp"
 #include "scene/mesh_primitive.hpp"
 #include "scene/model.hpp"
 #include "scene/scene.hpp"
@@ -9,6 +10,8 @@
 
 #include <cstdint>
 #include <span>
+
+#include <glm/mat4x4.hpp>
 
 namespace renderer::raster {
 
@@ -79,8 +82,60 @@ ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
         }
     }
 
+    for (const scene::InstancedGroup& group : scene.instanced_groups()) {
+        if (group.transforms.empty()) {
+            continue;
+        }
+        for (const scene::MeshPrimitive& primitive : group.prototype.mesh.primitives) {
+            if (primitive.vertices.empty() || primitive.indices.empty()) {
+                continue;
+            }
+
+            out.vertex_buffers.push_back(buffers::GpuBuffer::from_span(
+                ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(),
+                buffers::BufferKind::vertex,
+                std::span<const util::Vertex>(primitive.vertices.data(), primitive.vertices.size())));
+            out.index_buffers.push_back(buffers::GpuBuffer::from_span(
+                ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(),
+                buffers::BufferKind::index,
+                std::span<const util::Index>(primitive.indices.data(), primitive.indices.size())));
+            out.instance_buffers.push_back(buffers::GpuBuffer::from_span(
+                ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(),
+                buffers::BufferKind::vertex,
+                std::span<const glm::mat4>(group.transforms.data(), group.transforms.size())));
+
+            const auto vb_idx   = out.vertex_buffers.size()   - 1;
+            const auto ib_idx   = out.index_buffers.size()    - 1;
+            const auto inst_idx = out.instance_buffers.size() - 1;
+
+            const std::uint32_t material_index
+                = static_cast<std::uint32_t>(out.material_albedos.size());
+            out.material_albedos.push_back(
+                glm::vec4(primitive.material.base_color, 1.0f));
+            out.material_roughness.push_back(primitive.material.roughness);
+
+            std::uint32_t texture_index = kNoTexture;
+            if (!primitive.material.texture_location.file_name.empty()) {
+                texture_index = load_texture(primitive.material.texture_location);
+                if (out.texture_sampler == vk::Sampler{}) {
+                    out.texture_sampler = *out.textures.back().sampler();
+                }
+            }
+
+            out.instanced_items.push_back(InstancedDrawItem{
+                .vertex_buffer   = *out.vertex_buffers[vb_idx].buffer(),
+                .index_buffer    = *out.index_buffers[ib_idx].buffer(),
+                .instance_buffer = *out.instance_buffers[inst_idx].buffer(),
+                .index_count     = static_cast<std::uint32_t>(primitive.indices.size()),
+                .instance_count  = static_cast<std::uint32_t>(group.transforms.size()),
+                .material_index  = material_index,
+                .texture_index   = texture_index,
+            });
+        }
+    }
+
     out.material_count = static_cast<std::uint32_t>(out.material_albedos.size());
-    out.valid = !out.draw_items.empty();
+    out.valid = scene_has_draw_work(out);
     ScenePayload payload{};
     payload.backend = BackendKind::raster;
     payload.set(std::move(out));
