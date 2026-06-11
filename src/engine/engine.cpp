@@ -337,6 +337,7 @@ BenchmarkMeta Engine::make_benchmark_meta() const
     meta.window_width             = extent.width;
     meta.window_height            = extent.height;
     meta.rt_reflections_enabled   = current_scene_config_.benchmark.rt_reflections_enabled;
+    meta.stress_use_texture       = current_scene_config_.stress.use_texture;
     return meta;
 }
 

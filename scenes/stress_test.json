@@ -1,7 +1,7 @@
 {
   "name": "StressTest",
   "kind": "benchmark",
-  "benchmark": { "duration_seconds": 60.0, "rt_reflections_enabled": false },
+  "benchmark": { "duration_seconds": 60.0, "rt_reflections_enabled": true },
   "benchmark_path": {
     "from": [0.0, 3.0, 100.0],
     "to": [0.0, 3.0, -100.0],
@@ -23,6 +23,8 @@
     "color": [0.6, 0.4, 0.2],
     "metalness": 0.9,
     "roughness": 0.1,
-    "rng_seed": 42
+    "rng_seed": 42,
+    "use_texture": true,
+    "texture": "images/container.png"
   }
 }

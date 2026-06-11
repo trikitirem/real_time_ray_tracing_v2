@@ -7,7 +7,7 @@
     "euler_degrees": [0.0, 0.0, 0.0]
   },
   "camera_presets": [
-
+    { "name": "main_shot", "position": [3.56937, 1.72607, 3.7003], "euler_degrees": [-16.759, 42.3989, -0.000155501] }
   ],
   "primitives": [
     {
@@ -17,7 +17,7 @@
       "color": [1.0, 0.0, 0.0],
       "metalness": 0.0,
       "roughness": 0.7,
-      "texture": "images/texture.jpg"
+      "texture": "images/container.png"
     },
     {
       "type": "plane",

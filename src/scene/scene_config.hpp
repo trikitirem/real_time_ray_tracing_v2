@@ -66,6 +66,8 @@ struct StressConfig {
     float     metalness     = 0.0f;
     float     roughness     = 0.5f;
     int       rng_seed      = 42;
+    bool      use_texture   = false;
+    std::string texture;
 };
 
 struct SceneConfig {

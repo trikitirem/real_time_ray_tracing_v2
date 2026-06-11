@@ -26,6 +26,7 @@ struct BenchmarkMeta {
     std::uint32_t window_height = 0;
 
     bool rt_reflections_enabled = true;
+    bool stress_use_texture       = false;
 };
 
 struct BenchmarkStats {

@@ -132,6 +132,10 @@ void validate_config(const SceneConfig& cfg)
             throw std::runtime_error("Scene '" + cfg.name
                                      + "': stress.roughness must be in [0, 1]");
         }
+        if (cfg.stress.use_texture && cfg.stress.texture.empty()) {
+            throw std::runtime_error("Scene '" + cfg.name
+                                     + "': stress.use_texture is true but stress.texture is empty");
+        }
     }
 }
 
@@ -208,6 +212,10 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
         }
         cfg.stress.metalness = s.value("metalness", 0.0f);
         cfg.stress.roughness = s.value("roughness", 0.5f);
+        cfg.stress.use_texture = s.value("use_texture", false);
+        if (s.contains("texture")) {
+            cfg.stress.texture = s.at("texture").get<std::string>();
+        }
     }
 
     validate_config(cfg);
@@ -284,6 +292,11 @@ std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,
         stress_mat.base_color = cfg.stress.color;
         stress_mat.metalness  = cfg.stress.metalness;
         stress_mat.roughness  = cfg.stress.roughness;
+        if (cfg.stress.use_texture && !cfg.stress.texture.empty()) {
+            const auto p = util::resolve_asset(cfg.stress.texture);
+            stress_mat.texture_location
+                = util::AssetLocation{ p.parent_path(), p.filename().string() };
+        }
 
         const Model prototype = primitives::make_cube(1.0f, 1.0f, 1.0f, stress_mat, Transform{});
 

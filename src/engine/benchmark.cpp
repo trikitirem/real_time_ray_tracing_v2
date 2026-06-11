@@ -158,6 +158,7 @@ void Benchmark::save_json() const
     j["stress_count"]            = meta_.stress_count;
     j["stress_rng_seed"]         = meta_.stress_rng_seed;
     j["rt_reflections_enabled"]  = meta_.rt_reflections_enabled;
+    j["stress_use_texture"]      = meta_.stress_use_texture;
     j["stats"]["avg_fps"]        = stats.avg_fps;
     j["stats"]["p5_low_fps"]     = stats.p5_low_fps;
     j["stats"]["p1_low_fps"]     = stats.p1_low_fps;
