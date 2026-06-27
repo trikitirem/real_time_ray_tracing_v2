@@ -9,20 +9,18 @@
 namespace renderer::ray_tracing {
 
 class RayTracingPipeline : public renderer::GraphicsPipeline {
-public:
+  public:
     RayTracingPipeline() = default;
-    RayTracingPipeline(const RayTracingPipeline&)            = delete;
+    RayTracingPipeline(const RayTracingPipeline&) = delete;
     RayTracingPipeline& operator=(const RayTracingPipeline&) = delete;
-    RayTracingPipeline(RayTracingPipeline&&)                 = delete;
-    RayTracingPipeline& operator=(RayTracingPipeline&&)      = delete;
+    RayTracingPipeline(RayTracingPipeline&&) = delete;
+    RayTracingPipeline& operator=(RayTracingPipeline&&) = delete;
 
-    void create(const vk::raii::Device&        device,
-                const vk::raii::PhysicalDevice& physicalDevice,
-                vk::Format                     colorFormat,
-                const std::filesystem::path&   spirv_path);
+    void create(const vk::raii::Device& device, const vk::raii::PhysicalDevice& physicalDevice,
+                vk::Format colorFormat, const std::filesystem::path& spirv_path);
     void destroy();
 
-private:
+  private:
     vk::raii::DescriptorSetLayout camera_set_layout_ = nullptr;
     vk::raii::DescriptorSetLayout texture_set_layout_ = nullptr;
 };

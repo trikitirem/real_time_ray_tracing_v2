@@ -16,11 +16,11 @@ struct FrameRecordContext {
 };
 
 class FrameRecorder {
-public:
-    FrameRecorder()                                  = default;
-    FrameRecorder(const FrameRecorder&)            = delete;
+  public:
+    FrameRecorder() = default;
+    FrameRecorder(const FrameRecorder&) = delete;
     FrameRecorder& operator=(const FrameRecorder&) = delete;
-    virtual ~FrameRecorder()                           = default;
+    virtual ~FrameRecorder() = default;
 
     virtual void record(vk::CommandBuffer cmd, const FrameRecordContext& ctx) = 0;
 };

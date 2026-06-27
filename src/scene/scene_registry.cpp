@@ -2,8 +2,7 @@
 
 namespace scene {
 
-std::string_view scene_json_path(const SceneName name)
-{
+std::string_view scene_json_path(const SceneName name) {
     switch (name) {
     case SceneName::Test:
         return "scenes/test_scene.json";
@@ -15,8 +14,7 @@ std::string_view scene_json_path(const SceneName name)
     return "";
 }
 
-std::string_view scene_display_name(const SceneName name)
-{
+std::string_view scene_display_name(const SceneName name) {
     switch (name) {
     case SceneName::Test:
         return "Test";

@@ -34,7 +34,7 @@ struct BlasBuildResult {
 };
 
 class BlasBuilder {
-public:
+  public:
     BlasBuildResult build(DeviceContext& ctx, const RtSceneGpuData& scene_data) const;
 };
 

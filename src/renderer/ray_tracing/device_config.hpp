@@ -9,31 +9,30 @@ namespace renderer::ray_tracing {
 namespace detail {
 
 struct RayTracingFeatureChain {
-    vk::PhysicalDeviceRayQueryFeaturesKHR               rayQuery{};
-    vk::PhysicalDeviceAccelerationStructureFeaturesKHR   asFeat{};
-    vk::PhysicalDeviceVulkan11Features                v11{};
-    vk::PhysicalDeviceVulkan12Features                v12{};
-    vk::PhysicalDeviceVulkan13Features                v13{};
-    vk::PhysicalDeviceFeatures2                       features2{};
+    vk::PhysicalDeviceRayQueryFeaturesKHR rayQuery{};
+    vk::PhysicalDeviceAccelerationStructureFeaturesKHR asFeat{};
+    vk::PhysicalDeviceVulkan11Features v11{};
+    vk::PhysicalDeviceVulkan12Features v12{};
+    vk::PhysicalDeviceVulkan13Features v13{};
+    vk::PhysicalDeviceFeatures2 features2{};
 
-    RayTracingFeatureChain()
-    {
+    RayTracingFeatureChain() {
         rayQuery.rayQuery = vk::True;
 
-        asFeat.pNext                 = &rayQuery;
+        asFeat.pNext = &rayQuery;
         asFeat.accelerationStructure = vk::True;
 
-        v12.pNext                           = &asFeat;
-        v12.descriptorIndexing              = vk::True;
+        v12.pNext = &asFeat;
+        v12.descriptorIndexing = vk::True;
         v12.descriptorBindingPartiallyBound = vk::True;
-        v12.runtimeDescriptorArray          = vk::True;
-        v12.scalarBlockLayout               = vk::True;
-        v12.bufferDeviceAddress             = vk::True;
+        v12.runtimeDescriptorArray = vk::True;
+        v12.scalarBlockLayout = vk::True;
+        v12.bufferDeviceAddress = vk::True;
 
-        v11.pNext               = &v12;
+        v11.pNext = &v12;
         v11.shaderDrawParameters = vk::True;
 
-        v13.pNext            = &v11;
+        v13.pNext = &v11;
         v13.synchronization2 = vk::True;
         v13.dynamicRendering = vk::True;
 
@@ -44,8 +43,7 @@ struct RayTracingFeatureChain {
 
 } // namespace detail
 
-inline DeviceConfig makeRayTracingDeviceConfig()
-{
+inline DeviceConfig makeRayTracingDeviceConfig() {
     static detail::RayTracingFeatureChain chain;
 
     DeviceConfig cfg{};

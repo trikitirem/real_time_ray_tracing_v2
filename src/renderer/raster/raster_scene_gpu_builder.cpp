@@ -15,8 +15,7 @@
 
 namespace renderer::raster {
 
-ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& scene)
-{
+ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene& scene) {
     RasterSceneGpuData out{};
 
     const vk::raii::Device& device = ctx.device();
@@ -26,11 +25,7 @@ ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
     const vk::raii::CommandPool command_pool(device, pool_info);
     auto load_texture = [&](const util::AssetLocation& location) -> std::uint32_t {
         out.textures.push_back(textures::TextureResource::load_from_asset_location(
-            ctx.physicalDevice(),
-            device,
-            command_pool,
-            ctx.graphicsQueue(),
-            location));
+            ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(), location));
         out.texture_views.push_back(*out.textures.back().view());
         return static_cast<std::uint32_t>(out.textures.size() - 1);
     };
@@ -42,24 +37,19 @@ ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
             }
 
             out.vertex_buffers.push_back(buffers::GpuBuffer::from_span(
-                ctx.physicalDevice(),
-                device,
-                command_pool,
-                ctx.graphicsQueue(),
+                ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(),
                 buffers::BufferKind::vertex,
-                std::span<const util::Vertex>(primitive.vertices.data(), primitive.vertices.size())));
+                std::span<const util::Vertex>(primitive.vertices.data(),
+                                              primitive.vertices.size())));
             out.index_buffers.push_back(buffers::GpuBuffer::from_span(
-                ctx.physicalDevice(),
-                device,
-                command_pool,
-                ctx.graphicsQueue(),
+                ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(),
                 buffers::BufferKind::index,
                 std::span<const util::Index>(primitive.indices.data(), primitive.indices.size())));
 
             const auto vb_idx = out.vertex_buffers.size() - 1;
             const auto ib_idx = out.index_buffers.size() - 1;
-            const std::uint32_t material_index
-                = static_cast<std::uint32_t>(out.material_albedos.size());
+            const std::uint32_t material_index =
+                static_cast<std::uint32_t>(out.material_albedos.size());
             out.material_albedos.push_back(glm::vec4(primitive.material.base_color, 1.0f));
             out.material_roughness.push_back(primitive.material.roughness);
             std::uint32_t texture_index = kNoTexture;
@@ -94,7 +84,8 @@ ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
             out.vertex_buffers.push_back(buffers::GpuBuffer::from_span(
                 ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(),
                 buffers::BufferKind::vertex,
-                std::span<const util::Vertex>(primitive.vertices.data(), primitive.vertices.size())));
+                std::span<const util::Vertex>(primitive.vertices.data(),
+                                              primitive.vertices.size())));
             out.index_buffers.push_back(buffers::GpuBuffer::from_span(
                 ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(),
                 buffers::BufferKind::index,
@@ -104,14 +95,13 @@ ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
                 buffers::BufferKind::vertex,
                 std::span<const glm::mat4>(group.transforms.data(), group.transforms.size())));
 
-            const auto vb_idx   = out.vertex_buffers.size()   - 1;
-            const auto ib_idx   = out.index_buffers.size()    - 1;
+            const auto vb_idx = out.vertex_buffers.size() - 1;
+            const auto ib_idx = out.index_buffers.size() - 1;
             const auto inst_idx = out.instance_buffers.size() - 1;
 
-            const std::uint32_t material_index
-                = static_cast<std::uint32_t>(out.material_albedos.size());
-            out.material_albedos.push_back(
-                glm::vec4(primitive.material.base_color, 1.0f));
+            const std::uint32_t material_index =
+                static_cast<std::uint32_t>(out.material_albedos.size());
+            out.material_albedos.push_back(glm::vec4(primitive.material.base_color, 1.0f));
             out.material_roughness.push_back(primitive.material.roughness);
 
             std::uint32_t texture_index = kNoTexture;
@@ -123,13 +113,13 @@ ScenePayload RasterSceneGpuBuilder::build(DeviceContext& ctx, const scene::Scene
             }
 
             out.instanced_items.push_back(InstancedDrawItem{
-                .vertex_buffer   = *out.vertex_buffers[vb_idx].buffer(),
-                .index_buffer    = *out.index_buffers[ib_idx].buffer(),
+                .vertex_buffer = *out.vertex_buffers[vb_idx].buffer(),
+                .index_buffer = *out.index_buffers[ib_idx].buffer(),
                 .instance_buffer = *out.instance_buffers[inst_idx].buffer(),
-                .index_count     = static_cast<std::uint32_t>(primitive.indices.size()),
-                .instance_count  = static_cast<std::uint32_t>(group.transforms.size()),
-                .material_index  = material_index,
-                .texture_index   = texture_index,
+                .index_count = static_cast<std::uint32_t>(primitive.indices.size()),
+                .instance_count = static_cast<std::uint32_t>(group.transforms.size()),
+                .material_index = material_index,
+                .texture_index = texture_index,
             });
         }
     }

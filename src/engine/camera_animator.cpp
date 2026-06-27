@@ -8,8 +8,7 @@ namespace engine {
 
 namespace {
 
-glm::quat look_at_orientation(const glm::vec3& position, const glm::vec3& look_at)
-{
+glm::quat look_at_orientation(const glm::vec3& position, const glm::vec3& look_at) {
     glm::vec3 world_up(0.0f, 1.0f, 0.0f);
     const glm::vec3 forward = look_at - position;
     if (glm::length(forward) < 1e-6f) {
@@ -26,20 +25,17 @@ glm::quat look_at_orientation(const glm::vec3& position, const glm::vec3& look_a
 
 } // namespace
 
-void CameraAnimator::start(const scene::BenchmarkPath& path)
-{
-    path_     = path;
+void CameraAnimator::start(const scene::BenchmarkPath& path) {
+    path_ = path;
     elapsed_s_ = 0.0f;
-    running_  = true;
+    running_ = true;
 }
 
-void CameraAnimator::stop()
-{
+void CameraAnimator::stop() {
     running_ = false;
 }
 
-void CameraAnimator::update(Camera& camera, const float dt)
-{
+void CameraAnimator::update(Camera& camera, const float dt) {
     if (!running_) {
         return;
     }
@@ -51,11 +47,11 @@ void CameraAnimator::update(Camera& camera, const float dt)
         const float cycle = path_.duration_seconds * 2.0f;
         const float phase = std::fmod(elapsed_s_, cycle);
         t = (phase < path_.duration_seconds)
-            ? phase / path_.duration_seconds
-            : 1.0f - (phase - path_.duration_seconds) / path_.duration_seconds;
+                ? phase / path_.duration_seconds
+                : 1.0f - (phase - path_.duration_seconds) / path_.duration_seconds;
     }
 
-    camera.position    = glm::mix(path_.from, path_.to, t);
+    camera.position = glm::mix(path_.from, path_.to, t);
     camera.orientation = look_at_orientation(camera.position, path_.look_at);
 }
 

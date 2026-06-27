@@ -16,7 +16,7 @@
 namespace renderer::raster {
 
 class RasterRenderBackend final : public renderer::IRenderBackend {
-public:
+  public:
     RasterRenderBackend() = default;
     ~RasterRenderBackend() override;
 
@@ -29,7 +29,7 @@ public:
 
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
-private:
+  private:
     void build_texture_descriptor_sets();
 
     DeviceContext* ctx_ = nullptr;

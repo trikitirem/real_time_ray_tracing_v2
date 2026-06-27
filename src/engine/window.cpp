@@ -8,8 +8,7 @@ namespace engine {
 
 Window::Window() = default;
 
-Window::~Window()
-{
+Window::~Window() {
     if (window_) {
         glfwDestroyWindow(window_);
         window_ = nullptr;
@@ -20,8 +19,7 @@ Window::~Window()
     }
 }
 
-void Window::init(const std::uint32_t width, const std::uint32_t height, const std::string& title)
-{
+void Window::init(const std::uint32_t width, const std::uint32_t height, const std::string& title) {
     if (glfwInited_) {
         throw std::logic_error("Window::init called twice");
     }
@@ -39,11 +37,8 @@ void Window::init(const std::uint32_t width, const std::uint32_t height, const s
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-    window_ = glfwCreateWindow(static_cast<int>(width),
-                               static_cast<int>(height),
-                               title.c_str(),
-                               nullptr,
-                               nullptr);
+    window_ = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), title.c_str(),
+                               nullptr, nullptr);
     if (!window_) {
         throw std::runtime_error("glfwCreateWindow failed");
     }
@@ -60,8 +55,7 @@ void Window::init(const std::uint32_t width, const std::uint32_t height, const s
     glfwSetFramebufferSizeCallback(window_, &Window::framebufferSizeCallback);
 }
 
-bool Window::shouldClose() const
-{
+bool Window::shouldClose() const {
     return window_ != nullptr && glfwWindowShouldClose(window_);
 }
 
@@ -69,13 +63,11 @@ void Window::pollEvents() {
     glfwPollEvents();
 }
 
-void Window::framebufferSize(int& width, int& height) const
-{
+void Window::framebufferSize(int& width, int& height) const {
     glfwGetFramebufferSize(window_, &width, &height);
 }
 
-void Window::framebufferSizeCallback(GLFWwindow* window, const int width, const int height)
-{
+void Window::framebufferSizeCallback(GLFWwindow* window, const int width, const int height) {
     auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self != nullptr && self->resizeCb_) {
         self->resizeCb_(width, height);

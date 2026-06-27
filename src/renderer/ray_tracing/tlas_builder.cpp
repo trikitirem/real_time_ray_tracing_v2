@@ -4,8 +4,8 @@
 #include "renderer/shared/device_context.hpp"
 
 #include <array>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 #include <glm/mat4x4.hpp>
 #include <memory>
 #include <stdexcept>
@@ -14,10 +14,8 @@ namespace renderer::ray_tracing {
 
 namespace {
 
-std::uint32_t find_memory_type(const vk::raii::PhysicalDevice& physical,
-                               std::uint32_t type_bits,
-                               vk::MemoryPropertyFlags required)
-{
+std::uint32_t find_memory_type(const vk::raii::PhysicalDevice& physical, std::uint32_t type_bits,
+                               vk::MemoryPropertyFlags required) {
     const vk::PhysicalDeviceMemoryProperties mem = physical.getMemoryProperties();
     for (std::uint32_t i = 0; i < mem.memoryTypeCount; ++i) {
         const bool supported = (type_bits & (1u << i)) != 0;
@@ -29,14 +27,10 @@ std::uint32_t find_memory_type(const vk::raii::PhysicalDevice& physical,
     throw std::runtime_error("TlasBuilder: no suitable memory type");
 }
 
-void create_buffer(const vk::raii::PhysicalDevice& physical,
-                   const vk::raii::Device& device,
-                   vk::DeviceSize size,
-                   vk::BufferUsageFlags usage,
-                   vk::MemoryPropertyFlags properties,
-                   vk::raii::Buffer& out_buffer,
-                   vk::raii::DeviceMemory& out_memory)
-{
+void create_buffer(const vk::raii::PhysicalDevice& physical, const vk::raii::Device& device,
+                   vk::DeviceSize size, vk::BufferUsageFlags usage,
+                   vk::MemoryPropertyFlags properties, vk::raii::Buffer& out_buffer,
+                   vk::raii::DeviceMemory& out_memory) {
     vk::BufferCreateInfo buffer_info{};
     buffer_info.size = size;
     buffer_info.usage = usage;
@@ -58,9 +52,9 @@ void create_buffer(const vk::raii::PhysicalDevice& physical,
     out_buffer.bindMemory(*out_memory, 0);
 }
 
-std::unique_ptr<vk::raii::CommandBuffer> begin_single_time_commands(const vk::raii::Device& device,
-                                                                     const vk::raii::CommandPool& command_pool)
-{
+std::unique_ptr<vk::raii::CommandBuffer>
+begin_single_time_commands(const vk::raii::Device& device,
+                           const vk::raii::CommandPool& command_pool) {
     vk::CommandBufferAllocateInfo alloc_info{};
     alloc_info.commandPool = *command_pool;
     alloc_info.level = vk::CommandBufferLevel::ePrimary;
@@ -73,34 +67,34 @@ std::unique_ptr<vk::raii::CommandBuffer> begin_single_time_commands(const vk::ra
     return cmd;
 }
 
-void end_single_time_commands(const vk::raii::Queue& queue, const vk::raii::CommandBuffer& cmd)
-{
+void end_single_time_commands(const vk::raii::Queue& queue, const vk::raii::CommandBuffer& cmd) {
     cmd.end();
     const vk::CommandBuffer raw = *cmd;
-    queue.submit(vk::SubmitInfo{
-        .commandBufferCount = 1,
-        .pCommandBuffers = &raw,
-    }, nullptr);
+    queue.submit(
+        vk::SubmitInfo{
+            .commandBufferCount = 1,
+            .pCommandBuffers = &raw,
+        },
+        nullptr);
     queue.waitIdle();
 }
-    /// Vulkan transform expects 3x4 row-major, glm::mat4 is column-major.
-    /// Thats is why this mapping exists
-vk::TransformMatrixKHR to_vk_transform(const glm::mat4& matrix)
-{
+/// Vulkan transform expects 3x4 row-major, glm::mat4 is column-major.
+/// Thats is why this mapping exists
+vk::TransformMatrixKHR to_vk_transform(const glm::mat4& matrix) {
     vk::TransformMatrixKHR out{};
 
     out.matrix = std::array<std::array<float, 4>, 3>{
-        std::array<float, 4>{ matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0] },
-        std::array<float, 4>{ matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1] },
-        std::array<float, 4>{ matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2] },
+        std::array<float, 4>{matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0]},
+        std::array<float, 4>{matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1]},
+        std::array<float, 4>{matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2]},
     };
     return out;
 }
 
 } // namespace
 
-TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasInstanceInput>& instances) const
-{
+TlasBuildResult TlasBuilder::build(DeviceContext& ctx,
+                                   const std::vector<BlasInstanceInput>& instances) const {
     TlasBuildResult out{};
     if (instances.empty()) {
         return out;
@@ -129,24 +123,21 @@ TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasIns
         as_instances.push_back(inst);
     }
 
-    const vk::DeviceSize inst_buffer_size =
-        static_cast<vk::DeviceSize>(sizeof(vk::AccelerationStructureInstanceKHR) * as_instances.size());
-    create_buffer(
-        physical,
-        device,
-        inst_buffer_size,
-        vk::BufferUsageFlagBits::eShaderDeviceAddress
-            | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
-        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-        out.instance_buffer,
-        out.instance_memory);
+    const vk::DeviceSize inst_buffer_size = static_cast<vk::DeviceSize>(
+        sizeof(vk::AccelerationStructureInstanceKHR) * as_instances.size());
+    create_buffer(physical, device, inst_buffer_size,
+                  vk::BufferUsageFlagBits::eShaderDeviceAddress |
+                      vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
+                  vk::MemoryPropertyFlagBits::eHostVisible |
+                      vk::MemoryPropertyFlagBits::eHostCoherent,
+                  out.instance_buffer, out.instance_memory);
 
     void* mapped = out.instance_memory.mapMemory(0, inst_buffer_size);
     std::memcpy(mapped, as_instances.data(), static_cast<std::size_t>(inst_buffer_size));
     out.instance_memory.unmapMemory();
 
     const vk::DeviceAddress instance_addr =
-        device.getBufferAddress(vk::BufferDeviceAddressInfo{ .buffer = *out.instance_buffer });
+        device.getBufferAddress(vk::BufferDeviceAddressInfo{.buffer = *out.instance_buffer});
 
     const vk::AccelerationStructureGeometryInstancesDataKHR instances_data{
         .arrayOfPointers = vk::False,
@@ -168,31 +159,20 @@ TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasIns
 
     const std::uint32_t primitive_count = static_cast<std::uint32_t>(instances.size());
     const vk::AccelerationStructureBuildSizesInfoKHR sizes =
-        device.getAccelerationStructureBuildSizesKHR(
-            vk::AccelerationStructureBuildTypeKHR::eDevice,
-            build_info,
-            { primitive_count });
+        device.getAccelerationStructureBuildSizesKHR(vk::AccelerationStructureBuildTypeKHR::eDevice,
+                                                     build_info, {primitive_count});
 
-    create_buffer(
-        physical,
-        device,
-        sizes.buildScratchSize,
-        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
-        vk::MemoryPropertyFlagBits::eDeviceLocal,
-        out.scratch_buffer,
-        out.scratch_memory);
+    create_buffer(physical, device, sizes.buildScratchSize,
+                  vk::BufferUsageFlagBits::eStorageBuffer |
+                      vk::BufferUsageFlagBits::eShaderDeviceAddress,
+                  vk::MemoryPropertyFlagBits::eDeviceLocal, out.scratch_buffer, out.scratch_memory);
     build_info.scratchData.deviceAddress =
-        device.getBufferAddress(vk::BufferDeviceAddressInfo{ .buffer = *out.scratch_buffer });
+        device.getBufferAddress(vk::BufferDeviceAddressInfo{.buffer = *out.scratch_buffer});
 
-    create_buffer(
-        physical,
-        device,
-        sizes.accelerationStructureSize,
-        vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR
-            | vk::BufferUsageFlagBits::eShaderDeviceAddress,
-        vk::MemoryPropertyFlagBits::eDeviceLocal,
-        out.tlas_buffer,
-        out.tlas_memory);
+    create_buffer(physical, device, sizes.accelerationStructureSize,
+                  vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR |
+                      vk::BufferUsageFlagBits::eShaderDeviceAddress,
+                  vk::MemoryPropertyFlagBits::eDeviceLocal, out.tlas_buffer, out.tlas_memory);
 
     out.tlas = device.createAccelerationStructureKHR(vk::AccelerationStructureCreateInfoKHR{
         .buffer = *out.tlas_buffer,
@@ -210,7 +190,7 @@ TlasBuildResult TlasBuilder::build(DeviceContext& ctx, const std::vector<BlasIns
     };
 
     auto cmd = begin_single_time_commands(device, command_pool);
-    cmd->buildAccelerationStructuresKHR({ build_info }, { &range_info });
+    cmd->buildAccelerationStructuresKHR({build_info}, {&range_info});
     end_single_time_commands(ctx.graphicsQueue(), *cmd);
 
     return out;

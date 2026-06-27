@@ -25,12 +25,12 @@ namespace renderer {
 class DeviceContext;
 
 class Renderer {
-public:
+  public:
     Renderer(GLFWwindow* window, DeviceContext& ctx, bool useRasterBackend);
-    Renderer(const Renderer&)            = delete;
+    Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
-    Renderer(Renderer&&)                 = delete;
-    Renderer& operator=(Renderer&&)      = delete;
+    Renderer(Renderer&&) = delete;
+    Renderer& operator=(Renderer&&) = delete;
 
     ~Renderer();
 
@@ -41,12 +41,16 @@ public:
     void draw();
     void switch_backend(bool use_raster);
 
-    [[nodiscard]] vk::Extent2D swapchain_extent() const { return swapchain_.extent(); }
+    [[nodiscard]] vk::Extent2D swapchain_extent() const {
+        return swapchain_.extent();
+    }
     [[nodiscard]] std::string present_mode_string() const;
 
-    void notifyFramebufferResized() { framebuffer_resized_ = true; }
+    void notifyFramebufferResized() {
+        framebuffer_resized_ = true;
+    }
 
-private:
+  private:
     void create_command_pool_and_buffers();
     void destroy_command_pool_and_buffers();
 
@@ -57,29 +61,29 @@ private:
 
     void record_command_buffer(std::uint32_t frame_index, std::uint32_t image_index);
 
-    GLFWwindow*      window_;
-    DeviceContext&   ctx_;
-    bool             use_raster_;
+    GLFWwindow* window_;
+    DeviceContext& ctx_;
+    bool use_raster_;
 
     Swapchain swapchain_;
     std::unique_ptr<IRenderBackend> backend_;
 
     struct FrameSync {
         vk::raii::Semaphore image_available = nullptr;
-        vk::raii::Fence     in_flight       = nullptr;
+        vk::raii::Fence in_flight = nullptr;
     };
 
     static constexpr std::uint32_t kMaxFramesInFlight = 2;
 
-    vk::raii::CommandPool              command_pool_     = nullptr;
-    vk::raii::CommandBuffers           command_buffers_  = nullptr;
-    std::vector<FrameSync>             frames_{};
-    std::vector<vk::raii::Semaphore>   render_finished_{};
+    vk::raii::CommandPool command_pool_ = nullptr;
+    vk::raii::CommandBuffers command_buffers_ = nullptr;
+    std::vector<FrameSync> frames_{};
+    std::vector<vk::raii::Semaphore> render_finished_{};
     const scene::Scene* loaded_scene_ = nullptr;
     const engine::Camera* camera_ = nullptr;
 
-    std::uint32_t current_frame_        = 0;
-    bool          framebuffer_resized_ = false;
+    std::uint32_t current_frame_ = 0;
+    bool framebuffer_resized_ = false;
 };
 
 } // namespace renderer

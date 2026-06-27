@@ -6,13 +6,10 @@
 namespace renderer::buffers {
 
 GpuBuffer::GpuBuffer(const vk::raii::PhysicalDevice& physical_device,
-                     const vk::raii::Device&         device,
-                     const vk::raii::CommandPool&    command_pool,
-                     const vk::raii::Queue&          graphics_queue,
-                     const BufferKind                kind,
+                     const vk::raii::Device& device, const vk::raii::CommandPool& command_pool,
+                     const vk::raii::Queue& graphics_queue, const BufferKind kind,
                      const std::span<const std::byte> initial_data)
-    : BaseBuffer(physical_device, device, kind)
-{
+    : BaseBuffer(physical_device, device, kind) {
     if (initial_data.empty()) {
         throw std::runtime_error("GpuBuffer: initial_data cannot be empty");
     }
@@ -28,16 +25,14 @@ GpuBuffer::GpuBuffer(const vk::raii::PhysicalDevice& physical_device,
     std::memcpy(mapped, initial_data.data(), initial_data.size_bytes());
     staging.memory.unmapMemory();
 
-    create_with_memory(size_bytes, gpu_usage_for(kind),
-                       vk::MemoryPropertyFlagBits::eDeviceLocal,
+    create_with_memory(size_bytes, gpu_usage_for(kind), vk::MemoryPropertyFlagBits::eDeviceLocal,
                        requires_device_address(kind));
 
     copy_buffer_one_shot(device, command_pool, graphics_queue, *staging.buffer, *buffer_,
                          size_bytes);
 }
 
-vk::DeviceAddress GpuBuffer::device_address() const
-{
+vk::DeviceAddress GpuBuffer::device_address() const {
     vk::BufferDeviceAddressInfo info{};
     info.buffer = *buffer_;
     return device_->getBufferAddress(info);

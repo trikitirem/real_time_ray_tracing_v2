@@ -6,7 +6,7 @@
 namespace renderer::raster {
 
 class RasterSceneGpuBuilder final : public SceneGpuBuilderBase {
-public:
+  public:
     RasterSceneGpuBuilder() = default;
     ~RasterSceneGpuBuilder() override = default;
 

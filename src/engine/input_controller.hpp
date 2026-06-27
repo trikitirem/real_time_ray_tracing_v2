@@ -7,33 +7,69 @@ struct GLFWwindow;
 namespace engine {
 
 class InputController {
-public:
+  public:
     void attach(GLFWwindow* window);
     void begin_frame();
     void poll();
 
-    [[nodiscard]] bool move_forward() const { return move_forward_; }
-    [[nodiscard]] bool move_backward() const { return move_backward_; }
-    [[nodiscard]] bool move_left() const { return move_left_; }
-    [[nodiscard]] bool move_right() const { return move_right_; }
-    [[nodiscard]] bool move_up() const { return move_up_; }
-    [[nodiscard]] bool move_down() const { return move_down_; }
+    [[nodiscard]] bool move_forward() const {
+        return move_forward_;
+    }
+    [[nodiscard]] bool move_backward() const {
+        return move_backward_;
+    }
+    [[nodiscard]] bool move_left() const {
+        return move_left_;
+    }
+    [[nodiscard]] bool move_right() const {
+        return move_right_;
+    }
+    [[nodiscard]] bool move_up() const {
+        return move_up_;
+    }
+    [[nodiscard]] bool move_down() const {
+        return move_down_;
+    }
 
-    [[nodiscard]] float mouse_delta_x() const { return mouse_dx_; }
-    [[nodiscard]] float mouse_delta_y() const { return mouse_dy_; }
+    [[nodiscard]] float mouse_delta_x() const {
+        return mouse_dx_;
+    }
+    [[nodiscard]] float mouse_delta_y() const {
+        return mouse_dy_;
+    }
 
-    [[nodiscard]] bool pressed_f1() const { return edge_f1_; }
-    [[nodiscard]] bool pressed_f2() const { return edge_f2_; }
-    [[nodiscard]] bool pressed_f3() const { return edge_f3_; }
-    [[nodiscard]] bool pressed_f5() const { return edge_f5_; }
-    [[nodiscard]] bool pressed_f7() const { return edge_f7_; }
-    [[nodiscard]] bool pressed_tab() const { return edge_tab_; }
-    [[nodiscard]] bool pressed_p() const { return edge_p_; }
-    [[nodiscard]] bool pressed_camera_lock_toggle() const { return edge_camera_lock_; }
-    [[nodiscard]] bool pressed_stress_increase() const { return edge_stress_inc_; }
-    [[nodiscard]] bool pressed_stress_decrease() const { return edge_stress_dec_; }
+    [[nodiscard]] bool pressed_f1() const {
+        return edge_f1_;
+    }
+    [[nodiscard]] bool pressed_f2() const {
+        return edge_f2_;
+    }
+    [[nodiscard]] bool pressed_f3() const {
+        return edge_f3_;
+    }
+    [[nodiscard]] bool pressed_f5() const {
+        return edge_f5_;
+    }
+    [[nodiscard]] bool pressed_f7() const {
+        return edge_f7_;
+    }
+    [[nodiscard]] bool pressed_tab() const {
+        return edge_tab_;
+    }
+    [[nodiscard]] bool pressed_p() const {
+        return edge_p_;
+    }
+    [[nodiscard]] bool pressed_camera_lock_toggle() const {
+        return edge_camera_lock_;
+    }
+    [[nodiscard]] bool pressed_stress_increase() const {
+        return edge_stress_inc_;
+    }
+    [[nodiscard]] bool pressed_stress_decrease() const {
+        return edge_stress_dec_;
+    }
 
-private:
+  private:
     [[nodiscard]] bool edge_trigger(int key, bool& prev_down) const;
 
     GLFWwindow* window_ = nullptr;

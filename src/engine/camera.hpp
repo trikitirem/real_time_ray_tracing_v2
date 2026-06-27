@@ -8,49 +8,44 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/trigonometric.hpp>
 #include <glm/mat4x4.hpp>
+#include <glm/trigonometric.hpp>
 #include <glm/vec3.hpp>
 
 namespace engine {
 
 /// World space is right-handed, Y up (matches `make_viewport_y_up_ndc`: no extra Y flip here).
 class Camera {
-public:
-    glm::vec3 position{ 0.0f };
-    glm::quat orientation{ 1.0f, 0.0f, 0.0f, 0.0f }; // w, x, y, z — identity looks along world −Z
+  public:
+    glm::vec3 position{0.0f};
+    glm::quat orientation{1.0f, 0.0f, 0.0f, 0.0f}; // w, x, y, z — identity looks along world −Z
 
     float fov_y_rad = 1.0471975511965977461542144610932f; // ~60°
-    float z_near    = 0.1f;
-    float z_far     = 300.0f;
+    float z_near = 0.1f;
+    float z_far = 300.0f;
     float move_speed = 4.5f;
     float mouse_sensitivity = 0.0025f;
 
-    [[nodiscard]] glm::mat4 view_matrix() const
-    {
-        const glm::mat4 cam_to_world
-            = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(orientation);
+    [[nodiscard]] glm::mat4 view_matrix() const {
+        const glm::mat4 cam_to_world =
+            glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(orientation);
         return glm::inverse(cam_to_world);
     }
 
-    [[nodiscard]] glm::mat4 projection_matrix(float aspect) const
-    {
+    [[nodiscard]] glm::mat4 projection_matrix(float aspect) const {
         return glm::perspective(fov_y_rad, aspect, z_near, z_far);
     }
 
-    [[nodiscard]] glm::mat4 view_projection(float aspect) const
-    {
+    [[nodiscard]] glm::mat4 view_projection(float aspect) const {
         return projection_matrix(aspect) * view_matrix();
     }
 
-    void reset_pitch_state()
-    {
+    void reset_pitch_state() {
         const glm::vec3 euler = glm::eulerAngles(orientation);
         pitch_accumulated_rad_ = euler.x;
     }
 
-    void update_from_input(const InputController& input)
-    {
+    void update_from_input(const InputController& input) {
         const float dt = DeltaTime::instance().seconds();
         if (dt <= 0.0f) {
             return;
@@ -86,10 +81,8 @@ public:
         const float yaw_delta = -input.mouse_delta_x() * mouse_sensitivity;
         const float pitch_delta_raw = -input.mouse_delta_y() * mouse_sensitivity;
         const float max_pitch = glm::radians(89.0f);
-        const float pitch_delta = std::clamp(
-            pitch_delta_raw,
-            -max_pitch - pitch_accumulated_rad_,
-            max_pitch - pitch_accumulated_rad_);
+        const float pitch_delta = std::clamp(pitch_delta_raw, -max_pitch - pitch_accumulated_rad_,
+                                             max_pitch - pitch_accumulated_rad_);
         pitch_accumulated_rad_ += pitch_delta;
 
         if (yaw_delta != 0.0f) {
@@ -103,7 +96,7 @@ public:
         }
     }
 
-private:
+  private:
     float pitch_accumulated_rad_ = 0.0f;
 };
 

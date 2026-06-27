@@ -6,7 +6,7 @@
 namespace renderer::ray_tracing {
 
 class RtSceneGpuBuilder final : public SceneGpuBuilderBase {
-public:
+  public:
     RtSceneGpuBuilder() = default;
     ~RtSceneGpuBuilder() override = default;
 

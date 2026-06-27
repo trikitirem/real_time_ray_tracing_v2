@@ -25,8 +25,9 @@ struct TlasBuildResult {
 };
 
 class TlasBuilder {
-public:
-    TlasBuildResult build(DeviceContext& ctx, const std::vector<BlasInstanceInput>& instances) const;
+  public:
+    TlasBuildResult build(DeviceContext& ctx,
+                          const std::vector<BlasInstanceInput>& instances) const;
 };
 
 } // namespace renderer::ray_tracing

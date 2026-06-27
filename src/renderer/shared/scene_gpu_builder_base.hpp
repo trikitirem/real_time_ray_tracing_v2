@@ -11,7 +11,7 @@ namespace renderer {
 class DeviceContext;
 
 class SceneGpuBuilderBase {
-public:
+  public:
     SceneGpuBuilderBase() = default;
     SceneGpuBuilderBase(const SceneGpuBuilderBase&) = delete;
     SceneGpuBuilderBase& operator=(const SceneGpuBuilderBase&) = delete;

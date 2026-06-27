@@ -13,7 +13,7 @@ class DeviceContext;
 class Swapchain;
 
 class IRenderBackend {
-public:
+  public:
     IRenderBackend() = default;
     IRenderBackend(const IRenderBackend&) = delete;
     IRenderBackend& operator=(const IRenderBackend&) = delete;

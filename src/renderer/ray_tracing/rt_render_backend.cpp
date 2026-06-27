@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "engine/camera.hpp"
 #include "renderer/ray_tracing/rt_frame_recorder.hpp"
 #include "renderer/ray_tracing/rt_gpu_types.hpp"
 #include "renderer/ray_tracing/rt_pipeline.hpp"
@@ -16,7 +17,6 @@
 #include "renderer/shared/graphics_pipeline.hpp"
 #include "renderer/shared/swapchain.hpp"
 #include "renderer/shared/textures/texture_resource.hpp"
-#include "engine/camera.hpp"
 #include "util/shader_paths.hpp"
 
 namespace renderer::ray_tracing {
@@ -24,13 +24,11 @@ namespace renderer::ray_tracing {
 namespace {
 
 std::uint32_t find_memory_type(const vk::raii::PhysicalDevice& physicalDevice,
-                               std::uint32_t typeFilter,
-                               vk::MemoryPropertyFlags properties)
-{
+                               std::uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
     const vk::PhysicalDeviceMemoryProperties mem = physicalDevice.getMemoryProperties();
     for (std::uint32_t i = 0; i < mem.memoryTypeCount; ++i) {
-        if ((typeFilter & (1u << i))
-            && (mem.memoryTypes[i].propertyFlags & properties) == properties) {
+        if ((typeFilter & (1u << i)) &&
+            (mem.memoryTypes[i].propertyFlags & properties) == properties) {
             return i;
         }
     }
@@ -41,66 +39,52 @@ std::uint32_t find_memory_type(const vk::raii::PhysicalDevice& physicalDevice,
 
 RtRenderBackend::~RtRenderBackend() = default;
 
-void RtRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain)
-{
+void RtRenderBackend::create(DeviceContext& ctx, const Swapchain& swapchain) {
     ctx_ = &ctx;
     const vk::raii::Device& device = ctx.device();
     pipeline_ = std::make_unique<RayTracingPipeline>();
     pipeline_->create(device, ctx.physicalDevice(), swapchain.imageFormat(),
                       util::ray_tracing_shader("default.spv").full_path());
     create_depth_resources(ctx, swapchain.extent());
-    frame_recorder_ = std::make_unique<RayTracingFrameRecorder>(
-        *pipeline_,
-        swapchain,
-        rt_depth_format_,
-        *rt_depth_view_);
+    frame_recorder_ = std::make_unique<RayTracingFrameRecorder>(*pipeline_, swapchain,
+                                                                rt_depth_format_, *rt_depth_view_);
 
-    camera_buffer_.emplace(
-        ctx.physicalDevice(),
-        ctx.device(),
-        buffers::BufferKind::uniform,
-        sizeof(CameraUbo));
+    camera_buffer_.emplace(ctx.physicalDevice(), ctx.device(), buffers::BufferKind::uniform,
+                           sizeof(CameraUbo));
 
-    camera_uniform_set_.emplace(
-        ctx.device(),
-        descriptors::UniformSetConfig{
-            .bindings = kCameraDescriptorBindings,
-            .pool_sizes = kCameraDescriptorPoolSizes,
-            .set_index = kCameraSetIndex,
-            .max_sets = 1,
-        });
-    camera_uniform_set_->update_uniform_buffer(
-        kCameraBinding,
-        *camera_buffer_->buffer(),
-        sizeof(CameraUbo));
+    camera_uniform_set_.emplace(ctx.device(), descriptors::UniformSetConfig{
+                                                  .bindings = kCameraDescriptorBindings,
+                                                  .pool_sizes = kCameraDescriptorPoolSizes,
+                                                  .set_index = kCameraSetIndex,
+                                                  .max_sets = 1,
+                                              });
+    camera_uniform_set_->update_uniform_buffer(kCameraBinding, *camera_buffer_->buffer(),
+                                               sizeof(CameraUbo));
 
     texture_uniform_sets_.clear();
     texture_uniform_sets_.reserve(kFramesInFlight);
     for (std::uint32_t i = 0; i < kFramesInFlight; ++i) {
-        texture_uniform_sets_.emplace_back(
-            ctx.device(),
-            descriptors::UniformSetConfig{
-                .bindings = kTextureDescriptorBindings,
-                .pool_sizes = kTextureDescriptorPoolSizes,
-                .set_index = kTextureSetIndex,
-                .max_sets = 1,
-            });
+        texture_uniform_sets_.emplace_back(ctx.device(),
+                                           descriptors::UniformSetConfig{
+                                               .bindings = kTextureDescriptorBindings,
+                                               .pool_sizes = kTextureDescriptorPoolSizes,
+                                               .set_index = kTextureSetIndex,
+                                               .max_sets = 1,
+                                           });
     }
 
     vk::CommandPoolCreateInfo pool_info{};
-    pool_info.flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
     pool_info.queueFamilyIndex = ctx.graphicsQueueFamily();
     const vk::raii::CommandPool command_pool(device, pool_info);
     default_albedo_ = textures::TextureResource::create_solid_rgba(
         ctx.physicalDevice(), device, command_pool, ctx.graphicsQueue(), 255, 255, 255, 255);
     update_texture_descriptors();
 
-    frame_recorder_->set_camera_uniform_set(
-        camera_uniform_set_ ? &*camera_uniform_set_ : nullptr);
+    frame_recorder_->set_camera_uniform_set(camera_uniform_set_ ? &*camera_uniform_set_ : nullptr);
 }
 
-void RtRenderBackend::destroy(DeviceContext& ctx)
-{
+void RtRenderBackend::destroy(DeviceContext& ctx) {
     (void)ctx;
     tlas_build_ = {};
     blas_build_ = {};
@@ -119,8 +103,7 @@ void RtRenderBackend::destroy(DeviceContext& ctx)
     ctx_ = nullptr;
 }
 
-void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
-{
+void RtRenderBackend::load_scene(ScenePayload&& scene_payload) {
     if (scene_payload.backend != BackendKind::ray_tracing) {
         throw std::runtime_error("RtRenderBackend::load_scene received non-ray-tracing payload");
     }
@@ -132,27 +115,23 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
     reflection_instance_lut_buffer_.reset();
     if (camera_uniform_set_) {
         if (scene_data_.material_buffer) {
-            camera_uniform_set_->update_storage_buffer(
-                kMaterialBufferBinding,
-                *scene_data_.material_buffer->buffer(),
-                scene_data_.material_buffer->size_bytes());
+            camera_uniform_set_->update_storage_buffer(kMaterialBufferBinding,
+                                                       *scene_data_.material_buffer->buffer(),
+                                                       scene_data_.material_buffer->size_bytes());
         }
         if (scene_data_.reflection_index_buffer) {
             camera_uniform_set_->update_storage_buffer(
-                kReflectionIndexBufferBinding,
-                *scene_data_.reflection_index_buffer->buffer(),
+                kReflectionIndexBufferBinding, *scene_data_.reflection_index_buffer->buffer(),
                 scene_data_.reflection_index_buffer->size_bytes());
         }
         if (scene_data_.reflection_uv_buffer) {
             camera_uniform_set_->update_storage_buffer(
-                kReflectionUvBufferBinding,
-                *scene_data_.reflection_uv_buffer->buffer(),
+                kReflectionUvBufferBinding, *scene_data_.reflection_uv_buffer->buffer(),
                 scene_data_.reflection_uv_buffer->size_bytes());
         }
         if (scene_data_.reflection_normal_buffer) {
             camera_uniform_set_->update_storage_buffer(
-                kReflectionNormalBufferBinding,
-                *scene_data_.reflection_normal_buffer->buffer(),
+                kReflectionNormalBufferBinding, *scene_data_.reflection_normal_buffer->buffer(),
                 scene_data_.reflection_normal_buffer->size_bytes());
         }
         if (!scene_data_.reflection_instance_lut.empty() && ctx_ != nullptr) {
@@ -169,17 +148,12 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
             pool_info.queueFamilyIndex = ctx_->graphicsQueueFamily();
             const vk::raii::CommandPool command_pool(ctx_->device(), pool_info);
             reflection_instance_lut_buffer_.emplace(buffers::GpuBuffer::from_span(
-                ctx_->physicalDevice(),
-                ctx_->device(),
-                command_pool,
-                ctx_->graphicsQueue(),
+                ctx_->physicalDevice(), ctx_->device(), command_pool, ctx_->graphicsQueue(),
                 buffers::BufferKind::storage,
-                std::span<const ReflectionInstanceLutGpu>(
-                    reflection_lut_gpu.data(),
-                    reflection_lut_gpu.size())));
+                std::span<const ReflectionInstanceLutGpu>(reflection_lut_gpu.data(),
+                                                          reflection_lut_gpu.size())));
             camera_uniform_set_->update_storage_buffer(
-                kReflectionInstanceLutBufferBinding,
-                *reflection_instance_lut_buffer_->buffer(),
+                kReflectionInstanceLutBufferBinding, *reflection_instance_lut_buffer_->buffer(),
                 reflection_instance_lut_buffer_->size_bytes());
         }
     }
@@ -192,36 +166,34 @@ void RtRenderBackend::load_scene(ScenePayload&& scene_payload)
     }
 }
 
-void RtRenderBackend::update_camera(const engine::Camera& camera, vk::Extent2D extent)
-{
+void RtRenderBackend::update_camera(const engine::Camera& camera, vk::Extent2D extent) {
     if (!pipeline_) {
         return;
     }
-    const float aspect = extent.height == 0 ? 1.0f
-                                             : static_cast<float>(extent.width)
-                                                   / static_cast<float>(extent.height);
+    const float aspect = extent.height == 0
+                             ? 1.0f
+                             : static_cast<float>(extent.width) / static_cast<float>(extent.height);
     const CameraUbo ubo{
-        .view_proj           = camera.view_projection(aspect),
-        .view_position       = camera.position,
+        .view_proj = camera.view_projection(aspect),
+        .view_position = camera.position,
         .reflections_enabled = rt_reflections_enabled_ ? 1u : 0u,
     };
 
     if (!camera_buffer_) {
-        throw std::runtime_error("RtRenderBackend::update_camera requires initialized camera buffer");
+        throw std::runtime_error(
+            "RtRenderBackend::update_camera requires initialized camera buffer");
     }
     camera_buffer_->update(std::span<const CameraUbo>(&ubo, 1));
 }
 
-void RtRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx)
-{
+void RtRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) {
     FrameRecordContext rt_frame_ctx = frame_ctx;
     rt_frame_ctx.depthImage = *rt_depth_image_;
-    frame_recorder_->set_camera_uniform_set(
-        camera_uniform_set_ ? &*camera_uniform_set_ : nullptr);
+    frame_recorder_->set_camera_uniform_set(camera_uniform_set_ ? &*camera_uniform_set_ : nullptr);
     frame_recorder_->set_scene_data(&scene_data_);
     if (!texture_uniform_sets_.empty()) {
-        const std::size_t idx
-            = static_cast<std::size_t>(frame_ctx.frameIndex % texture_uniform_sets_.size());
+        const std::size_t idx =
+            static_cast<std::size_t>(frame_ctx.frameIndex % texture_uniform_sets_.size());
         frame_recorder_->set_texture_uniform_set(&texture_uniform_sets_[idx]);
     } else {
         frame_recorder_->set_texture_uniform_set(nullptr);
@@ -229,8 +201,7 @@ void RtRenderBackend::record(vk::CommandBuffer cmd, const FrameRecordContext& fr
     frame_recorder_->record(cmd, rt_frame_ctx);
 }
 
-void RtRenderBackend::update_texture_descriptors()
-{
+void RtRenderBackend::update_texture_descriptors() {
     if (texture_uniform_sets_.empty() || default_albedo_.view() == nullptr) {
         if (frame_recorder_) {
             frame_recorder_->set_texture_uniform_set(nullptr);
@@ -241,8 +212,8 @@ void RtRenderBackend::update_texture_descriptors()
     vk::Sampler sampler_to_use = *default_albedo_.sampler();
     std::vector<vk::DescriptorImageInfo> bindless_images{};
     bindless_images.push_back(vk::DescriptorImageInfo{
-        .sampler     = vk::Sampler{},
-        .imageView   = *default_albedo_.view(),
+        .sampler = vk::Sampler{},
+        .imageView = *default_albedo_.view(),
         .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
     });
 
@@ -252,8 +223,8 @@ void RtRenderBackend::update_texture_descriptors()
         bindless_images.reserve(scene_data_.texture_views.size());
         for (const vk::ImageView view : scene_data_.texture_views) {
             bindless_images.push_back(vk::DescriptorImageInfo{
-                .sampler     = vk::Sampler{},
-                .imageView   = view,
+                .sampler = vk::Sampler{},
+                .imageView = view,
                 .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             });
         }
@@ -269,8 +240,7 @@ void RtRenderBackend::update_texture_descriptors()
     }
 }
 
-void RtRenderBackend::create_depth_resources(DeviceContext& ctx, vk::Extent2D extent)
-{
+void RtRenderBackend::create_depth_resources(DeviceContext& ctx, vk::Extent2D extent) {
     const vk::raii::Device& device = ctx.device();
     const vk::raii::PhysicalDevice& physical = ctx.physicalDevice();
 
@@ -278,7 +248,7 @@ void RtRenderBackend::create_depth_resources(DeviceContext& ctx, vk::Extent2D ex
 
     vk::ImageCreateInfo depth_info{};
     depth_info.imageType = vk::ImageType::e2D;
-    depth_info.extent = vk::Extent3D{ extent.width, extent.height, 1 };
+    depth_info.extent = vk::Extent3D{extent.width, extent.height, 1};
     depth_info.mipLevels = 1;
     depth_info.arrayLayers = 1;
     depth_info.format = rt_depth_format_;
@@ -294,8 +264,8 @@ void RtRenderBackend::create_depth_resources(DeviceContext& ctx, vk::Extent2D ex
     const vk::MemoryRequirements2 mem_req2 = device.getImageMemoryRequirements2(imreq);
     const vk::MemoryRequirements& mem_req = mem_req2.memoryRequirements;
 
-    const std::uint32_t mem_index = find_memory_type(
-        physical, mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+    const std::uint32_t mem_index = find_memory_type(physical, mem_req.memoryTypeBits,
+                                                     vk::MemoryPropertyFlagBits::eDeviceLocal);
 
     vk::MemoryAllocateInfo alloc{};
     alloc.allocationSize = mem_req.size;
@@ -309,25 +279,23 @@ void RtRenderBackend::create_depth_resources(DeviceContext& ctx, vk::Extent2D ex
     view_info.image = *rt_depth_image_;
     view_info.viewType = vk::ImageViewType::e2D;
     view_info.format = rt_depth_format_;
-    view_info.subresourceRange.aspectMask
-        = (rt_depth_format_ == vk::Format::eD32Sfloat)
-              ? vk::ImageAspectFlagBits::eDepth
-              : (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil);
+    view_info.subresourceRange.aspectMask =
+        (rt_depth_format_ == vk::Format::eD32Sfloat)
+            ? vk::ImageAspectFlagBits::eDepth
+            : (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil);
     view_info.subresourceRange.levelCount = 1;
     view_info.subresourceRange.layerCount = 1;
     rt_depth_view_ = vk::raii::ImageView(device, view_info);
 }
 
-void RtRenderBackend::destroy_depth_resources()
-{
+void RtRenderBackend::destroy_depth_resources() {
     rt_depth_view_ = nullptr;
     rt_depth_image_ = nullptr;
     rt_depth_memory_ = nullptr;
     rt_depth_format_ = vk::Format::eUndefined;
 }
 
-void RtRenderBackend::rebuild_acceleration_structures()
-{
+void RtRenderBackend::rebuild_acceleration_structures() {
     tlas_build_ = {};
     blas_build_ = {};
     if (ctx_ == nullptr || !scene_data_.valid) {
@@ -338,8 +306,7 @@ void RtRenderBackend::rebuild_acceleration_structures()
     update_acceleration_structure_descriptor();
 }
 
-void RtRenderBackend::update_acceleration_structure_descriptor()
-{
+void RtRenderBackend::update_acceleration_structure_descriptor() {
     if (ctx_ == nullptr || !camera_uniform_set_ || tlas_build_.tlas == nullptr) {
         return;
     }
@@ -356,7 +323,7 @@ void RtRenderBackend::update_acceleration_structure_descriptor()
     as_write.descriptorCount = 1;
     as_write.descriptorType = vk::DescriptorType::eAccelerationStructureKHR;
 
-    ctx_->device().updateDescriptorSets({ as_write }, {});
+    ctx_->device().updateDescriptorSets({as_write}, {});
 }
 
 } // namespace renderer::ray_tracing

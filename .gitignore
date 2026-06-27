@@ -13,3 +13,8 @@ docs/
 
 # Benchmark measurement outputs
 measurements/*.json
+
+# Local format helper (uses repo .clang-format; not tracked)
+scripts/format-cpp.ps1
+
+.vscode/

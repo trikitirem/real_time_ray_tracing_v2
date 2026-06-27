@@ -10,13 +10,9 @@
 
 namespace renderer::raster {
 
-RasterFrameRecorder::RasterFrameRecorder(RasterPipeline& pipeline)
-    : pipeline_(pipeline)
-{
-}
+RasterFrameRecorder::RasterFrameRecorder(RasterPipeline& pipeline) : pipeline_(pipeline) {}
 
-void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext& ctx)
-{
+void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext& ctx) {
     // ── PASS 1: Shadow map ────────────────────────────────────────────────────
     {
         vk::ClearValue shadow_clear{};
@@ -25,7 +21,7 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
         vk::RenderPassBeginInfo shadow_begin{};
         shadow_begin.renderPass = *pipeline_.shadow_render_pass();
         shadow_begin.framebuffer = *pipeline_.shadow_framebuffer();
-        shadow_begin.renderArea.offset = vk::Offset2D{ 0, 0 };
+        shadow_begin.renderArea.offset = vk::Offset2D{0, 0};
         shadow_begin.renderArea.extent = pipeline_.shadow_extent();
         shadow_begin.clearValueCount = 1;
         shadow_begin.pClearValues = &shadow_clear;
@@ -42,7 +38,7 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
         cmd.setViewport(0, shadow_vp);
 
         vk::Rect2D shadow_scissor{};
-        shadow_scissor.offset = vk::Offset2D{ 0, 0 };
+        shadow_scissor.offset = vk::Offset2D{0, 0};
         shadow_scissor.extent = pipeline_.shadow_extent();
         cmd.setScissor(0, shadow_scissor);
 
@@ -55,13 +51,12 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
                     const ShadowInstancedPushConstant push{
                         .light_space_matrix = shadow_push_.light_space_matrix,
                     };
-                    cmd.pushConstants(
-                        *pipeline_.shadow_pipeline_instanced_layout(),
-                        vk::ShaderStageFlagBits::eVertex,
-                        0, sizeof(ShadowInstancedPushConstant), &push);
+                    cmd.pushConstants(*pipeline_.shadow_pipeline_instanced_layout(),
+                                      vk::ShaderStageFlagBits::eVertex, 0,
+                                      sizeof(ShadowInstancedPushConstant), &push);
 
-                    const vk::Buffer bufs[] = { batch.vertex_buffer, batch.instance_buffer };
-                    const vk::DeviceSize offsets[] = { 0, 0 };
+                    const vk::Buffer bufs[] = {batch.vertex_buffer, batch.instance_buffer};
+                    const vk::DeviceSize offsets[] = {0, 0};
                     cmd.bindVertexBuffers(0, 2, bufs, offsets);
                     cmd.bindIndexBuffer(batch.index_buffer, 0, vk::IndexType::eUint32);
                     cmd.drawIndexed(batch.index_count, batch.instance_count, 0, 0, 0);
@@ -76,10 +71,9 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
                         .light_space_matrix = shadow_push_.light_space_matrix,
                         .model = item.model_matrix,
                     };
-                    cmd.pushConstants(
-                        *pipeline_.shadow_pipeline_layout(),
-                        vk::ShaderStageFlagBits::eVertex,
-                        0, sizeof(ShadowPushConstant), &push);
+                    cmd.pushConstants(*pipeline_.shadow_pipeline_layout(),
+                                      vk::ShaderStageFlagBits::eVertex, 0,
+                                      sizeof(ShadowPushConstant), &push);
 
                     const vk::Buffer vb = item.vertex_buffer;
                     const vk::DeviceSize vb_offset = 0;
@@ -96,17 +90,16 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
     // ── PASS 2: Main shading ──────────────────────────────────────────────────
     {
         vk::ClearValue clear_color{};
-        clear_color.color = vk::ClearColorValue{
-            std::array<float, 4>{ 0.53f, 0.81f, 0.98f, 1.0f }};
+        clear_color.color = vk::ClearColorValue{std::array<float, 4>{0.53f, 0.81f, 0.98f, 1.0f}};
         vk::ClearValue clear_depth{};
         clear_depth.depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
 
-        const vk::ClearValue clears[] = { clear_color, clear_depth };
+        const vk::ClearValue clears[] = {clear_color, clear_depth};
 
         vk::RenderPassBeginInfo begin{};
         begin.renderPass = *pipeline_.render_pass();
         begin.framebuffer = *pipeline_.framebuffers()[ctx.imageIndex];
-        begin.renderArea.offset = vk::Offset2D{ 0, 0 };
+        begin.renderArea.offset = vk::Offset2D{0, 0};
         begin.renderArea.extent = ctx.extent;
         begin.clearValueCount = static_cast<std::uint32_t>(std::size(clears));
         begin.pClearValues = clears;
@@ -124,37 +117,39 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
                     light_uniform_set_->bind(cmd, *pipeline_.pipeline_instanced_layout());
 
                 for (const InstancedDrawItem& batch : scene_data_->instanced_items) {
-                    const bool has_texture = batch.texture_index != kNoTexture
-                                             && batch.texture_index < scene_data_->texture_views.size()
-                                             && per_texture_uniform_sets_ != nullptr
-                                             && batch.texture_index < per_texture_uniform_sets_->size();
+                    const bool has_texture =
+                        batch.texture_index != kNoTexture &&
+                        batch.texture_index < scene_data_->texture_views.size() &&
+                        per_texture_uniform_sets_ != nullptr &&
+                        batch.texture_index < per_texture_uniform_sets_->size();
                     if (has_texture) {
                         (*per_texture_uniform_sets_)[batch.texture_index].bind(
                             cmd, *pipeline_.pipeline_instanced_layout());
                     } else if (default_texture_uniform_set_ != nullptr) {
-                        default_texture_uniform_set_->bind(cmd, *pipeline_.pipeline_instanced_layout());
+                        default_texture_uniform_set_->bind(cmd,
+                                                           *pipeline_.pipeline_instanced_layout());
                     }
 
-                    const glm::vec4 albedo
-                        = batch.material_index < scene_data_->material_albedos.size()
-                              ? scene_data_->material_albedos[batch.material_index]
-                              : glm::vec4(1.0f);
-                    const float roughness
-                        = batch.material_index < scene_data_->material_roughness.size()
-                              ? scene_data_->material_roughness[batch.material_index]
-                              : 0.5f;
+                    const glm::vec4 albedo =
+                        batch.material_index < scene_data_->material_albedos.size()
+                            ? scene_data_->material_albedos[batch.material_index]
+                            : glm::vec4(1.0f);
+                    const float roughness =
+                        batch.material_index < scene_data_->material_roughness.size()
+                            ? scene_data_->material_roughness[batch.material_index]
+                            : 0.5f;
                     const InstancedBatchPushConstant push{
-                        .albedo       = albedo,
-                        .has_texture  = has_texture ? 1u : 0u,
-                        .roughness    = roughness,
+                        .albedo = albedo,
+                        .has_texture = has_texture ? 1u : 0u,
+                        .roughness = roughness,
                     };
-                    cmd.pushConstants(
-                        *pipeline_.pipeline_instanced_layout(),
-                        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                        0, sizeof(InstancedBatchPushConstant), &push);
+                    cmd.pushConstants(*pipeline_.pipeline_instanced_layout(),
+                                      vk::ShaderStageFlagBits::eVertex |
+                                          vk::ShaderStageFlagBits::eFragment,
+                                      0, sizeof(InstancedBatchPushConstant), &push);
 
-                    const vk::Buffer bufs[] = { batch.vertex_buffer, batch.instance_buffer };
-                    const vk::DeviceSize offsets[] = { 0, 0 };
+                    const vk::Buffer bufs[] = {batch.vertex_buffer, batch.instance_buffer};
+                    const vk::DeviceSize offsets[] = {0, 0};
                     cmd.bindVertexBuffers(0, 2, bufs, offsets);
                     cmd.bindIndexBuffer(batch.index_buffer, 0, vk::IndexType::eUint32);
                     cmd.drawIndexed(batch.index_count, batch.instance_count, 0, 0, 0);
@@ -173,10 +168,10 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
 
         if (scene_data_ && scene_data_->valid) {
             for (const RasterDrawItem& item : scene_data_->draw_items) {
-                const bool has_texture = item.texture_index != kNoTexture
-                                         && item.texture_index < scene_data_->texture_views.size()
-                                         && per_texture_uniform_sets_ != nullptr
-                                         && item.texture_index < per_texture_uniform_sets_->size();
+                const bool has_texture = item.texture_index != kNoTexture &&
+                                         item.texture_index < scene_data_->texture_views.size() &&
+                                         per_texture_uniform_sets_ != nullptr &&
+                                         item.texture_index < per_texture_uniform_sets_->size();
 
                 if (has_texture) {
                     (*per_texture_uniform_sets_)[item.texture_index].bind(
@@ -185,14 +180,12 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
                     default_texture_uniform_set_->bind(cmd, *pipeline_.pipeline_layout());
                 }
 
-                const glm::vec4 albedo =
-                    item.material_index < scene_data_->material_albedos.size()
-                        ? scene_data_->material_albedos[item.material_index]
-                        : glm::vec4(1.0f);
-                const float roughness =
-                    item.material_index < scene_data_->material_roughness.size()
-                        ? scene_data_->material_roughness[item.material_index]
-                        : 0.5f;
+                const glm::vec4 albedo = item.material_index < scene_data_->material_albedos.size()
+                                             ? scene_data_->material_albedos[item.material_index]
+                                             : glm::vec4(1.0f);
+                const float roughness = item.material_index < scene_data_->material_roughness.size()
+                                            ? scene_data_->material_roughness[item.material_index]
+                                            : 0.5f;
 
                 const ModelPushConstant push{
                     .model = item.model_matrix,
@@ -200,10 +193,10 @@ void RasterFrameRecorder::record(vk::CommandBuffer cmd, const FrameRecordContext
                     .has_texture = has_texture ? 1u : 0u,
                     .roughness = roughness,
                 };
-                cmd.pushConstants(
-                    *pipeline_.pipeline_layout(),
-                    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                    0, sizeof(ModelPushConstant), &push);
+                cmd.pushConstants(*pipeline_.pipeline_layout(),
+                                  vk::ShaderStageFlagBits::eVertex |
+                                      vk::ShaderStageFlagBits::eFragment,
+                                  0, sizeof(ModelPushConstant), &push);
 
                 const vk::Buffer vb = item.vertex_buffer;
                 const vk::DeviceSize vb_offset = 0;

@@ -48,31 +48,6 @@ foreach(rel IN ITEMS shaders/raster shaders/ray_tracing)
 endforeach()
 add_custom_target(rtrt_shaders ALL DEPENDS ${RTRT_SHADER_SPV})
 
-# Runtime assets: copy images/ next to built binaries.
-add_custom_target(rtrt_images ALL
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/images"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/images"
-            "${CMAKE_BINARY_DIR}/images"
-        COMMENT "Copy images -> build/images"
-)
-
-add_custom_target(rtrt_scenes ALL
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/scenes"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/scenes"
-            "${CMAKE_BINARY_DIR}/scenes"
-        COMMENT "Copy scenes -> build/scenes"
-)
-
-add_custom_target(rtrt_models ALL
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/models"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/models"
-            "${CMAKE_BINARY_DIR}/models"
-        COMMENT "Copy models -> build/models"
-)
-
 # GLFW
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
@@ -157,9 +132,6 @@ add_executable(real_time_ray_tracing_v2
 )
 
 add_dependencies(real_time_ray_tracing_v2 rtrt_shaders)
-add_dependencies(real_time_ray_tracing_v2 rtrt_images)
-add_dependencies(real_time_ray_tracing_v2 rtrt_scenes)
-add_dependencies(real_time_ray_tracing_v2 rtrt_models)
 
 target_include_directories(real_time_ray_tracing_v2 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -175,9 +147,22 @@ target_link_libraries(real_time_ray_tracing_v2 PRIVATE
         Vulkan::Vulkan
 )
 
+set(RTRT_RUNTIME_ASSET_DIRS images scenes models)
+foreach(asset_dir IN LISTS RTRT_RUNTIME_ASSET_DIRS)
+    add_custom_command(TARGET real_time_ray_tracing_v2 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:real_time_ray_tracing_v2>/${asset_dir}"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}"
+            "$<TARGET_FILE_DIR:real_time_ray_tracing_v2>/${asset_dir}"
+        COMMENT "Copy ${asset_dir} -> exe directory"
+        VERBATIM
+    )
+endforeach()
+
 add_custom_command(TARGET real_time_ray_tracing_v2 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory
-            "${CMAKE_BINARY_DIR}/measurements"
+            "$<TARGET_FILE_DIR:real_time_ray_tracing_v2>/measurements"
         COMMENT "Create measurements directory"
 )
 

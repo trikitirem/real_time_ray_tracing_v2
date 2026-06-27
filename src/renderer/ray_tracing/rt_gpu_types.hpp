@@ -8,14 +8,14 @@
 namespace renderer::ray_tracing {
 
 struct CameraUbo {
-    glm::mat4     view_proj{ 1.0f };
-    glm::vec3     view_position{ 0.0f };
+    glm::mat4 view_proj{1.0f};
+    glm::vec3 view_position{0.0f};
     std::uint32_t reflections_enabled = 1;
 };
 
 struct ModelPushConstant {
-    glm::mat4 model{ 1.0f };
-    glm::vec4 albedo{ 1.0f };
+    glm::mat4 model{1.0f};
+    glm::vec4 albedo{1.0f};
     std::uint32_t material_index = 0;
     std::uint32_t has_texture = 0;
     std::uint32_t _pad0 = 0;
@@ -23,11 +23,11 @@ struct ModelPushConstant {
 };
 
 struct MaterialGpu {
-    glm::vec4     albedo{ 1.0f };
+    glm::vec4 albedo{1.0f};
     std::uint32_t texture_index = 0;
-    std::uint32_t has_texture   = 0;
-    float         metalness     = 0.0f;
-    float         roughness     = 0.5f;
+    std::uint32_t has_texture = 0;
+    float metalness = 0.0f;
+    float roughness = 0.5f;
 };
 
 static_assert(sizeof(MaterialGpu) == 32);

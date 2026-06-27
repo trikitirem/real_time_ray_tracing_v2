@@ -19,10 +19,10 @@ struct InstancedDrawItem {
     vk::Buffer vertex_buffer{};
     vk::Buffer index_buffer{};
     vk::Buffer instance_buffer{};
-    std::uint32_t index_count    = 0;
+    std::uint32_t index_count = 0;
     std::uint32_t instance_count = 0;
     std::uint32_t material_index = 0;
-    std::uint32_t texture_index  = kNoTexture;
+    std::uint32_t texture_index = kNoTexture;
 };
 
 struct RasterDrawItem {
@@ -42,10 +42,10 @@ struct RasterSceneGpuData {
     std::vector<buffers::GpuBuffer> instance_buffers{};
     std::vector<textures::TextureResource> textures{};
 
-    std::vector<RasterDrawItem>    draw_items{};
+    std::vector<RasterDrawItem> draw_items{};
     std::vector<InstancedDrawItem> instanced_items{};
     std::vector<glm::vec4> material_albedos{};
-    std::vector<float>     material_roughness{};
+    std::vector<float> material_roughness{};
     vk::Buffer material_buffer{};
     std::vector<vk::ImageView> texture_views{};
     vk::Sampler texture_sampler{};
@@ -53,8 +53,7 @@ struct RasterSceneGpuData {
     bool valid = false;
 };
 
-inline bool scene_has_draw_work(const RasterSceneGpuData& data)
-{
+inline bool scene_has_draw_work(const RasterSceneGpuData& data) {
     return !data.draw_items.empty() || !data.instanced_items.empty();
 }
 

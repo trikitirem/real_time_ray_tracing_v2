@@ -20,14 +20,14 @@
 namespace engine {
 
 class Engine {
-public:
+  public:
     explicit Engine(bool useRasterBackend);
-    Engine(const Engine&)            = delete;
+    Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
 
     int run();
 
-private:
+  private:
     void initWindow();
     void initVulkan();
     void mainLoop();
@@ -50,39 +50,39 @@ private:
     [[nodiscard]] BenchmarkMeta make_benchmark_meta() const;
     [[nodiscard]] float measure_frame_delta();
 
-    const bool             useRasterBackendFromMain_;
+    const bool useRasterBackendFromMain_;
     renderer::DeviceConfig rasterConfig_;
     renderer::DeviceConfig rayTracingConfig_;
 
-    Window                  window_;
+    Window window_;
     renderer::DeviceContext deviceContext_;
     std::unique_ptr<renderer::Renderer> renderer_;
-    scene::Scene            scene_{};
-    Camera                  camera_{};
-    InputController         input_{};
+    scene::Scene scene_{};
+    Camera camera_{};
+    InputController input_{};
 
-    scene::SceneName                current_scene_name_{ scene::SceneName::Test };
-    scene::SceneConfig              current_scene_config_{};
-    scene::SceneStats               scene_stats_{};
+    scene::SceneName current_scene_name_{scene::SceneName::Test};
+    scene::SceneConfig current_scene_config_{};
+    scene::SceneStats scene_stats_{};
     std::vector<scene::CameraPreset> camera_presets_{};
-    int                             current_camera_preset_ = -1;
+    int current_camera_preset_ = -1;
 
-    bool rt_extensions_supported_  = false;
-    bool backend_toggle_enabled_   = false;
+    bool rt_extensions_supported_ = false;
+    bool backend_toggle_enabled_ = false;
     bool active_backend_is_raster_ = true;
-    bool is_rendering_paused_      = false;
-    bool camera_movement_locked_   = false;
+    bool is_rendering_paused_ = false;
+    bool camera_movement_locked_ = false;
 
-    int  current_stress_count_ = 0;
-    bool stress_suite_active_  = false;
+    int current_stress_count_ = 0;
+    bool stress_suite_active_ = false;
 
-    Benchmark      benchmark_{};
+    Benchmark benchmark_{};
     CameraAnimator animator_{};
 
     bool framebufferResized_ = false;
 
     using Clock = std::chrono::steady_clock;
-    Clock::time_point last_frame_time_{ Clock::now() };
+    Clock::time_point last_frame_time_{Clock::now()};
 };
 
 } // namespace engine

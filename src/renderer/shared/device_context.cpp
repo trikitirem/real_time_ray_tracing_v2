@@ -19,10 +19,9 @@ namespace renderer {
 
 namespace {
 
-constexpr std::array<const char*, 1> kValidationLayers = { "VK_LAYER_KHRONOS_validation" };
+constexpr std::array<const char*, 1> kValidationLayers = {"VK_LAYER_KHRONOS_validation"};
 
-bool checkValidationLayerSupport(const vk::raii::Context& ctx)
-{
+bool checkValidationLayerSupport(const vk::raii::Context& ctx) {
     const auto available = ctx.enumerateInstanceLayerProperties();
     for (const char* layer : kValidationLayers) {
         bool found = false;
@@ -39,42 +38,37 @@ bool checkValidationLayerSupport(const vk::raii::Context& ctx)
     return true;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      severity,
+VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
                                              VkDebugUtilsMessageTypeFlagsEXT /*type*/,
                                              const VkDebugUtilsMessengerCallbackDataEXT* data,
-                                             void* /*userData*/)
-{
+                                             void* /*userData*/) {
     if (severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
         std::cerr << "[vk] " << data->pMessage << '\n';
     }
     return VK_FALSE;
 }
 
-vk::DebugUtilsMessengerCreateInfoEXT makeDebugMessengerCreateInfo()
-{
+vk::DebugUtilsMessengerCreateInfoEXT makeDebugMessengerCreateInfo() {
     vk::DebugUtilsMessengerCreateInfoEXT ci{};
-    ci.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
-                       | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
-                       | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
-    ci.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
-                   | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
-                   | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
-    ci.pfnUserCallback =
-        reinterpret_cast<vk::PFN_DebugUtilsMessengerCallbackEXT>(&debugCallback);
+    ci.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+                         vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+                         vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+    ci.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+                     vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+                     vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
+    ci.pfnUserCallback = reinterpret_cast<vk::PFN_DebugUtilsMessengerCallbackEXT>(&debugCallback);
     return ci;
 }
 
-std::vector<const char*> getGlfwRequiredInstanceExtensions()
-{
-    std::uint32_t           count    = 0;
+std::vector<const char*> getGlfwRequiredInstanceExtensions() {
+    std::uint32_t count = 0;
     const char* const* glfwExt = glfwGetRequiredInstanceExtensions(&count);
-    return { glfwExt, glfwExt + count };
+    return {glfwExt, glfwExt + count};
 }
 
 bool checkDeviceExtensionSupport(const vk::raii::PhysicalDevice& dev,
-                                 const std::vector<const char*>& required)
-{
-    const auto            available = dev.enumerateDeviceExtensionProperties();
+                                 const std::vector<const char*>& required) {
+    const auto available = dev.enumerateDeviceExtensionProperties();
     std::set<std::string> missing(required.begin(), required.end());
     for (const auto& a : available) {
         missing.erase(a.extensionName);
@@ -82,11 +76,9 @@ bool checkDeviceExtensionSupport(const vk::raii::PhysicalDevice& dev,
     return missing.empty();
 }
 
-bool findSuitableDevice(const vk::raii::Instance&          instance,
-                        const vk::raii::SurfaceKHR&      surface,
-                        const std::vector<const char*>&    required_extensions,
-                        vk::raii::PhysicalDevice*          out_device = nullptr)
-{
+bool findSuitableDevice(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface,
+                        const std::vector<const char*>& required_extensions,
+                        vk::raii::PhysicalDevice* out_device = nullptr) {
     const auto devices = instance.enumeratePhysicalDevices();
 
     for (const auto& dev : devices) {
@@ -94,9 +86,9 @@ bool findSuitableDevice(const vk::raii::Instance&          instance,
             continue;
         }
 
-        const auto    qf       = dev.getQueueFamilyProperties();
+        const auto qf = dev.getQueueFamilyProperties();
         std::uint32_t graphics = UINT32_MAX;
-        std::uint32_t present  = UINT32_MAX;
+        std::uint32_t present = UINT32_MAX;
         for (std::uint32_t i = 0; i < qf.size(); ++i) {
             if (qf[i].queueFlags & vk::QueueFlagBits::eGraphics) {
                 graphics = i;
@@ -122,40 +114,37 @@ bool findSuitableDevice(const vk::raii::Instance&          instance,
 
 } // namespace
 
-bool probeRayTracingSupport(GLFWwindow* window)
-{
+bool probeRayTracingSupport(GLFWwindow* window) {
     if (window == nullptr) {
         return false;
     }
 
     static std::once_flag dispatch_init;
-    std::call_once(dispatch_init, []() {
-        VULKAN_HPP_DEFAULT_DISPATCHER.init();
-    });
+    std::call_once(dispatch_init, []() { VULKAN_HPP_DEFAULT_DISPATCHER.init(); });
 
     vk::raii::Context context{};
 
     vk::ApplicationInfo app{
-        .pApplicationName   = "real_time_ray_tracing_v2_probe",
+        .pApplicationName = "real_time_ray_tracing_v2_probe",
         .applicationVersion = VK_MAKE_API_VERSION(0, 0, 1, 0),
-        .pEngineName        = "rtrt_v2",
-        .engineVersion      = VK_MAKE_API_VERSION(0, 0, 1, 0),
-        .apiVersion         = VK_API_VERSION_1_3,
+        .pEngineName = "rtrt_v2",
+        .engineVersion = VK_MAKE_API_VERSION(0, 0, 1, 0),
+        .apiVersion = VK_API_VERSION_1_3,
     };
 
     const auto glfw_extensions = getGlfwRequiredInstanceExtensions();
     vk::InstanceCreateInfo instance_create_info{
-        .pApplicationInfo        = &app,
-        .enabledExtensionCount   = static_cast<std::uint32_t>(glfw_extensions.size()),
+        .pApplicationInfo = &app,
+        .enabledExtensionCount = static_cast<std::uint32_t>(glfw_extensions.size()),
         .ppEnabledExtensionNames = glfw_extensions.data(),
     };
 
     const vk::raii::Instance instance(context, instance_create_info);
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Instance{ *instance });
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Instance{*instance});
 
     VkSurfaceKHR raw_surface = VK_NULL_HANDLE;
-    if (glfwCreateWindowSurface(static_cast<VkInstance>(*instance), window, nullptr, &raw_surface)
-        != VK_SUCCESS) {
+    if (glfwCreateWindowSurface(static_cast<VkInstance>(*instance), window, nullptr,
+                                &raw_surface) != VK_SUCCESS) {
         return false;
     }
     const vk::raii::SurfaceKHR surface(instance, raw_surface);
@@ -164,32 +153,24 @@ bool probeRayTracingSupport(GLFWwindow* window)
     return findSuitableDevice(instance, surface, rt_extensions, nullptr);
 }
 
-DeviceContext::DeviceContext()
-    : context_()
-{
-}
+DeviceContext::DeviceContext() : context_() {}
 
-const DeviceConfig& DeviceContext::cfg() const
-{
+const DeviceConfig& DeviceContext::cfg() const {
     if (cfgPtr_ == nullptr) {
         throw std::logic_error("DeviceContext::cfg used before init");
     }
     return *cfgPtr_;
 }
 
-const DeviceConfig& DeviceContext::deviceConfig() const
-{
+const DeviceConfig& DeviceContext::deviceConfig() const {
     return cfg();
 }
 
-void DeviceContext::init(GLFWwindow* window, const DeviceConfig& cfg)
-{
+void DeviceContext::init(GLFWwindow* window, const DeviceConfig& cfg) {
     cfgPtr_ = &cfg;
 
     static std::once_flag dispatch_init;
-    std::call_once(dispatch_init, []() {
-        VULKAN_HPP_DEFAULT_DISPATCHER.init();
-    });
+    std::call_once(dispatch_init, []() { VULKAN_HPP_DEFAULT_DISPATCHER.init(); });
 
 #ifndef NDEBUG
     enableValidation_ = true;
@@ -206,14 +187,13 @@ void DeviceContext::init(GLFWwindow* window, const DeviceConfig& cfg)
     createLogicalDevice();
 }
 
-void DeviceContext::createInstance()
-{
+void DeviceContext::createInstance() {
     vk::ApplicationInfo app{
-        .pApplicationName   = "real_time_ray_tracing_v2",
+        .pApplicationName = "real_time_ray_tracing_v2",
         .applicationVersion = VK_MAKE_API_VERSION(0, 0, 1, 0),
-        .pEngineName        = "rtrt_v2",
-        .engineVersion      = VK_MAKE_API_VERSION(0, 0, 1, 0),
-        .apiVersion         = VK_API_VERSION_1_3,
+        .pEngineName = "rtrt_v2",
+        .engineVersion = VK_MAKE_API_VERSION(0, 0, 1, 0),
+        .apiVersion = VK_API_VERSION_1_3,
     };
 
     std::vector<const char*> layers = cfg().instanceLayers;
@@ -222,8 +202,7 @@ void DeviceContext::createInstance()
     }
 
     std::vector<const char*> extensions = getGlfwRequiredInstanceExtensions();
-    extensions.insert(extensions.end(),
-                      cfg().instanceExtensionsExtra.begin(),
+    extensions.insert(extensions.end(), cfg().instanceExtensionsExtra.begin(),
                       cfg().instanceExtensionsExtra.end());
     if (enableValidation_) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -232,39 +211,36 @@ void DeviceContext::createInstance()
     vk::DebugUtilsMessengerCreateInfoEXT dbg = makeDebugMessengerCreateInfo();
 
     vk::InstanceCreateInfo instanceCreateInfo{
-        .pNext                   = enableValidation_ ? &dbg : nullptr,
-        .pApplicationInfo        = &app,
-        .enabledLayerCount       = static_cast<std::uint32_t>(layers.size()),
-        .ppEnabledLayerNames     = layers.empty() ? nullptr : layers.data(),
-        .enabledExtensionCount   = static_cast<std::uint32_t>(extensions.size()),
+        .pNext = enableValidation_ ? &dbg : nullptr,
+        .pApplicationInfo = &app,
+        .enabledLayerCount = static_cast<std::uint32_t>(layers.size()),
+        .ppEnabledLayerNames = layers.empty() ? nullptr : layers.data(),
+        .enabledExtensionCount = static_cast<std::uint32_t>(extensions.size()),
         .ppEnabledExtensionNames = extensions.data(),
     };
 
     instance_ = vk::raii::Instance(context_, instanceCreateInfo);
 
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Instance{ *instance_ });
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Instance{*instance_});
 }
 
-void DeviceContext::setupDebugMessenger()
-{
+void DeviceContext::setupDebugMessenger() {
     if (!enableValidation_) {
         return;
     }
     debugMessenger_ = vk::raii::DebugUtilsMessengerEXT(instance_, makeDebugMessengerCreateInfo());
 }
 
-void DeviceContext::createSurface(GLFWwindow* window)
-{
+void DeviceContext::createSurface(GLFWwindow* window) {
     VkSurfaceKHR raw = VK_NULL_HANDLE;
-    if (glfwCreateWindowSurface(static_cast<VkInstance>(*instance_), window, nullptr, &raw)
-        != VK_SUCCESS) {
+    if (glfwCreateWindowSurface(static_cast<VkInstance>(*instance_), window, nullptr, &raw) !=
+        VK_SUCCESS) {
         throw std::runtime_error("Failed to create window surface");
     }
     surface_ = vk::raii::SurfaceKHR(instance_, raw);
 }
 
-void DeviceContext::pickPhysicalDevice()
-{
+void DeviceContext::pickPhysicalDevice() {
     const auto devices = instance_.enumeratePhysicalDevices();
 
     for (const auto& dev : devices) {
@@ -272,9 +248,9 @@ void DeviceContext::pickPhysicalDevice()
             continue;
         }
 
-        const auto    qf       = dev.getQueueFamilyProperties();
+        const auto qf = dev.getQueueFamilyProperties();
         std::uint32_t graphics = UINT32_MAX;
-        std::uint32_t present  = UINT32_MAX;
+        std::uint32_t present = UINT32_MAX;
         for (std::uint32_t i = 0; i < qf.size(); ++i) {
             if (qf[i].queueFlags & vk::QueueFlagBits::eGraphics) {
                 graphics = i;
@@ -290,9 +266,9 @@ void DeviceContext::pickPhysicalDevice()
             continue;
         }
 
-        physicalDevice_      = dev;
+        physicalDevice_ = dev;
         graphicsQueueFamily_ = graphics;
-        presentQueueFamily_  = present;
+        presentQueueFamily_ = present;
         return;
     }
 
@@ -300,37 +276,36 @@ void DeviceContext::pickPhysicalDevice()
         "No suitable Vulkan physical device found for current DeviceConfig (extensions / queues)");
 }
 
-void DeviceContext::createLogicalDevice()
-{
+void DeviceContext::createLogicalDevice() {
     auto* features2 = static_cast<vk::PhysicalDeviceFeatures2*>(cfg().deviceFeaturesChainHead);
     if (features2 == nullptr) {
         throw std::runtime_error("DeviceConfig::deviceFeaturesChainHead is null");
     }
 
-    std::set<std::uint32_t> uniqueFamilies = { graphicsQueueFamily_, presentQueueFamily_ };
+    std::set<std::uint32_t> uniqueFamilies = {graphicsQueueFamily_, presentQueueFamily_};
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;
-    const float                            prio = 1.0f;
+    const float prio = 1.0f;
     for (auto fam : uniqueFamilies) {
         queueInfos.push_back(vk::DeviceQueueCreateInfo{
             .queueFamilyIndex = fam,
-            .queueCount       = 1,
+            .queueCount = 1,
             .pQueuePriorities = &prio,
         });
     }
 
     vk::DeviceCreateInfo di{
-        .pNext                   = features2,
-        .queueCreateInfoCount    = static_cast<std::uint32_t>(queueInfos.size()),
-        .pQueueCreateInfos       = queueInfos.data(),
-        .enabledExtensionCount   = static_cast<std::uint32_t>(cfg().deviceExtensions.size()),
+        .pNext = features2,
+        .queueCreateInfoCount = static_cast<std::uint32_t>(queueInfos.size()),
+        .pQueueCreateInfos = queueInfos.data(),
+        .enabledExtensionCount = static_cast<std::uint32_t>(cfg().deviceExtensions.size()),
         .ppEnabledExtensionNames = cfg().deviceExtensions.data(),
     };
 
-    device_        = vk::raii::Device(physicalDevice_, di);
+    device_ = vk::raii::Device(physicalDevice_, di);
     graphicsQueue_ = vk::raii::Queue(device_, graphicsQueueFamily_, 0);
-    presentQueue_  = vk::raii::Queue(device_, presentQueueFamily_, 0);
+    presentQueue_ = vk::raii::Queue(device_, presentQueueFamily_, 0);
 
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Device{ *device_ });
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Device{*device_});
 }
 
 } // namespace renderer

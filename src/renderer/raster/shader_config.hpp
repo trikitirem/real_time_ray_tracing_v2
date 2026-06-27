@@ -9,52 +9,52 @@ namespace renderer::raster {
 
 // TEMP: camera and one texture set; more bindings will be added in next steps.
 inline constexpr std::uint32_t kCameraSetIndex = 0;
-inline constexpr std::uint32_t kCameraBinding  = 0;
+inline constexpr std::uint32_t kCameraBinding = 0;
 inline constexpr std::uint32_t kTextureSetIndex = 1;
-inline constexpr std::uint32_t kTextureImageBinding  = 0;
-inline constexpr std::uint32_t kTextureSamplerBinding  = 1;
+inline constexpr std::uint32_t kTextureImageBinding = 0;
+inline constexpr std::uint32_t kTextureSamplerBinding = 1;
 
 inline constexpr std::array<vk::DescriptorSetLayoutBinding, 1> kCameraDescriptorBindings = {
     vk::DescriptorSetLayoutBinding{
-        .binding         = kCameraBinding,
-        .descriptorType  = vk::DescriptorType::eUniformBuffer,
+        .binding = kCameraBinding,
+        .descriptorType = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = 1,
-        .stageFlags      = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
 };
 
 inline constexpr std::array<vk::DescriptorPoolSize, 1> kCameraDescriptorPoolSizes = {
     vk::DescriptorPoolSize{
-        .type            = vk::DescriptorType::eUniformBuffer,
+        .type = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = 1,
     },
 };
 
 inline constexpr std::array<vk::DescriptorSetLayoutBinding, 2> kTextureDescriptorBindings = {
     vk::DescriptorSetLayoutBinding{
-        .binding            = kTextureImageBinding,
-        .descriptorType     = vk::DescriptorType::eSampledImage,
-        .descriptorCount    = 1,
-        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .binding = kTextureImageBinding,
+        .descriptorType = vk::DescriptorType::eSampledImage,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
     vk::DescriptorSetLayoutBinding{
-        .binding            = kTextureSamplerBinding,
-        .descriptorType     = vk::DescriptorType::eSampler,
-        .descriptorCount    = 1,
-        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .binding = kTextureSamplerBinding,
+        .descriptorType = vk::DescriptorType::eSampler,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
 };
 
 inline constexpr std::array<vk::DescriptorPoolSize, 2> kTextureDescriptorPoolSizes = {
     vk::DescriptorPoolSize{
-        .type            = vk::DescriptorType::eSampledImage,
+        .type = vk::DescriptorType::eSampledImage,
         .descriptorCount = 1,
     },
     vk::DescriptorPoolSize{
-        .type            = vk::DescriptorType::eSampler,
+        .type = vk::DescriptorType::eSampler,
         .descriptorCount = 1,
     },
 };
@@ -66,39 +66,39 @@ inline constexpr std::uint32_t kShadowSamplerBinding = 2;
 
 inline constexpr std::array<vk::DescriptorSetLayoutBinding, 3> kLightDescriptorBindings = {
     vk::DescriptorSetLayoutBinding{
-        .binding            = kLightUboBinding,
-        .descriptorType     = vk::DescriptorType::eUniformBuffer,
-        .descriptorCount    = 1,
-        .stageFlags         = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+        .binding = kLightUboBinding,
+        .descriptorType = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
     vk::DescriptorSetLayoutBinding{
-        .binding            = kShadowMapBinding,
-        .descriptorType     = vk::DescriptorType::eSampledImage,
-        .descriptorCount    = 1,
-        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .binding = kShadowMapBinding,
+        .descriptorType = vk::DescriptorType::eSampledImage,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
     vk::DescriptorSetLayoutBinding{
-        .binding            = kShadowSamplerBinding,
-        .descriptorType     = vk::DescriptorType::eSampler,
-        .descriptorCount    = 1,
-        .stageFlags         = vk::ShaderStageFlagBits::eFragment,
+        .binding = kShadowSamplerBinding,
+        .descriptorType = vk::DescriptorType::eSampler,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
         .pImmutableSamplers = nullptr,
     },
 };
 
 inline constexpr std::array<vk::DescriptorPoolSize, 3> kLightDescriptorPoolSizes = {
     vk::DescriptorPoolSize{
-        .type            = vk::DescriptorType::eUniformBuffer,
+        .type = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = 1,
     },
     vk::DescriptorPoolSize{
-        .type            = vk::DescriptorType::eSampledImage,
+        .type = vk::DescriptorType::eSampledImage,
         .descriptorCount = 1,
     },
     vk::DescriptorPoolSize{
-        .type            = vk::DescriptorType::eSampler,
+        .type = vk::DescriptorType::eSampler,
         .descriptorCount = 1,
     },
 };

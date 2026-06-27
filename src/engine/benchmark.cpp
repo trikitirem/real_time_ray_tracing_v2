@@ -16,8 +16,7 @@ namespace engine {
 
 namespace {
 
-std::string sanitize_filename_part(std::string value)
-{
+std::string sanitize_filename_part(std::string value) {
     for (char& c : value) {
         if (c == ' ') {
             c = '_';
@@ -28,10 +27,9 @@ std::string sanitize_filename_part(std::string value)
     return value;
 }
 
-std::string format_timestamp(const std::chrono::system_clock::time_point tp)
-{
+std::string format_timestamp(const std::chrono::system_clock::time_point tp) {
     const auto time_t_val = std::chrono::system_clock::to_time_t(tp);
-    std::tm    tm_val{};
+    std::tm tm_val{};
 #if defined(_WIN32)
     localtime_s(&tm_val, &time_t_val);
 #else
@@ -42,14 +40,12 @@ std::string format_timestamp(const std::chrono::system_clock::time_point tp)
     return oss.str();
 }
 
-float percentile_low_fps(const std::vector<float>& sorted_frame_times, const float percentile)
-{
+float percentile_low_fps(const std::vector<float>& sorted_frame_times, const float percentile) {
     if (sorted_frame_times.empty()) {
         return 0.0f;
     }
-    const std::size_t count
-        = std::max<std::size_t>(1, static_cast<std::size_t>(
-                                        std::ceil(sorted_frame_times.size() * percentile)));
+    const std::size_t count = std::max<std::size_t>(
+        1, static_cast<std::size_t>(std::ceil(sorted_frame_times.size() * percentile)));
     float sum_fps = 0.0f;
     for (std::size_t i = 0; i < count; ++i) {
         const float dt = sorted_frame_times[i];
@@ -60,23 +56,21 @@ float percentile_low_fps(const std::vector<float>& sorted_frame_times, const flo
 
 } // namespace
 
-void Benchmark::start(BenchmarkMeta meta)
-{
-    meta_               = std::move(meta);
-    running_            = true;
-    elapsed_s_          = 0.0f;
-    warmup_remaining_   = kWarmupFrames;
+void Benchmark::start(BenchmarkMeta meta) {
+    meta_ = std::move(meta);
+    running_ = true;
+    elapsed_s_ = 0.0f;
+    warmup_remaining_ = kWarmupFrames;
     frame_times_.clear();
-    started_at_      = Clock::now();
+    started_at_ = Clock::now();
     started_at_wall_ = std::chrono::system_clock::now();
 }
 
-void Benchmark::stop()
-{
+void Benchmark::stop() {
     if (!running_) {
         return;
     }
-    running_       = false;
+    running_ = false;
     just_finished_ = true;
 
     const auto stats = this->stats();
@@ -86,8 +80,7 @@ void Benchmark::stop()
               << "  frames=" << stats.frame_count << '\n';
 }
 
-bool Benchmark::consume_finished()
-{
+bool Benchmark::consume_finished() {
     if (just_finished_) {
         just_finished_ = false;
         return true;
@@ -95,8 +88,7 @@ bool Benchmark::consume_finished()
     return false;
 }
 
-bool Benchmark::tick(const float frame_dt)
-{
+bool Benchmark::tick(const float frame_dt) {
     if (!running_) {
         return false;
     }
@@ -117,8 +109,7 @@ bool Benchmark::tick(const float frame_dt)
     return true;
 }
 
-BenchmarkStats Benchmark::stats() const
-{
+BenchmarkStats Benchmark::stats() const {
     BenchmarkStats result{};
     result.frame_count = static_cast<int>(frame_times_.size());
     if (frame_times_.empty()) {
@@ -132,47 +123,45 @@ BenchmarkStats Benchmark::stats() const
     for (const float dt : frame_times_) {
         sum_fps += dt > 0.0f ? 1.0f / dt : 0.0f;
     }
-    result.avg_fps    = sum_fps / static_cast<float>(frame_times_.size());
+    result.avg_fps = sum_fps / static_cast<float>(frame_times_.size());
     result.p5_low_fps = percentile_low_fps(sorted, 0.05f);
     result.p1_low_fps = percentile_low_fps(sorted, 0.01f);
     return result;
 }
 
-void Benchmark::save_json() const
-{
+void Benchmark::save_json() const {
     const auto stats = this->stats();
 
     nlohmann::json j;
-    j["scene_name"]              = meta_.scene_name;
-    j["backend"]                 = meta_.backend;
-    j["gpu_name"]                = meta_.gpu_name;
-    j["window_width"]            = meta_.window_width;
-    j["window_height"]           = meta_.window_height;
-    j["present_mode"]            = meta_.present_mode;
-    j["configured_duration_s"]   = meta_.configured_duration_s;
-    j["elapsed_s"]               = elapsed_s_;
+    j["scene_name"] = meta_.scene_name;
+    j["backend"] = meta_.backend;
+    j["gpu_name"] = meta_.gpu_name;
+    j["window_width"] = meta_.window_width;
+    j["window_height"] = meta_.window_height;
+    j["present_mode"] = meta_.present_mode;
+    j["configured_duration_s"] = meta_.configured_duration_s;
+    j["elapsed_s"] = elapsed_s_;
     j["warmup_frames_discarded"] = kWarmupFrames;
-    j["object_count"]            = meta_.object_count;
-    j["vertex_count"]            = meta_.vertex_count;
-    j["triangle_count"]          = meta_.triangle_count;
-    j["stress_count"]            = meta_.stress_count;
-    j["stress_rng_seed"]         = meta_.stress_rng_seed;
-    j["rt_reflections_enabled"]  = meta_.rt_reflections_enabled;
-    j["stress_use_texture"]      = meta_.stress_use_texture;
-    j["stats"]["avg_fps"]        = stats.avg_fps;
-    j["stats"]["p5_low_fps"]     = stats.p5_low_fps;
-    j["stats"]["p1_low_fps"]     = stats.p1_low_fps;
-    j["stats"]["frame_count"]    = stats.frame_count;
+    j["object_count"] = meta_.object_count;
+    j["vertex_count"] = meta_.vertex_count;
+    j["triangle_count"] = meta_.triangle_count;
+    j["stress_count"] = meta_.stress_count;
+    j["stress_rng_seed"] = meta_.stress_rng_seed;
+    j["rt_reflections_enabled"] = meta_.rt_reflections_enabled;
+    j["stress_use_texture"] = meta_.stress_use_texture;
+    j["stats"]["avg_fps"] = stats.avg_fps;
+    j["stats"]["p5_low_fps"] = stats.p5_low_fps;
+    j["stats"]["p1_low_fps"] = stats.p1_low_fps;
+    j["stats"]["frame_count"] = stats.frame_count;
 
     nlohmann::json frames = nlohmann::json::array();
     for (const float dt : frame_times_) {
-        frames.push_back({ { "dt_s", dt }, { "fps", dt > 0.0f ? 1.0f / dt : 0.0f } });
+        frames.push_back({{"dt_s", dt}, {"fps", dt > 0.0f ? 1.0f / dt : 0.0f}});
     }
     j["frames"] = std::move(frames);
 
-    const std::string filename = sanitize_filename_part(meta_.scene_name) + "_"
-                                 + meta_.backend + "_"
-                                 + format_timestamp(started_at_wall_) + ".json";
+    const std::string filename = sanitize_filename_part(meta_.scene_name) + "_" + meta_.backend +
+                                 "_" + format_timestamp(started_at_wall_) + ".json";
     const auto out_path = util::resolve_asset("measurements") / filename;
 
     std::ofstream out(out_path);

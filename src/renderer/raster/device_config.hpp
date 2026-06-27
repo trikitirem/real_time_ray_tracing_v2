@@ -9,17 +9,16 @@ namespace renderer::raster {
 namespace detail {
 
 struct RasterFeatureChain {
-    vk::PhysicalDeviceVulkan11Features       v11{};
-    vk::PhysicalDeviceVulkan12Features       v12{};
-    vk::PhysicalDeviceVulkan13Features       v13{};
-    vk::PhysicalDeviceFeatures2              features2{};
+    vk::PhysicalDeviceVulkan11Features v11{};
+    vk::PhysicalDeviceVulkan12Features v12{};
+    vk::PhysicalDeviceVulkan13Features v13{};
+    vk::PhysicalDeviceFeatures2 features2{};
 
-    RasterFeatureChain()
-    {
-        v11.pNext               = &v12;
+    RasterFeatureChain() {
+        v11.pNext = &v12;
         v11.shaderDrawParameters = vk::True;
 
-        v13.pNext            = &v11;
+        v13.pNext = &v11;
         v13.synchronization2 = vk::True;
         v13.dynamicRendering = vk::False;
 
@@ -30,8 +29,7 @@ struct RasterFeatureChain {
 
 } // namespace detail
 
-inline DeviceConfig makeRasterDeviceConfig()
-{
+inline DeviceConfig makeRasterDeviceConfig() {
     static detail::RasterFeatureChain chain;
 
     DeviceConfig cfg{};

@@ -13,8 +13,7 @@ namespace util {
 
 namespace {
 
-std::filesystem::path executable_directory()
-{
+std::filesystem::path executable_directory() {
 #if defined(_WIN32)
     wchar_t buffer[MAX_PATH]{};
     const DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
@@ -35,14 +34,12 @@ std::filesystem::path executable_directory()
 
 } // namespace
 
-std::filesystem::path asset_root()
-{
+std::filesystem::path asset_root() {
     static const std::filesystem::path root = executable_directory();
     return root;
 }
 
-std::filesystem::path resolve_asset(const std::string_view relative)
-{
+std::filesystem::path resolve_asset(const std::string_view relative) {
     if (relative.empty()) {
         throw std::runtime_error("resolve_asset: empty relative path");
     }

@@ -7,9 +7,9 @@
 #include "scene/primitives/plane.hpp"
 #include "util/asset_root.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
-#include <cmath>
 #include <random>
 #include <stdexcept>
 
@@ -20,16 +20,14 @@ namespace scene {
 
 namespace {
 
-glm::vec3 read_vec3(const nlohmann::json& j)
-{
+glm::vec3 read_vec3(const nlohmann::json& j) {
     if (!j.is_array() || j.size() < 3) {
         throw std::runtime_error("Expected vec3 array with 3 elements");
     }
     return glm::vec3(j[0].get<float>(), j[1].get<float>(), j[2].get<float>());
 }
 
-SceneKind parse_scene_kind(const std::string& kind)
-{
+SceneKind parse_scene_kind(const std::string& kind) {
     if (kind == "viewing") {
         return SceneKind::Viewing;
     }
@@ -39,24 +37,22 @@ SceneKind parse_scene_kind(const std::string& kind)
     throw std::runtime_error("Unknown scene kind: " + kind);
 }
 
-CameraPreset parse_camera_preset(const nlohmann::json& j)
-{
+CameraPreset parse_camera_preset(const nlohmann::json& j) {
     CameraPreset preset{};
-    preset.name           = j.at("name").get<std::string>();
-    preset.position       = read_vec3(j.at("position"));
-    preset.euler_degrees  = read_vec3(j.at("euler_degrees"));
+    preset.name = j.at("name").get<std::string>();
+    preset.position = read_vec3(j.at("position"));
+    preset.euler_degrees = read_vec3(j.at("euler_degrees"));
     return preset;
 }
 
-PrimitiveConfig parse_primitive(const nlohmann::json& j)
-{
+PrimitiveConfig parse_primitive(const nlohmann::json& j) {
     PrimitiveConfig prim{};
-    prim.type      = j.at("type").get<std::string>();
-    prim.position      = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
-    prim.euler_degrees = j.contains("euler_degrees") ? read_vec3(j.at("euler_degrees"))
-                                                       : glm::vec3(0.0f);
-    prim.scale         = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
-    prim.color     = j.contains("color") ? read_vec3(j.at("color")) : glm::vec3(1.0f);
+    prim.type = j.at("type").get<std::string>();
+    prim.position = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
+    prim.euler_degrees =
+        j.contains("euler_degrees") ? read_vec3(j.at("euler_degrees")) : glm::vec3(0.0f);
+    prim.scale = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
+    prim.color = j.contains("color") ? read_vec3(j.at("color")) : glm::vec3(1.0f);
     prim.metalness = j.value("metalness", 0.0f);
     prim.roughness = j.value("roughness", 0.5f);
     if (j.contains("texture")) {
@@ -65,27 +61,24 @@ PrimitiveConfig parse_primitive(const nlohmann::json& j)
     return prim;
 }
 
-ModelConfig parse_model(const nlohmann::json& j)
-{
+ModelConfig parse_model(const nlohmann::json& j) {
     ModelConfig model{};
     model.gltf_path = j.at("gltf_path").get<std::string>();
-    model.position      = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
-    model.euler_degrees = j.contains("euler_degrees") ? read_vec3(j.at("euler_degrees"))
-                                                        : glm::vec3(0.0f);
-    model.scale         = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
+    model.position = j.contains("position") ? read_vec3(j.at("position")) : glm::vec3(0.0f);
+    model.euler_degrees =
+        j.contains("euler_degrees") ? read_vec3(j.at("euler_degrees")) : glm::vec3(0.0f);
+    model.scale = j.contains("scale") ? read_vec3(j.at("scale")) : glm::vec3(1.0f);
     return model;
 }
 
-Model build_primitive(const PrimitiveConfig& prim, const std::filesystem::path& /*asset_root*/)
-{
+Model build_primitive(const PrimitiveConfig& prim, const std::filesystem::path& /*asset_root*/) {
     Material mat{};
     mat.base_color = prim.color;
-    mat.metalness  = prim.metalness;
-    mat.roughness  = prim.roughness;
+    mat.metalness = prim.metalness;
+    mat.roughness = prim.roughness;
     if (!prim.texture.empty()) {
         const auto p = util::resolve_asset(prim.texture);
-        mat.texture_location
-            = util::AssetLocation{ p.parent_path(), p.filename().string() };
+        mat.texture_location = util::AssetLocation{p.parent_path(), p.filename().string()};
     }
 
     Transform xf{};
@@ -102,8 +95,7 @@ Model build_primitive(const PrimitiveConfig& prim, const std::filesystem::path& 
     throw std::runtime_error("Unknown primitive type: " + prim.type);
 }
 
-void validate_config(const SceneConfig& cfg)
-{
+void validate_config(const SceneConfig& cfg) {
     if (cfg.kind == SceneKind::Benchmark && !cfg.benchmark_path.has_value()) {
         std::cerr << "[Scene] Warning: benchmark scene '" << cfg.name
                   << "' has no benchmark_path — camera will stay fixed during benchmark.\n";
@@ -111,38 +103,36 @@ void validate_config(const SceneConfig& cfg)
 
     for (const auto& prim : cfg.primitives) {
         if (prim.type != "cube" && prim.type != "plane") {
-            throw std::runtime_error("Scene '" + cfg.name + "': unknown primitive type '"
-                                     + prim.type + "'");
+            throw std::runtime_error("Scene '" + cfg.name + "': unknown primitive type '" +
+                                     prim.type + "'");
         }
     }
 
     if (cfg.stress.enabled) {
         if (cfg.stress.initial_count < 0) {
-            throw std::runtime_error("Scene '" + cfg.name
-                                     + "': stress.initial_count must be >= 0");
+            throw std::runtime_error("Scene '" + cfg.name + "': stress.initial_count must be >= 0");
         }
         if (cfg.stress.step <= 0) {
             throw std::runtime_error("Scene '" + cfg.name + "': stress.step must be > 0");
         }
         if (cfg.stress.metalness < 0.0f || cfg.stress.metalness > 1.0f) {
-            throw std::runtime_error("Scene '" + cfg.name
-                                     + "': stress.metalness must be in [0, 1]");
+            throw std::runtime_error("Scene '" + cfg.name +
+                                     "': stress.metalness must be in [0, 1]");
         }
         if (cfg.stress.roughness < 0.0f || cfg.stress.roughness > 1.0f) {
-            throw std::runtime_error("Scene '" + cfg.name
-                                     + "': stress.roughness must be in [0, 1]");
+            throw std::runtime_error("Scene '" + cfg.name +
+                                     "': stress.roughness must be in [0, 1]");
         }
         if (cfg.stress.use_texture && cfg.stress.texture.empty()) {
-            throw std::runtime_error("Scene '" + cfg.name
-                                     + "': stress.use_texture is true but stress.texture is empty");
+            throw std::runtime_error("Scene '" + cfg.name +
+                                     "': stress.use_texture is true but stress.texture is empty");
         }
     }
 }
 
 } // namespace
 
-SceneConfig load_scene_config(const std::filesystem::path& json_path)
-{
+SceneConfig load_scene_config(const std::filesystem::path& json_path) {
     std::ifstream file(json_path);
     if (!file) {
         throw std::runtime_error("Failed to open scene config: " + json_path.string());
@@ -155,10 +145,10 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
     cfg.kind = parse_scene_kind(j.at("kind").get<std::string>());
 
     if (j.contains("benchmark")) {
-        cfg.benchmark.duration_seconds
-            = j.at("benchmark").value("duration_seconds", engine::kDefaultBenchmarkDurationS);
-        cfg.benchmark.rt_reflections_enabled
-            = j.at("benchmark").value("rt_reflections_enabled", true);
+        cfg.benchmark.duration_seconds =
+            j.at("benchmark").value("duration_seconds", engine::kDefaultBenchmarkDurationS);
+        cfg.benchmark.rt_reflections_enabled =
+            j.at("benchmark").value("rt_reflections_enabled", true);
     }
 
     if (j.contains("camera_presets")) {
@@ -170,20 +160,20 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
     if (j.contains("initial_camera")) {
         const auto& ic = j.at("initial_camera");
         InitialCamera cam{};
-        cam.position      = read_vec3(ic.at("position"));
-        cam.euler_degrees = ic.contains("euler_degrees") ? read_vec3(ic.at("euler_degrees"))
-                                                         : glm::vec3(0.0f);
+        cam.position = read_vec3(ic.at("position"));
+        cam.euler_degrees =
+            ic.contains("euler_degrees") ? read_vec3(ic.at("euler_degrees")) : glm::vec3(0.0f);
         cfg.initial_camera = cam;
     }
 
     if (j.contains("benchmark_path")) {
         const auto& bp = j.at("benchmark_path");
         BenchmarkPath path{};
-        path.from              = read_vec3(bp.at("from"));
-        path.to                = read_vec3(bp.at("to"));
-        path.look_at           = read_vec3(bp.at("look_at"));
-        path.duration_seconds  = bp.value("duration_seconds", 30.0f);
-        cfg.benchmark_path     = path;
+        path.from = read_vec3(bp.at("from"));
+        path.to = read_vec3(bp.at("to"));
+        path.look_at = read_vec3(bp.at("look_at"));
+        path.duration_seconds = bp.value("duration_seconds", 30.0f);
+        cfg.benchmark_path = path;
     }
 
     if (j.contains("primitives")) {
@@ -199,14 +189,14 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
     }
 
     if (j.contains("stress")) {
-        const auto& s       = j.at("stress");
-        cfg.stress.enabled  = s.value("enabled", false);
+        const auto& s = j.at("stress");
+        cfg.stress.enabled = s.value("enabled", false);
         cfg.stress.initial_count = s.value("initial_count", 100);
-        cfg.stress.step          = s.value("step", 100);
-        cfg.stress.min_count     = s.value("min_count", 0);
-        cfg.stress.max_count     = s.value("max_count", 10000);
-        cfg.stress.spread        = s.value("spread", 10.0f);
-        cfg.stress.rng_seed      = s.value("rng_seed", 42);
+        cfg.stress.step = s.value("step", 100);
+        cfg.stress.min_count = s.value("min_count", 0);
+        cfg.stress.max_count = s.value("max_count", 10000);
+        cfg.stress.spread = s.value("spread", 10.0f);
+        cfg.stress.rng_seed = s.value("rng_seed", 42);
         if (s.contains("color")) {
             cfg.stress.color = read_vec3(s.at("color"));
         }
@@ -222,8 +212,7 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path)
     return cfg;
 }
 
-SceneStats count_scene_stats(const Scene& scene, const int stress_count)
-{
+SceneStats count_scene_stats(const Scene& scene, const int stress_count) {
     SceneStats stats{};
     stats.stress_count = stress_count;
 
@@ -239,7 +228,7 @@ SceneStats count_scene_stats(const Scene& scene, const int stress_count)
         stats.object_count += static_cast<int>(group.transforms.size());
         for (const auto& prim : group.prototype.mesh.primitives) {
             const int n = static_cast<int>(group.transforms.size());
-            stats.vertex_count   += static_cast<int>(prim.vertices.size()) * n;
+            stats.vertex_count += static_cast<int>(prim.vertices.size()) * n;
             stats.triangle_count += static_cast<int>(prim.indices.size() / 3) * n;
         }
     }
@@ -247,10 +236,9 @@ SceneStats count_scene_stats(const Scene& scene, const int stress_count)
     return stats;
 }
 
-float compute_shadow_half_extent(const SceneConfig& cfg)
-{
+float compute_shadow_half_extent(const SceneConfig& cfg) {
     constexpr float kDefaultHalfExtent = 10.0f;
-    constexpr float kLightAngleMargin  = 1.05f;
+    constexpr float kLightAngleMargin = 1.05f;
 
     float half_extent = kDefaultHalfExtent;
     for (const PrimitiveConfig& prim : cfg.primitives) {
@@ -258,19 +246,18 @@ float compute_shadow_half_extent(const SceneConfig& cfg)
             continue;
         }
 
-        const float half_width  = prim.scale.x * 0.5f;
-        const float half_depth  = prim.scale.z * 0.5f;
-        const float diagonal    = std::sqrt(half_width * half_width + half_depth * half_depth);
-        half_extent             = std::max(half_extent, diagonal * kLightAngleMargin);
+        const float half_width = prim.scale.x * 0.5f;
+        const float half_depth = prim.scale.z * 0.5f;
+        const float diagonal = std::sqrt(half_width * half_width + half_depth * half_depth);
+        half_extent = std::max(half_extent, diagonal * kLightAngleMargin);
     }
 
     return half_extent;
 }
 
-std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,
-                                           const std::filesystem::path& /*asset_root*/,
-                                           const int                    stress_count_override)
-{
+std::pair<Scene, SceneStats> build_scene(const SceneConfig& cfg,
+                                         const std::filesystem::path& /*asset_root*/,
+                                         const int stress_count_override) {
     Scene scene{};
 
     for (const auto& prim : cfg.primitives) {
@@ -286,21 +273,22 @@ std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,
 
     int stress_count = 0;
     if (cfg.stress.enabled) {
-        stress_count = stress_count_override >= 0 ? stress_count_override : cfg.stress.initial_count;
+        stress_count =
+            stress_count_override >= 0 ? stress_count_override : cfg.stress.initial_count;
 
         Material stress_mat{};
         stress_mat.base_color = cfg.stress.color;
-        stress_mat.metalness  = cfg.stress.metalness;
-        stress_mat.roughness  = cfg.stress.roughness;
+        stress_mat.metalness = cfg.stress.metalness;
+        stress_mat.roughness = cfg.stress.roughness;
         if (cfg.stress.use_texture && !cfg.stress.texture.empty()) {
             const auto p = util::resolve_asset(cfg.stress.texture);
-            stress_mat.texture_location
-                = util::AssetLocation{ p.parent_path(), p.filename().string() };
+            stress_mat.texture_location =
+                util::AssetLocation{p.parent_path(), p.filename().string()};
         }
 
         const Model prototype = primitives::make_cube(1.0f, 1.0f, 1.0f, stress_mat, Transform{});
 
-        std::mt19937                          rng(static_cast<std::uint32_t>(cfg.stress.rng_seed));
+        std::mt19937 rng(static_cast<std::uint32_t>(cfg.stress.rng_seed));
         std::uniform_real_distribution<float> dist(-cfg.stress.spread, cfg.stress.spread);
 
         InstancedGroup stress_group{};
@@ -318,7 +306,7 @@ std::pair<Scene, SceneStats> build_scene(const SceneConfig&           cfg,
         }
     }
 
-    return { std::move(scene), count_scene_stats(scene, stress_count) };
+    return {std::move(scene), count_scene_stats(scene, stress_count)};
 }
 
 } // namespace scene

@@ -9,6 +9,6 @@
 namespace scene {
 
 [[nodiscard]] std::vector<Model> load_gltf_models(const std::filesystem::path& gltf_path,
-                                                  const ModelConfig&           config);
+                                                  const ModelConfig& config);
 
 } // namespace scene

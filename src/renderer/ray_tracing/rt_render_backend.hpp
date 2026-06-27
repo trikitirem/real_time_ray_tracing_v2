@@ -6,8 +6,8 @@
 
 #include <vulkan/vulkan_raii.hpp>
 
-#include "renderer/ray_tracing/rt_frame_recorder.hpp"
 #include "renderer/ray_tracing/blas_builder.hpp"
+#include "renderer/ray_tracing/rt_frame_recorder.hpp"
 #include "renderer/ray_tracing/rt_gpu_types.hpp"
 #include "renderer/ray_tracing/rt_pipeline.hpp"
 #include "renderer/ray_tracing/rt_scene_gpu_data.hpp"
@@ -21,7 +21,7 @@
 namespace renderer::ray_tracing {
 
 class RtRenderBackend final : public renderer::IRenderBackend {
-public:
+  public:
     RtRenderBackend() = default;
     ~RtRenderBackend() override;
 
@@ -29,10 +29,12 @@ public:
     void destroy(DeviceContext& ctx) override;
     void load_scene(ScenePayload&& scene_payload) override;
     void update_camera(const engine::Camera& camera, vk::Extent2D extent) override;
-    void set_rt_reflections_enabled(bool enabled) override { rt_reflections_enabled_ = enabled; }
+    void set_rt_reflections_enabled(bool enabled) override {
+        rt_reflections_enabled_ = enabled;
+    }
     void record(vk::CommandBuffer cmd, const FrameRecordContext& frame_ctx) override;
 
-private:
+  private:
     static constexpr std::uint32_t kFramesInFlight = 2;
 
     void create_depth_resources(DeviceContext& ctx, vk::Extent2D extent);
