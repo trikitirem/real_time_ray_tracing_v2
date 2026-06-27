@@ -30,7 +30,7 @@ void Benchmark::start(BenchmarkMeta meta) {
     meta_ = std::move(meta);
     running_ = true;
     elapsed_s_ = 0.0f;
-    warmup_remaining_ = kWarmupFrames;
+    warmup_complete_logged_ = false;
     frame_times_.clear();
     started_at_ = Clock::now();
 }
@@ -62,14 +62,18 @@ bool Benchmark::tick(const float frame_dt) {
 
     elapsed_s_ += frame_dt;
 
-    if (warmup_remaining_ > 0) {
-        --warmup_remaining_;
-    } else {
+    if (elapsed_s_ > kWarmupDurationS) {
         frame_times_.push_back(frame_dt);
+        if (!warmup_complete_logged_) {
+            warmup_complete_logged_ = true;
+            std::cout << "[Benchmark] Warmup complete (" << kWarmupDurationS << "s)\n";
+        }
     }
 
-    if (elapsed_s_ >= meta_.configured_duration_s) {
-        std::cout << "[Benchmark] Finished (" << meta_.configured_duration_s << "s)\n";
+    const float total_duration_s = kWarmupDurationS + meta_.configured_duration_s;
+    if (elapsed_s_ >= total_duration_s) {
+        std::cout << "[Benchmark] Finished (" << meta_.configured_duration_s << "s measured, "
+                  << kWarmupDurationS << "s warmup)\n";
         stop();
         return false;
     }

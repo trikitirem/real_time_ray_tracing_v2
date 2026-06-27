@@ -1,12 +1,12 @@
 {
   "name": "StressTest",
   "kind": "benchmark",
-  "benchmark": { "duration_seconds": 60.0, "rt_reflections_enabled": true },
+  "benchmark": { "duration_seconds": 30.0, "rt_reflections_enabled": true },
   "benchmark_path": {
     "from": [0.0, 3.0, 100.0],
     "to": [0.0, 3.0, -100.0],
     "look_at": [0.0, 1.0, 0.0],
-    "duration_seconds": 30.0
+    "duration_seconds": 15.0
   },
   "primitives": [
     { "type": "plane", "position": [0,0,0], "scale": [100,1,100],
@@ -15,8 +15,8 @@
   "models": [],
   "stress": {
     "enabled": true,
-    "initial_count": 5000,
-    "step": 5000,
+    "initial_count": 10000,
+    "step": 10000,
     "min_count": 0,
     "max_count": 100000,
     "spread": 100.0,

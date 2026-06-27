@@ -442,7 +442,7 @@ void Engine::handle_benchmark_input(const float /*frame_dt*/) {
 
     if (benchmark_.is_running() || stress_suite_active_) {
         std::cout << "[Benchmark] Stopped early (" << benchmark_.elapsed_s() << "s / "
-                  << benchmark_.meta().configured_duration_s << "s)\n";
+                  << (kWarmupDurationS + benchmark_.meta().configured_duration_s) << "s)\n";
         benchmark_.stop();
         animator_.stop();
         stress_suite_active_ = false;

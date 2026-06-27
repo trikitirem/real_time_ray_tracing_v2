@@ -14,6 +14,11 @@ docs/
 # Benchmark measurement outputs
 measurements/*.json
 
+# Benchmark visualization outputs
+tests/benchmarks/output/
+tests/benchmarks/.venv/
+tests/benchmarks/.packages/
+
 # Local format helper (uses repo .clang-format; not tracked)
 scripts/format-cpp.ps1
 

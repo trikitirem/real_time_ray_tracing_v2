@@ -1,0 +1,1992 @@
+{
+  "session_started_at": "2026-06-28T00-00-00",
+  "gpu_name": "NVIDIA GeForce RTX 4070 (mock)",
+  "window_width": 1920,
+  "window_height": 1080,
+  "raster": {
+    "10000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 4544.78,
+          "p1_low_fps": 2132.19,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 4446.24,
+          "p1_low_fps": 2176.56,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 4571.03,
+          "p1_low_fps": 2278.07,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 4613.14,
+          "p1_low_fps": 2146.06,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 4485.97,
+          "p1_low_fps": 2133.26,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 4430.99,
+          "p1_low_fps": 2239.72,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 4379.04,
+          "p1_low_fps": 2171.1,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 4547.61,
+          "p1_low_fps": 2248.58,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 4431.48,
+          "p1_low_fps": 2258.5,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 4590.76,
+          "p1_low_fps": 2128.05,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 4504.1,
+      "p1_low_fps": 2191.21
+    },
+    "20000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 4172.03,
+          "p1_low_fps": 2095.34,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 4057.59,
+          "p1_low_fps": 1983.84,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 4209.24,
+          "p1_low_fps": 2021.05,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 3996.75,
+          "p1_low_fps": 1971.77,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 4182.27,
+          "p1_low_fps": 2075.94,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 4172.35,
+          "p1_low_fps": 2101.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 4105.76,
+          "p1_low_fps": 2151.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 4067.0,
+          "p1_low_fps": 2065.32,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 4177.82,
+          "p1_low_fps": 2078.98,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 4185.76,
+          "p1_low_fps": 2070.52,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 4132.66,
+      "p1_low_fps": 2061.64
+    },
+    "30000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 3731.88,
+          "p1_low_fps": 1785.77,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 3626.44,
+          "p1_low_fps": 1831.33,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 3593.68,
+          "p1_low_fps": 1820.74,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 3598.37,
+          "p1_low_fps": 1829.2,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 3716.64,
+          "p1_low_fps": 1845.44,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 3657.91,
+          "p1_low_fps": 1816.39,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 3635.08,
+          "p1_low_fps": 1952.42,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 3719.37,
+          "p1_low_fps": 1891.15,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 3613.88,
+          "p1_low_fps": 1913.59,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 3612.17,
+          "p1_low_fps": 1848.18,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 3650.54,
+      "p1_low_fps": 1853.42
+    },
+    "40000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 3372.63,
+          "p1_low_fps": 1710.45,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 3287.6,
+          "p1_low_fps": 1717.98,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 3343.8,
+          "p1_low_fps": 1733.39,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 3223.14,
+          "p1_low_fps": 1607.91,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 3240.12,
+          "p1_low_fps": 1647.66,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 3219.58,
+          "p1_low_fps": 1761.55,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 3350.39,
+          "p1_low_fps": 1655.58,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 3306.96,
+          "p1_low_fps": 1669.23,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 3357.89,
+          "p1_low_fps": 1679.9,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 3230.18,
+          "p1_low_fps": 1644.1,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 3293.23,
+      "p1_low_fps": 1682.78
+    },
+    "50000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 2876.73,
+          "p1_low_fps": 1467.28,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 2880.72,
+          "p1_low_fps": 1562.73,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 2848.87,
+          "p1_low_fps": 1460.76,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 2951.74,
+          "p1_low_fps": 1504.37,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 2795.82,
+          "p1_low_fps": 1434.88,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 2799.04,
+          "p1_low_fps": 1522.1,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 2916.4,
+          "p1_low_fps": 1491.24,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 2791.11,
+          "p1_low_fps": 1485.15,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 2951.49,
+          "p1_low_fps": 1507.32,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 2947.18,
+          "p1_low_fps": 1557.17,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 2875.91,
+      "p1_low_fps": 1499.3
+    },
+    "60000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 2383.96,
+          "p1_low_fps": 1348.16,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 2482.72,
+          "p1_low_fps": 1323.92,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 2421.59,
+          "p1_low_fps": 1337.64,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 2398.71,
+          "p1_low_fps": 1310.44,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 2449.13,
+          "p1_low_fps": 1378.91,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 2511.33,
+          "p1_low_fps": 1287.84,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 2456.03,
+          "p1_low_fps": 1276.66,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 2516.75,
+          "p1_low_fps": 1367.92,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 2426.25,
+          "p1_low_fps": 1337.38,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 2472.0,
+          "p1_low_fps": 1273.26,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 2451.85,
+      "p1_low_fps": 1324.21
+    },
+    "70000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 2077.94,
+          "p1_low_fps": 1139.62,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 2079.92,
+          "p1_low_fps": 1138.6,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 1984.42,
+          "p1_low_fps": 1115.19,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 1986.74,
+          "p1_low_fps": 1183.86,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 2092.21,
+          "p1_low_fps": 1172.8,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 2022.09,
+          "p1_low_fps": 1084.97,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 2092.12,
+          "p1_low_fps": 1185.89,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 1994.86,
+          "p1_low_fps": 1133.56,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 1992.84,
+          "p1_low_fps": 1164.74,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 2078.35,
+          "p1_low_fps": 1092.97,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 2040.15,
+      "p1_low_fps": 1141.22
+    },
+    "80000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 1633.07,
+          "p1_low_fps": 956.0,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 1612.44,
+          "p1_low_fps": 986.69,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 1627.95,
+          "p1_low_fps": 923.84,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 1639.35,
+          "p1_low_fps": 973.13,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 1606.17,
+          "p1_low_fps": 933.35,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 1684.08,
+          "p1_low_fps": 965.52,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 1629.42,
+          "p1_low_fps": 952.93,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 1598.3,
+          "p1_low_fps": 925.07,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 1619.6,
+          "p1_low_fps": 959.66,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 1609.01,
+          "p1_low_fps": 924.64,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 1625.94,
+      "p1_low_fps": 950.08
+    },
+    "90000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 1193.73,
+          "p1_low_fps": 777.42,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 1205.34,
+          "p1_low_fps": 798.47,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 1251.71,
+          "p1_low_fps": 734.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 1206.01,
+          "p1_low_fps": 780.33,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 1204.26,
+          "p1_low_fps": 739.15,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 1257.28,
+          "p1_low_fps": 772.82,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 1223.26,
+          "p1_low_fps": 789.21,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 1247.87,
+          "p1_low_fps": 743.61,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 1195.63,
+          "p1_low_fps": 762.07,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 1219.65,
+          "p1_low_fps": 764.83,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 1220.47,
+      "p1_low_fps": 766.23
+    },
+    "100000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 826.24,
+          "p1_low_fps": 593.59,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 838.72,
+          "p1_low_fps": 560.04,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 810.28,
+          "p1_low_fps": 574.09,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 832.73,
+          "p1_low_fps": 568.8,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 799.89,
+          "p1_low_fps": 580.47,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 811.22,
+          "p1_low_fps": 570.55,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 802.8,
+          "p1_low_fps": 608.17,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 812.26,
+          "p1_low_fps": 604.55,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 817.5,
+          "p1_low_fps": 557.25,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 839.46,
+          "p1_low_fps": 603.08,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 819.11,
+      "p1_low_fps": 582.06
+    }
+  },
+  "rt_full": {
+    "10000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 431.82,
+          "p1_low_fps": 218.95,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 428.79,
+          "p1_low_fps": 202.99,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 419.64,
+          "p1_low_fps": 203.99,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 417.51,
+          "p1_low_fps": 200.73,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 416.95,
+          "p1_low_fps": 220.19,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 414.08,
+          "p1_low_fps": 215.97,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 418.87,
+          "p1_low_fps": 208.38,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 431.52,
+          "p1_low_fps": 220.4,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 421.41,
+          "p1_low_fps": 214.59,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 411.3,
+          "p1_low_fps": 205.73,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 421.19,
+      "p1_low_fps": 211.19
+    },
+    "20000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 397.31,
+          "p1_low_fps": 196.21,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 387.42,
+          "p1_low_fps": 199.49,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 376.18,
+          "p1_low_fps": 196.31,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 386.51,
+          "p1_low_fps": 201.53,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 378.5,
+          "p1_low_fps": 203.64,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 376.71,
+          "p1_low_fps": 188.55,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 388.65,
+          "p1_low_fps": 198.08,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 380.3,
+          "p1_low_fps": 187.27,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 395.49,
+          "p1_low_fps": 189.73,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 388.64,
+          "p1_low_fps": 196.99,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 385.57,
+      "p1_low_fps": 195.78
+    },
+    "30000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 351.18,
+          "p1_low_fps": 180.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 353.37,
+          "p1_low_fps": 187.13,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 346.63,
+          "p1_low_fps": 183.21,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 347.36,
+          "p1_low_fps": 177.46,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 356.52,
+          "p1_low_fps": 175.75,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 349.0,
+          "p1_low_fps": 183.85,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 343.84,
+          "p1_low_fps": 178.59,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 363.44,
+          "p1_low_fps": 188.23,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 343.85,
+          "p1_low_fps": 174.19,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 347.92,
+          "p1_low_fps": 187.1,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 350.31,
+      "p1_low_fps": 181.63
+    },
+    "40000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 326.63,
+          "p1_low_fps": 170.22,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 316.83,
+          "p1_low_fps": 158.39,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 325.73,
+          "p1_low_fps": 167.34,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 321.47,
+          "p1_low_fps": 171.99,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 322.28,
+          "p1_low_fps": 155.93,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 325.41,
+          "p1_low_fps": 160.71,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 322.46,
+          "p1_low_fps": 171.2,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 312.33,
+          "p1_low_fps": 157.69,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 311.8,
+          "p1_low_fps": 164.87,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 314.97,
+          "p1_low_fps": 165.72,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 319.99,
+      "p1_low_fps": 164.41
+    },
+    "50000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 289.51,
+          "p1_low_fps": 144.26,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 288.08,
+          "p1_low_fps": 145.16,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 285.58,
+          "p1_low_fps": 154.69,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 291.71,
+          "p1_low_fps": 142.61,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 284.47,
+          "p1_low_fps": 145.35,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 277.27,
+          "p1_low_fps": 152.7,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 288.13,
+          "p1_low_fps": 145.13,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 289.91,
+          "p1_low_fps": 149.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 284.54,
+          "p1_low_fps": 141.38,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 278.49,
+          "p1_low_fps": 154.36,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 285.77,
+      "p1_low_fps": 147.51
+    },
+    "60000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 258.34,
+          "p1_low_fps": 133.94,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 257.29,
+          "p1_low_fps": 134.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 246.9,
+          "p1_low_fps": 128.37,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 249.32,
+          "p1_low_fps": 138.65,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 256.7,
+          "p1_low_fps": 138.14,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 258.26,
+          "p1_low_fps": 129.47,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 248.43,
+          "p1_low_fps": 128.04,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 256.46,
+          "p1_low_fps": 138.46,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 250.81,
+          "p1_low_fps": 134.94,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 246.99,
+          "p1_low_fps": 139.07,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 252.95,
+      "p1_low_fps": 134.35
+    },
+    "70000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 223.45,
+          "p1_low_fps": 123.62,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 222.74,
+          "p1_low_fps": 122.5,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 212.43,
+          "p1_low_fps": 120.79,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 216.46,
+          "p1_low_fps": 123.08,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 222.63,
+          "p1_low_fps": 122.3,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 222.74,
+          "p1_low_fps": 115.25,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 222.44,
+          "p1_low_fps": 113.38,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 223.55,
+          "p1_low_fps": 122.23,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 215.02,
+          "p1_low_fps": 121.74,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 218.15,
+          "p1_low_fps": 115.7,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 219.96,
+      "p1_low_fps": 120.06
+    },
+    "80000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 188.39,
+          "p1_low_fps": 99.87,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 179.82,
+          "p1_low_fps": 99.52,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 183.2,
+          "p1_low_fps": 106.41,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 190.3,
+          "p1_low_fps": 100.4,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 186.68,
+          "p1_low_fps": 101.64,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 190.46,
+          "p1_low_fps": 103.04,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 189.99,
+          "p1_low_fps": 98.72,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 190.34,
+          "p1_low_fps": 99.37,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 190.25,
+          "p1_low_fps": 100.26,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 180.76,
+          "p1_low_fps": 101.99,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 187.02,
+      "p1_low_fps": 101.12
+    },
+    "90000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 153.63,
+          "p1_low_fps": 85.71,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 152.52,
+          "p1_low_fps": 87.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 150.51,
+          "p1_low_fps": 88.0,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 149.33,
+          "p1_low_fps": 89.16,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 147.02,
+          "p1_low_fps": 91.05,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 151.91,
+          "p1_low_fps": 89.25,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 153.76,
+          "p1_low_fps": 88.82,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 150.32,
+          "p1_low_fps": 83.58,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 153.05,
+          "p1_low_fps": 85.85,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 149.86,
+          "p1_low_fps": 90.37,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 151.19,
+      "p1_low_fps": 87.92
+    },
+    "100000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 119.56,
+          "p1_low_fps": 70.56,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 116.65,
+          "p1_low_fps": 71.34,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 117.31,
+          "p1_low_fps": 70.53,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 115.36,
+          "p1_low_fps": 71.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 121.12,
+          "p1_low_fps": 73.28,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 120.85,
+          "p1_low_fps": 72.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 116.59,
+          "p1_low_fps": 72.35,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 114.46,
+          "p1_low_fps": 70.47,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 117.5,
+          "p1_low_fps": 72.58,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 119.1,
+          "p1_low_fps": 71.75,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 117.85,
+      "p1_low_fps": 71.71
+    }
+  },
+  "rt_shadows": {
+    "10000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 677.64,
+          "p1_low_fps": 330.27,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 678.91,
+          "p1_low_fps": 353.64,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 692.08,
+          "p1_low_fps": 328.77,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 663.06,
+          "p1_low_fps": 340.53,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 685.42,
+          "p1_low_fps": 334.4,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 692.99,
+          "p1_low_fps": 348.54,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 687.05,
+          "p1_low_fps": 330.64,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 667.72,
+          "p1_low_fps": 323.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 669.59,
+          "p1_low_fps": 339.15,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 694.27,
+          "p1_low_fps": 325.48,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 680.87,
+      "p1_low_fps": 335.52
+    },
+    "20000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 621.79,
+          "p1_low_fps": 319.09,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 613.54,
+          "p1_low_fps": 321.19,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 624.79,
+          "p1_low_fps": 306.94,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 630.85,
+          "p1_low_fps": 299.42,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 634.41,
+          "p1_low_fps": 323.51,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 610.25,
+          "p1_low_fps": 312.64,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 612.85,
+          "p1_low_fps": 329.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 625.67,
+          "p1_low_fps": 300.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 615.59,
+          "p1_low_fps": 325.97,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 623.37,
+          "p1_low_fps": 324.49,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 621.31,
+      "p1_low_fps": 316.35
+    },
+    "30000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 575.73,
+          "p1_low_fps": 304.15,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 573.26,
+          "p1_low_fps": 303.05,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 583.39,
+          "p1_low_fps": 293.27,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 577.5,
+          "p1_low_fps": 290.14,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 581.31,
+          "p1_low_fps": 291.39,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 583.58,
+          "p1_low_fps": 297.07,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 569.13,
+          "p1_low_fps": 283.02,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 561.36,
+          "p1_low_fps": 293.99,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 579.09,
+          "p1_low_fps": 290.62,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 574.33,
+          "p1_low_fps": 283.46,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 575.87,
+      "p1_low_fps": 293.02
+    },
+    "40000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 501.94,
+          "p1_low_fps": 259.32,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 507.95,
+          "p1_low_fps": 260.22,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 516.24,
+          "p1_low_fps": 255.42,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 506.7,
+          "p1_low_fps": 270.14,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 521.38,
+          "p1_low_fps": 253.45,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 512.14,
+          "p1_low_fps": 266.13,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 512.4,
+          "p1_low_fps": 257.23,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 512.53,
+          "p1_low_fps": 275.73,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 517.6,
+          "p1_low_fps": 270.18,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 526.02,
+          "p1_low_fps": 272.04,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 513.49,
+      "p1_low_fps": 263.99
+    },
+    "50000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 456.7,
+          "p1_low_fps": 228.14,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 455.91,
+          "p1_low_fps": 246.08,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 469.76,
+          "p1_low_fps": 250.88,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 457.76,
+          "p1_low_fps": 245.94,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 461.27,
+          "p1_low_fps": 242.48,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 452.29,
+          "p1_low_fps": 233.27,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 458.23,
+          "p1_low_fps": 228.7,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 455.48,
+          "p1_low_fps": 244.3,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 457.36,
+          "p1_low_fps": 231.96,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 459.1,
+          "p1_low_fps": 231.06,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 458.39,
+      "p1_low_fps": 238.28
+    },
+    "60000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 407.97,
+          "p1_low_fps": 204.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 402.42,
+          "p1_low_fps": 216.38,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 393.51,
+          "p1_low_fps": 218.07,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 396.15,
+          "p1_low_fps": 214.18,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 394.07,
+          "p1_low_fps": 212.4,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 397.99,
+          "p1_low_fps": 211.28,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 411.35,
+          "p1_low_fps": 212.4,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 411.12,
+          "p1_low_fps": 222.14,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 398.98,
+          "p1_low_fps": 206.01,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 393.32,
+          "p1_low_fps": 215.85,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 400.69,
+      "p1_low_fps": 213.35
+    },
+    "70000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 360.5,
+          "p1_low_fps": 187.15,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 353.15,
+          "p1_low_fps": 195.34,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 353.19,
+          "p1_low_fps": 194.83,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 359.44,
+          "p1_low_fps": 184.29,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 339.93,
+          "p1_low_fps": 183.4,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 342.15,
+          "p1_low_fps": 193.22,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 351.34,
+          "p1_low_fps": 184.64,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 354.19,
+          "p1_low_fps": 195.07,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 343.02,
+          "p1_low_fps": 192.04,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 355.21,
+          "p1_low_fps": 182.68,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 351.21,
+      "p1_low_fps": 189.27
+    },
+    "80000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 300.65,
+          "p1_low_fps": 172.67,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 288.06,
+          "p1_low_fps": 157.17,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 291.67,
+          "p1_low_fps": 167.93,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 303.11,
+          "p1_low_fps": 163.29,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 298.81,
+          "p1_low_fps": 158.0,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 298.37,
+          "p1_low_fps": 167.1,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 287.95,
+          "p1_low_fps": 169.5,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 301.2,
+          "p1_low_fps": 166.66,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 288.29,
+          "p1_low_fps": 172.98,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 300.0,
+          "p1_low_fps": 162.48,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 295.81,
+      "p1_low_fps": 165.78
+    },
+    "90000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 238.97,
+          "p1_low_fps": 138.19,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 240.09,
+          "p1_low_fps": 137.78,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 245.03,
+          "p1_low_fps": 144.51,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 234.32,
+          "p1_low_fps": 146.45,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 241.95,
+          "p1_low_fps": 144.6,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 242.99,
+          "p1_low_fps": 139.1,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 243.37,
+          "p1_low_fps": 146.52,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 236.69,
+          "p1_low_fps": 144.31,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 240.55,
+          "p1_low_fps": 139.77,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 239.07,
+          "p1_low_fps": 143.23,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 240.3,
+      "p1_low_fps": 142.45
+    },
+    "100000": {
+      "runs": [
+        {
+          "run": 1,
+          "avg_fps": 182.43,
+          "p1_low_fps": 119.04,
+          "frame_count": 3600
+        },
+        {
+          "run": 2,
+          "avg_fps": 188.67,
+          "p1_low_fps": 110.25,
+          "frame_count": 3600
+        },
+        {
+          "run": 3,
+          "avg_fps": 189.24,
+          "p1_low_fps": 112.05,
+          "frame_count": 3600
+        },
+        {
+          "run": 4,
+          "avg_fps": 184.61,
+          "p1_low_fps": 116.27,
+          "frame_count": 3600
+        },
+        {
+          "run": 5,
+          "avg_fps": 183.66,
+          "p1_low_fps": 109.58,
+          "frame_count": 3600
+        },
+        {
+          "run": 6,
+          "avg_fps": 188.9,
+          "p1_low_fps": 111.34,
+          "frame_count": 3600
+        },
+        {
+          "run": 7,
+          "avg_fps": 181.8,
+          "p1_low_fps": 118.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 8,
+          "avg_fps": 183.23,
+          "p1_low_fps": 119.37,
+          "frame_count": 3600
+        },
+        {
+          "run": 9,
+          "avg_fps": 187.23,
+          "p1_low_fps": 112.43,
+          "frame_count": 3600
+        },
+        {
+          "run": 10,
+          "avg_fps": 179.56,
+          "p1_low_fps": 120.15,
+          "frame_count": 3600
+        }
+      ],
+      "avg_fps": 184.93,
+      "p1_low_fps": 114.89
+    }
+  }
+}

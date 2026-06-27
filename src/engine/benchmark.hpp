@@ -57,7 +57,7 @@ class Benchmark {
     bool running_ = false;
     bool just_finished_ = false;
     float elapsed_s_ = 0.0f;
-    int warmup_remaining_ = kWarmupFrames;
+    bool warmup_complete_logged_ = false;
     std::vector<float> frame_times_{};
 
     using Clock = std::chrono::steady_clock;
