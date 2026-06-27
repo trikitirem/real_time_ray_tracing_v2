@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "engine/benchmark.hpp"
+#include "engine/benchmark_session.hpp"
 #include "engine/camera.hpp"
 #include "engine/camera_animator.hpp"
 #include "engine/input_controller.hpp"
@@ -48,6 +49,7 @@ class Engine {
     void start_stress_suite();
     void advance_stress_suite();
     [[nodiscard]] BenchmarkMeta make_benchmark_meta() const;
+    [[nodiscard]] std::string session_backend_key() const;
     [[nodiscard]] float measure_frame_delta();
 
     const bool useRasterBackendFromMain_;
@@ -73,11 +75,21 @@ class Engine {
     bool is_rendering_paused_ = false;
     bool camera_movement_locked_ = false;
 
+    struct SuiteBackendConfig {
+        bool is_raster;
+        bool rt_reflections;
+    };
+
     int current_stress_count_ = 0;
     bool stress_suite_active_ = false;
+    int suite_run_index_ = 0;
+    std::vector<SuiteBackendConfig> pending_suite_backends_;
+
+    bool rt_reflections_override_ = true;
 
     Benchmark benchmark_{};
     CameraAnimator animator_{};
+    BenchmarkSession session_{};
 
     bool framebufferResized_ = false;
 

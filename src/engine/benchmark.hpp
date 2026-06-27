@@ -31,7 +31,6 @@ struct BenchmarkMeta {
 
 struct BenchmarkStats {
     float avg_fps = 0.0f;
-    float p5_low_fps = 0.0f;
     float p1_low_fps = 0.0f;
     int frame_count = 0;
 };
@@ -54,8 +53,6 @@ class Benchmark {
     [[nodiscard]] BenchmarkStats stats() const;
 
   private:
-    void save_json() const;
-
     BenchmarkMeta meta_{};
     bool running_ = false;
     bool just_finished_ = false;
@@ -65,7 +62,6 @@ class Benchmark {
 
     using Clock = std::chrono::steady_clock;
     Clock::time_point started_at_{};
-    std::chrono::system_clock::time_point started_at_wall_{};
 };
 
 } // namespace engine

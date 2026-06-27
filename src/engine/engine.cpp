@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 #include "engine/delta_time.hpp"
 #include "renderer/raster/device_config.hpp"
@@ -219,9 +220,37 @@ void Engine::adjust_stress_count(const int delta) {
 
 void Engine::start_stress_suite() {
     const auto& stress = current_scene_config_.stress;
-    std::cout << "[Suite] Starting stress suite: " << stress.initial_count << " to "
-              << stress.max_count << " step " << stress.step << '\n';
 
+    // First F5 press: set up the full backend queue and ensure we start from raster.
+    if (!session_.is_initialized()) {
+        if (!active_backend_is_raster_) {
+            toggle_backend();
+        }
+        rt_reflections_override_ = true;
+
+        pending_suite_backends_.clear();
+        if (rt_extensions_supported_) {
+            pending_suite_backends_.push_back({false, true});   // rt_full
+            pending_suite_backends_.push_back({false, false});  // rt_shadows
+        }
+
+        const BenchmarkMeta tmp = make_benchmark_meta();
+        session_.init(tmp.gpu_name, tmp.window_width, tmp.window_height);
+
+        const int backends_total = 1 + static_cast<int>(pending_suite_backends_.size());
+        const int total_configs = (stress.max_count - stress.initial_count) / stress.step + 1;
+        std::cout << "[Suite] Full session: " << backends_total << " backend(s), "
+                  << total_configs << " stress configs each, " << kSuiteRunsPerConfig
+                  << " runs/config — " << (backends_total * total_configs * kSuiteRunsPerConfig)
+                  << " total benchmarks\n";
+    }
+
+    const std::string backend_key = session_backend_key();
+    const int total_configs = (stress.max_count - stress.initial_count) / stress.step + 1;
+    std::cout << "[Suite] Starting backend: " << backend_key << " ("
+              << (total_configs * kSuiteRunsPerConfig) << " benchmarks)\n";
+
+    suite_run_index_ = 0;
     rebuild_stress_scene(stress.initial_count);
 
     BenchmarkMeta meta = make_benchmark_meta();
@@ -234,8 +263,8 @@ void Engine::start_stress_suite() {
     }
 
     stress_suite_active_ = true;
-    std::cout << "[Suite] Run 1/" << ((stress.max_count - stress.initial_count) / stress.step + 1)
-              << ": " << current_stress_count_ << " objects\n";
+    std::cout << "[Suite] Config 1/" << total_configs << " (" << current_stress_count_
+              << " objects), run 1/" << kSuiteRunsPerConfig << '\n';
 }
 
 void Engine::advance_stress_suite() {
@@ -244,12 +273,60 @@ void Engine::advance_stress_suite() {
     }
 
     const auto& stress = current_scene_config_.stress;
+    const std::string backend_key = session_backend_key();
+
+    session_.add_run(backend_key, current_stress_count_, benchmark_.stats(), suite_run_index_);
+    session_.flush();
+
+    if (suite_run_index_ < kSuiteRunsPerConfig - 1) {
+        suite_run_index_++;
+        BenchmarkMeta meta = make_benchmark_meta();
+        renderer_->set_rt_reflections_enabled(meta.rt_reflections_enabled);
+        benchmark_.start(meta);
+        std::cout << "[Suite] Config (" << current_stress_count_ << " objects), run "
+                  << (suite_run_index_ + 1) << '/' << kSuiteRunsPerConfig << '\n';
+        return;
+    }
+
+    suite_run_index_ = 0;
     const int next = current_stress_count_ + stress.step;
 
     if (next > stress.max_count) {
-        stress_suite_active_ = false;
-        animator_.stop();
-        std::cout << "[Suite] All runs complete.\n";
+        if (pending_suite_backends_.empty()) {
+            stress_suite_active_ = false;
+            animator_.stop();
+            std::cout << "[Suite] All backends complete. Results -> "
+                      << session_.output_path().filename().string() << '\n';
+        } else {
+            const SuiteBackendConfig cfg = pending_suite_backends_.front();
+            pending_suite_backends_.erase(pending_suite_backends_.begin());
+
+            if (cfg.is_raster != active_backend_is_raster_) {
+                toggle_backend();
+            }
+            rt_reflections_override_ = cfg.rt_reflections;
+
+            const std::string next_key = session_backend_key();
+            const int total_configs =
+                (stress.max_count - stress.initial_count) / stress.step + 1;
+            std::cout << "[Suite] Starting backend: " << next_key << " ("
+                      << (total_configs * kSuiteRunsPerConfig) << " benchmarks)\n";
+
+            rebuild_stress_scene(stress.initial_count);
+
+            BenchmarkMeta meta = make_benchmark_meta();
+            renderer_->set_rt_reflections_enabled(meta.rt_reflections_enabled);
+            benchmark_.start(meta);
+
+            if (current_scene_config_.benchmark_path.has_value()) {
+                animator_.start(*current_scene_config_.benchmark_path);
+                camera_.reset_pitch_state();
+            }
+
+            std::cout << "[Suite] Config 1/" << total_configs << " ("
+                      << current_stress_count_ << " objects), run 1/" << kSuiteRunsPerConfig
+                      << '\n';
+        }
         return;
     }
 
@@ -259,7 +336,10 @@ void Engine::advance_stress_suite() {
     renderer_->set_rt_reflections_enabled(meta.rt_reflections_enabled);
     benchmark_.start(meta);
 
-    std::cout << "[Suite] Next run: " << current_stress_count_ << " objects\n";
+    const int total_configs = (stress.max_count - stress.initial_count) / stress.step + 1;
+    const int config_index = (current_stress_count_ - stress.initial_count) / stress.step + 1;
+    std::cout << "[Suite] Config " << config_index << '/' << total_configs << " ("
+              << current_stress_count_ << " objects), run 1/" << kSuiteRunsPerConfig << '\n';
 }
 
 void Engine::toggle_backend() {
@@ -313,9 +393,16 @@ BenchmarkMeta Engine::make_benchmark_meta() const {
     const auto extent = renderer_->swapchain_extent();
     meta.window_width = extent.width;
     meta.window_height = extent.height;
-    meta.rt_reflections_enabled = current_scene_config_.benchmark.rt_reflections_enabled;
+    meta.rt_reflections_enabled = rt_reflections_override_;
     meta.stress_use_texture = current_scene_config_.stress.use_texture;
     return meta;
+}
+
+std::string Engine::session_backend_key() const {
+    if (active_backend_is_raster_) {
+        return "raster";
+    }
+    return rt_reflections_override_ ? "rt_full" : "rt_shadows";
 }
 
 float Engine::measure_frame_delta() {
@@ -398,6 +485,16 @@ void Engine::handle_stress_input() {
 void Engine::handle_backend_input() {
     if (input_.pressed_f7()) {
         toggle_backend();
+    }
+    if (input_.pressed_f8()) {
+        if (active_backend_is_raster_) {
+            std::cout << "[Renderer] F8 has no effect in raster mode.\n";
+        } else {
+            rt_reflections_override_ = !rt_reflections_override_;
+            std::cout << "[Renderer] RT reflections: "
+                      << (rt_reflections_override_ ? "enabled (rt_full)" : "disabled (rt_shadows)")
+                      << '\n';
+        }
     }
 }
 

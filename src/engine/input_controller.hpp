@@ -53,6 +53,9 @@ class InputController {
     [[nodiscard]] bool pressed_f7() const {
         return edge_f7_;
     }
+    [[nodiscard]] bool pressed_f8() const {
+        return edge_f8_;
+    }
     [[nodiscard]] bool pressed_tab() const {
         return edge_tab_;
     }
@@ -92,6 +95,7 @@ class InputController {
     mutable bool prev_f3_ = false;
     mutable bool prev_f5_ = false;
     mutable bool prev_f7_ = false;
+    mutable bool prev_f8_ = false;
     mutable bool prev_tab_ = false;
     mutable bool prev_p_ = false;
     mutable bool prev_camera_lock_ = false;
@@ -103,6 +107,7 @@ class InputController {
     bool edge_f3_ = false;
     bool edge_f5_ = false;
     bool edge_f7_ = false;
+    bool edge_f8_ = false;
     bool edge_tab_ = false;
     bool edge_p_ = false;
     bool edge_camera_lock_ = false;
