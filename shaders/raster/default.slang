@@ -124,7 +124,7 @@ float4 fragMain(VertexOutput v) : SV_Target {
     float3 N = normalize(v.normal);
     float3 L = normalize(gLight.lightDirToLight);
     float3 V = normalize(gCamera.viewPosition - v.worldPos);
-    float3 H = normalize(L + V);
+    float3 R = reflect(-L, N);
 
     float3 ambient = ambientStrength * lightColor * baseColor;
     float ndotl = saturate(dot(N, L));
@@ -132,7 +132,7 @@ float4 fragMain(VertexOutput v) : SV_Target {
     float directShadow = lerp(shadowStrength, 1.0, shadow);
 
     float3 diffuse = directShadow * ndotl * lightColor * baseColor;
-    float spec = pow(saturate(dot(N, H)), shininess);
+    float spec = pow(saturate(dot(R, V)), shininess);
     float3 specular = directShadow * specularStrength * (1.0 - gModel.roughness) * spec * lightColor;
 
     return float4(ambient + diffuse + specular, 1.0f);
@@ -168,7 +168,7 @@ float4 fragMainInstanced(VertexOutput v) : SV_Target {
     float3 N = normalize(v.normal);
     float3 L = normalize(gLight.lightDirToLight);
     float3 V = normalize(gCamera.viewPosition - v.worldPos);
-    float3 H = normalize(L + V);
+    float3 R = reflect(-L, N);
 
     float3 ambient = ambientStrength * lightColor * baseColor;
     float ndotl = saturate(dot(N, L));
@@ -176,7 +176,7 @@ float4 fragMainInstanced(VertexOutput v) : SV_Target {
     float directShadow = lerp(shadowStrength, 1.0, shadow);
 
     float3 diffuse = directShadow * ndotl * lightColor * baseColor;
-    float spec = pow(saturate(dot(N, H)), shininess);
+    float spec = pow(saturate(dot(R, V)), shininess);
     float3 specular = directShadow * specularStrength * (1.0 - gBatch.roughness) * spec * lightColor;
 
     return float4(ambient + diffuse + specular, 1.0f);

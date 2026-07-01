@@ -94,13 +94,13 @@ bool traceShadow(float3 origin, float3 lightDir) {
 
 float3 shadePhong(float3 worldPos, float3 N, float3 baseColor, float3 V, float metalness, float roughness) {
     float3 L = kLightDirToLight;
-    float3 H = normalize(L + V);
+    float3 R = reflect(-L, N);
 
     float3 ambient = kAmbientStrength * kLightColor * baseColor;
     float3 diffuse = saturate(dot(N, L)) * kLightColor * baseColor;
     float specularWeight = 1.0 - roughness;
     float3 specular = kSpecularStrength * specularWeight
-                      * pow(saturate(dot(N, H)), kShininess) * kLightColor;
+                      * pow(saturate(dot(R, V)), kShininess) * kLightColor;
 
     if (traceShadow(worldPos + N * kEpsilon, kLightDirToLight)) {
         diffuse *= kShadowStrength;

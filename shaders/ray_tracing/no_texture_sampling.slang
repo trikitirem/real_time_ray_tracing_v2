@@ -121,13 +121,13 @@ float4 fragMain(VertexOutput v) : SV_Target {
     float3 N = normalize(v.normal);
     float3 L = lightDirToLight;
     float3 V = normalize(gCamera.viewPosition - v.worldPos);
-    float3 H = normalize(L + V);
+    float3 R = reflect(-L, N);
     const float shadowStrength = 0.2;
 
     float3 ambient = ambientStrength * lightColor * baseColor;
     float ndotl = saturate(dot(N, L));
     float3 diffuse = ndotl * lightColor * baseColor;
-    float spec = pow(saturate(dot(N, H)), shininess);
+    float spec = pow(saturate(dot(R, V)), shininess);
     float3 specular = specularStrength * spec * lightColor;
 
     RayDesc shadowRayDesc;
