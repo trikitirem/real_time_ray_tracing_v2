@@ -6,7 +6,7 @@ from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import FixedLocator, FormatStrFormatter, FuncFormatter
 
 BACKEND_ORDER = ["raster", "rt_full", "rt_shadows"]
 
@@ -47,6 +47,12 @@ def format_pct(value: float) -> str:
 
 def apply_y_axis_one_decimal(ax: plt.Axes) -> None:
     ax.yaxis.set_major_formatter(FormatStrFormatter(f"%.{VALUE_DECIMALS}f"))
+
+
+def apply_x_axis_thousands(ax: plt.Axes, values) -> None:
+    ticks = sorted({int(v) for v in values})
+    ax.xaxis.set_major_locator(FixedLocator(ticks))
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x / 1000:.0f}"))
 
 
 def apply_style() -> None:

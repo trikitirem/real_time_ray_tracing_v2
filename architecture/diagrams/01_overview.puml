@@ -8,6 +8,10 @@ skinparam backgroundColor #F4F6F9
 skinparam ArrowColor #64748B
 skinparam ArrowThickness 1.2
 skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 60
+
+left to right direction
 
 skinparam class {
   BackgroundColor #FFFFFF
@@ -45,7 +49,6 @@ package engine {
   }
 
   class Window
-  class Camera
   class InputController
 
   class "Benchmark & pomiary" as Benchmark #FFFBEB;line:F59E0B;text:92400E {
@@ -55,31 +58,18 @@ package engine {
   }
 }
 
-package "scene loading" #ECFDF5;line:059669;text:064E3B {
-
-  class "SceneLoader / Registry" as SceneLoading {
-    JSON sceny -> SceneConfig
-    GLTF -> modele CPU
-  }
-}
-
+' Klasy współdzielone przez Engine i Renderer - kolumna między pakietami,
+' żeby powiązania w obie strony byly krotkie i nie krzyzowaly innych pakietow.
+class Camera
 class "Scene (CPU)" as SceneCPU #ECFDF5;line:059669;text:064E3B {
   modele, meshe, materialy
 }
-
-package util #F1F5F9;line:94A3B8;text:475569 {
-
-  class "sciezki assetow i shaderow" as UtilPaths {
-    asset_root, shader_paths, path_io
-  }
+class DeviceContext {
+  Vulkan instance / device
+  DeviceConfig zalezny od trybu
 }
 
 package renderer #F8FAFC;line:64748B;text:334155 {
-
-  class DeviceContext {
-    Vulkan instance / device
-    DeviceConfig zalezny od trybu
-  }
 
   class Renderer {
     - use_raster_ : bool
@@ -114,10 +104,6 @@ Engine *-- SceneCPU
 Engine *-- DeviceContext
 Engine *-- Benchmark
 Engine o-- Renderer
-
-Engine ..> SceneLoading
-SceneLoading ..> SceneCPU
-SceneLoading ..> UtilPaths
 
 Renderer o--> IRenderBackend
 Renderer ..> SceneCPU

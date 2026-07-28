@@ -8,7 +8,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from benchmark_viz.load_data import available_backends
-from benchmark_viz.style import apply_y_axis_one_decimal, backend_color, backend_label, save_figure
+from benchmark_viz.style import (
+    apply_x_axis_thousands,
+    apply_y_axis_one_decimal,
+    backend_color,
+    backend_label,
+    save_figure,
+)
 
 RT_BACKENDS = ["rt_full", "rt_shadows"]
 
@@ -37,20 +43,14 @@ def _plot_fps_lines(
             color=color,
             label=label,
         )
-        ax.fill_between(
-            df["stress_count"],
-            df["avg_fps_min"],
-            df["avg_fps_max"],
-            color=color,
-            alpha=0.15,
-        )
 
     if log_y:
         ax.set_yscale("log")
 
     apply_y_axis_one_decimal(ax)
+    apply_x_axis_thousands(ax, frames[backend_keys[0]]["stress_count"])
     ax.set_title(title)
-    ax.set_xlabel("Liczba obiektów")
+    ax.set_xlabel("Liczba obiektów (w tys.)")
     ax.set_ylabel(ylabel)
     ax.legend()
     return fig

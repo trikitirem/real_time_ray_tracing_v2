@@ -12,6 +12,7 @@ from benchmark_viz.load_data import available_backends
 from benchmark_viz.style import (
     HEATMAP_STRESS_STRIDE,
     VALUE_DECIMALS,
+    apply_x_axis_thousands,
     apply_y_axis_one_decimal,
     backend_color,
     backend_label,
@@ -48,20 +49,14 @@ def _plot_metric_lines(
             color=color,
             label=label,
         )
-        ax.fill_between(
-            df["stress_count"],
-            df[min_col],
-            df[max_col],
-            color=color,
-            alpha=0.15,
-        )
 
     if log_y:
         ax.set_yscale("log")
 
     apply_y_axis_one_decimal(ax)
+    apply_x_axis_thousands(ax, frames[backend_keys[0]]["stress_count"])
     ax.set_title(title)
-    ax.set_xlabel("Liczba obiektów")
+    ax.set_xlabel("Liczba obiektów (w tys.)")
     ax.set_ylabel(ylabel)
     ax.legend()
     return fig
@@ -83,8 +78,9 @@ def _plot_s1_lines(frames: dict[str, pd.DataFrame], backend_keys: list[str]) -> 
         )
 
     apply_y_axis_one_decimal(ax)
+    apply_x_axis_thousands(ax, frames[backend_keys[0]]["stress_count"])
     ax.set_title("Stabilność klatek (S1%) — wszystkie tryby")
-    ax.set_xlabel("Liczba obiektów")
+    ax.set_xlabel("Liczba obiektów (w tys.)")
     ax.set_ylabel("S1% (1% low / średnia FPS)")
     ax.legend()
     return fig
