@@ -128,6 +128,28 @@ void validate_config(const SceneConfig& cfg) {
                                      "': stress.use_texture is true but stress.texture is empty");
         }
     }
+
+    if (!cfg.diagnostic.configs.empty()) {
+        if (cfg.diagnostic.runs_per_config <= 0) {
+            throw std::runtime_error("Scene '" + cfg.name +
+                                     "': diagnostic.runs_per_config must be > 0");
+        }
+        for (const auto& entry : cfg.diagnostic.configs) {
+            if (entry.backend != "raster" && entry.backend != "rt_full" &&
+                entry.backend != "rt_shadows") {
+                throw std::runtime_error("Scene '" + cfg.name + "': diagnostic backend '" +
+                                         entry.backend + "' must be raster, rt_full or rt_shadows");
+            }
+            if (entry.stress_count < 0) {
+                throw std::runtime_error("Scene '" + cfg.name +
+                                         "': diagnostic stress_count must be >= 0");
+            }
+            if (entry.duration_seconds.has_value() && *entry.duration_seconds <= 0.0f) {
+                throw std::runtime_error("Scene '" + cfg.name +
+                                         "': diagnostic duration_seconds must be > 0");
+            }
+        }
+    }
 }
 
 } // namespace
@@ -149,6 +171,22 @@ SceneConfig load_scene_config(const std::filesystem::path& json_path) {
             j.at("benchmark").value("duration_seconds", engine::kDefaultBenchmarkDurationS);
         cfg.benchmark.rt_reflections_enabled =
             j.at("benchmark").value("rt_reflections_enabled", true);
+    }
+
+    if (j.contains("diagnostic")) {
+        const auto& d = j.at("diagnostic");
+        cfg.diagnostic.runs_per_config = d.value("runs_per_config", 3);
+        if (d.contains("configs")) {
+            for (const auto& entry : d.at("configs")) {
+                DiagnosticConfigEntry item{};
+                item.backend = entry.at("backend").get<std::string>();
+                item.stress_count = entry.at("stress_count").get<int>();
+                if (entry.contains("duration_seconds")) {
+                    item.duration_seconds = entry.at("duration_seconds").get<float>();
+                }
+                cfg.diagnostic.configs.push_back(std::move(item));
+            }
+        }
     }
 
     if (j.contains("camera_presets")) {

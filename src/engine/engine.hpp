@@ -48,6 +48,11 @@ class Engine {
     void handle_camera_input(float frame_dt);
     void start_stress_suite();
     void advance_stress_suite();
+    void start_diagnostic_suite();
+    void advance_diagnostic_suite();
+    void begin_diagnostic_config(std::size_t config_index);
+    void write_current_frame_trace();
+    void apply_backend_key(const std::string& backend_key);
     [[nodiscard]] BenchmarkMeta make_benchmark_meta() const;
     [[nodiscard]] std::string session_backend_key() const;
     [[nodiscard]] float measure_frame_delta();
@@ -85,9 +90,16 @@ class Engine {
     int suite_run_index_ = 0;
     std::vector<SuiteBackendConfig> pending_suite_backends_;
 
+    // Diagnostic suite (F6): a short, explicit list of backend/object-count pairs that also exports
+    // a per-frame CSV trace. Kept separate from the full stress suite so the latter is unaffected.
+    bool diagnostic_suite_active_ = false;
+    std::size_t diagnostic_config_index_ = 0;
+    int diagnostic_run_index_ = 0;
+
     bool rt_reflections_override_ = true;
 
     Benchmark benchmark_{};
+    std::vector<renderer::GpuTimeSample> gpu_sample_scratch_{};
     CameraAnimator animator_{};
     BenchmarkSession session_{};
 

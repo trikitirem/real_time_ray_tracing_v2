@@ -269,6 +269,8 @@ void DeviceContext::pickPhysicalDevice() {
         physicalDevice_ = dev;
         graphicsQueueFamily_ = graphics;
         presentQueueFamily_ = present;
+        timestampPeriod_ = dev.getProperties().limits.timestampPeriod;
+        timestampValidBits_ = qf[graphics].timestampValidBits;
         return;
     }
 

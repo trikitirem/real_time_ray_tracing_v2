@@ -53,6 +53,18 @@ class DeviceContext {
         return presentQueueFamily_;
     }
 
+    // Nanoseconds per timestamp tick reported by the device (VkPhysicalDeviceLimits).
+    [[nodiscard]] float timestampPeriod() const {
+        return timestampPeriod_;
+    }
+    // Meaningful low-order bits of a timestamp written on the graphics queue; 0 = unsupported.
+    [[nodiscard]] std::uint32_t timestampValidBits() const {
+        return timestampValidBits_;
+    }
+    [[nodiscard]] bool gpuTimingSupported() const {
+        return timestampValidBits_ > 0 && timestampPeriod_ > 0.0f;
+    }
+
   private:
     const DeviceConfig& cfg() const;
 
@@ -73,6 +85,9 @@ class DeviceContext {
 
     std::uint32_t graphicsQueueFamily_ = 0;
     std::uint32_t presentQueueFamily_ = 0;
+
+    float timestampPeriod_ = 0.0f;
+    std::uint32_t timestampValidBits_ = 0;
 
     const DeviceConfig* cfgPtr_ = nullptr;
     bool enableValidation_ = false;

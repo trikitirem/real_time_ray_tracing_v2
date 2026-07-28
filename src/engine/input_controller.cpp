@@ -28,7 +28,7 @@ void InputController::begin_frame() {
     mouse_dx_ = 0.0f;
     mouse_dy_ = 0.0f;
     edge_f1_ = edge_f2_ = edge_f3_ = false;
-    edge_f5_ = edge_f7_ = edge_f8_ = edge_tab_ = edge_p_ = false;
+    edge_f5_ = edge_f6_ = edge_f7_ = edge_f8_ = edge_tab_ = edge_p_ = false;
     edge_camera_lock_ = false;
     edge_stress_inc_ = edge_stress_dec_ = false;
 }
@@ -56,7 +56,7 @@ void InputController::poll() {
         mouse_dx_ = 0.0f;
         mouse_dy_ = 0.0f;
         prev_f1_ = prev_f2_ = prev_f3_ = false;
-        prev_f5_ = prev_f7_ = prev_f8_ = prev_tab_ = prev_p_ = false;
+        prev_f5_ = prev_f6_ = prev_f7_ = prev_f8_ = prev_tab_ = prev_p_ = false;
         prev_camera_lock_ = false;
         prev_stress_inc_ = prev_stress_dec_ = false;
         return;
@@ -85,6 +85,7 @@ void InputController::poll() {
     edge_f2_ = edge_trigger(GLFW_KEY_F2, prev_f2_);
     edge_f3_ = edge_trigger(GLFW_KEY_F3, prev_f3_);
     edge_f5_ = edge_trigger(GLFW_KEY_F5, prev_f5_);
+    edge_f6_ = edge_trigger(GLFW_KEY_F6, prev_f6_);
     edge_f7_ = edge_trigger(GLFW_KEY_F7, prev_f7_);
     edge_f8_ = edge_trigger(GLFW_KEY_F8, prev_f8_);
     edge_tab_ = edge_trigger(GLFW_KEY_TAB, prev_tab_);

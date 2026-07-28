@@ -6,6 +6,7 @@
 #include <string>
 
 #include "engine/delta_time.hpp"
+#include "engine/frame_trace_writer.hpp"
 #include "renderer/raster/device_config.hpp"
 #include "renderer/ray_tracing/device_config.hpp"
 #include "util/asset_root.hpp"
@@ -126,6 +127,15 @@ void Engine::log_startup_info() const {
     }
     std::cout << "[Engine] Active backend: " << backend_name(active_backend_is_raster_) << '\n';
     std::cout << "[Engine] Scene: " << scene::scene_display_name(current_scene_name_) << '\n';
+    if (deviceContext_.gpuTimingSupported()) {
+        std::cout << "[Engine] GPU timing: enabled (timestampPeriod="
+                  << deviceContext_.timestampPeriod()
+                  << " ns, validBits=" << deviceContext_.timestampValidBits() << ")\n";
+    } else {
+        std::cout << "[Engine] GPU timing: unavailable (timestampValidBits="
+                  << deviceContext_.timestampValidBits() << ")\n";
+    }
+    std::cout << "[Engine] Present mode: " << renderer_->present_mode_string() << '\n';
 }
 
 void Engine::reload_scene_gpu() {
@@ -230,8 +240,8 @@ void Engine::start_stress_suite() {
 
         pending_suite_backends_.clear();
         if (rt_extensions_supported_) {
-            pending_suite_backends_.push_back({false, true});   // rt_full
-            pending_suite_backends_.push_back({false, false});  // rt_shadows
+            pending_suite_backends_.push_back({false, true});  // rt_full
+            pending_suite_backends_.push_back({false, false}); // rt_shadows
         }
 
         const BenchmarkMeta tmp = make_benchmark_meta();
@@ -239,9 +249,9 @@ void Engine::start_stress_suite() {
 
         const int backends_total = 1 + static_cast<int>(pending_suite_backends_.size());
         const int total_configs = (stress.max_count - stress.initial_count) / stress.step + 1;
-        std::cout << "[Suite] Full session: " << backends_total << " backend(s), "
-                  << total_configs << " stress configs each, " << kSuiteRunsPerConfig
-                  << " runs/config — " << (backends_total * total_configs * kSuiteRunsPerConfig)
+        std::cout << "[Suite] Full session: " << backends_total << " backend(s), " << total_configs
+                  << " stress configs each, " << kSuiteRunsPerConfig << " runs/config — "
+                  << (backends_total * total_configs * kSuiteRunsPerConfig)
                   << " total benchmarks\n";
     }
 
@@ -307,8 +317,7 @@ void Engine::advance_stress_suite() {
             rt_reflections_override_ = cfg.rt_reflections;
 
             const std::string next_key = session_backend_key();
-            const int total_configs =
-                (stress.max_count - stress.initial_count) / stress.step + 1;
+            const int total_configs = (stress.max_count - stress.initial_count) / stress.step + 1;
             std::cout << "[Suite] Starting backend: " << next_key << " ("
                       << (total_configs * kSuiteRunsPerConfig) << " benchmarks)\n";
 
@@ -323,9 +332,8 @@ void Engine::advance_stress_suite() {
                 camera_.reset_pitch_state();
             }
 
-            std::cout << "[Suite] Config 1/" << total_configs << " ("
-                      << current_stress_count_ << " objects), run 1/" << kSuiteRunsPerConfig
-                      << '\n';
+            std::cout << "[Suite] Config 1/" << total_configs << " (" << current_stress_count_
+                      << " objects), run 1/" << kSuiteRunsPerConfig << '\n';
         }
         return;
     }
@@ -340,6 +348,113 @@ void Engine::advance_stress_suite() {
     const int config_index = (current_stress_count_ - stress.initial_count) / stress.step + 1;
     std::cout << "[Suite] Config " << config_index << '/' << total_configs << " ("
               << current_stress_count_ << " objects), run 1/" << kSuiteRunsPerConfig << '\n';
+}
+
+void Engine::apply_backend_key(const std::string& backend_key) {
+    const bool want_raster = backend_key == "raster";
+    if (want_raster != active_backend_is_raster_) {
+        toggle_backend();
+    }
+    rt_reflections_override_ = backend_key != "rt_shadows";
+}
+
+void Engine::begin_diagnostic_config(const std::size_t config_index) {
+    const auto& entry = current_scene_config_.diagnostic.configs[config_index];
+
+    apply_backend_key(entry.backend);
+    rebuild_stress_scene(entry.stress_count);
+
+    BenchmarkMeta meta = make_benchmark_meta();
+    if (entry.duration_seconds.has_value()) {
+        // Slow configurations run longer so their 1% low bucket holds more than a couple of frames.
+        meta.configured_duration_s = *entry.duration_seconds;
+    }
+    renderer_->set_rt_reflections_enabled(meta.rt_reflections_enabled);
+    benchmark_.start(meta, /*collect_frame_trace=*/true);
+
+    if (current_scene_config_.benchmark_path.has_value()) {
+        animator_.start(*current_scene_config_.benchmark_path);
+        camera_.reset_pitch_state();
+    }
+
+    std::cout << "[Diag] Config " << (config_index + 1) << '/'
+              << current_scene_config_.diagnostic.configs.size() << " (" << entry.backend << ", "
+              << entry.stress_count << " objects, " << meta.configured_duration_s << "s), run "
+              << (diagnostic_run_index_ + 1) << '/'
+              << current_scene_config_.diagnostic.runs_per_config << '\n';
+}
+
+void Engine::write_current_frame_trace() {
+    FrameTraceInfo info{};
+    info.backend_key = session_backend_key();
+    info.stress_count = current_stress_count_;
+    info.run_index = diagnostic_run_index_;
+    info.session_timestamp = session_.session_timestamp();
+    info.gpu_name = benchmark_.meta().gpu_name;
+    info.present_mode = benchmark_.meta().present_mode;
+    (void)write_frame_trace(info, benchmark_.frame_samples());
+}
+
+void Engine::start_diagnostic_suite() {
+    const auto& diag = current_scene_config_.diagnostic;
+    if (diag.configs.empty()) {
+        std::cout << "[Diag] Scene '" << current_scene_config_.name
+                  << "' defines no diagnostic configs.\n";
+        return;
+    }
+    if (!renderer_->gpu_timing_enabled()) {
+        std::cout << "[Diag] Warning: GPU timing unavailable on this device — gpu_time_ms will be "
+                     "empty.\n";
+    }
+
+    if (!session_.is_initialized()) {
+        const BenchmarkMeta tmp = make_benchmark_meta();
+        session_.init(tmp.gpu_name, tmp.window_width, tmp.window_height);
+    }
+
+    diagnostic_config_index_ = 0;
+    diagnostic_run_index_ = 0;
+    diagnostic_suite_active_ = true;
+
+    std::cout << "[Diag] Starting: " << diag.configs.size() << " config(s) x "
+              << diag.runs_per_config
+              << " run(s) = " << (static_cast<int>(diag.configs.size()) * diag.runs_per_config)
+              << " benchmarks, with per-frame CSV traces\n";
+
+    begin_diagnostic_config(diagnostic_config_index_);
+}
+
+void Engine::advance_diagnostic_suite() {
+    if (!benchmark_.consume_finished()) {
+        return;
+    }
+
+    const auto& diag = current_scene_config_.diagnostic;
+
+    session_.add_run(session_backend_key(), current_stress_count_, benchmark_.stats(),
+                     diagnostic_run_index_);
+    session_.flush();
+    // Must happen before the next start(), which clears the sample buffer.
+    write_current_frame_trace();
+
+    if (diagnostic_run_index_ < diag.runs_per_config - 1) {
+        diagnostic_run_index_++;
+        begin_diagnostic_config(diagnostic_config_index_);
+        return;
+    }
+
+    diagnostic_run_index_ = 0;
+    diagnostic_config_index_++;
+
+    if (diagnostic_config_index_ >= diag.configs.size()) {
+        diagnostic_suite_active_ = false;
+        animator_.stop();
+        std::cout << "[Diag] Complete. Results -> " << session_.output_path().filename().string()
+                  << " + frames_*.csv\n";
+        return;
+    }
+
+    begin_diagnostic_config(diagnostic_config_index_);
 }
 
 void Engine::toggle_backend() {
@@ -436,16 +551,22 @@ void Engine::handle_scene_switch_input() {
 }
 
 void Engine::handle_benchmark_input(const float /*frame_dt*/) {
-    if (!input_.pressed_f5()) {
+    const bool start_full = input_.pressed_f5();
+    const bool start_diagnostic = input_.pressed_f6();
+    if (!start_full && !start_diagnostic) {
         return;
     }
 
-    if (benchmark_.is_running() || stress_suite_active_) {
+    if (benchmark_.is_running() || stress_suite_active_ || diagnostic_suite_active_) {
         std::cout << "[Benchmark] Stopped early (" << benchmark_.elapsed_s() << "s / "
                   << (kWarmupDurationS + benchmark_.meta().configured_duration_s) << "s)\n";
         benchmark_.stop();
         animator_.stop();
         stress_suite_active_ = false;
+        diagnostic_suite_active_ = false;
+        // Drop the partial run: consume_finished() would otherwise let the suite advance one more
+        // step on the next frame.
+        (void)benchmark_.consume_finished();
         return;
     }
 
@@ -455,6 +576,15 @@ void Engine::handle_benchmark_input(const float /*frame_dt*/) {
     }
 
     if (glfwGetWindowAttrib(window_.handle(), GLFW_FOCUSED) == 0) {
+        return;
+    }
+
+    if (start_diagnostic) {
+        if (current_scene_name_ != scene::SceneName::StressTest) {
+            std::cout << "[Diag] Diagnostic suite requires the StressTest scene (F3).\n";
+            return;
+        }
+        start_diagnostic_suite();
         return;
     }
 
@@ -547,10 +677,17 @@ void Engine::mainLoop() {
         handle_backend_input();
         handle_camera_input(frame_dt);
 
-        (void)benchmark_.tick(frame_dt);
+        // last_frame_cpu_timings() describes the previous draw(), i.e. the same loop iteration
+        // frame_dt covers, so the two pair up correctly. GPU samples lag a couple of frames and are
+        // joined by serial inside Benchmark.
+        (void)benchmark_.tick(frame_dt, renderer_->last_frame_cpu_timings());
+        renderer_->drain_gpu_samples(gpu_sample_scratch_);
+        benchmark_.apply_gpu_samples(gpu_sample_scratch_);
 
         if (stress_suite_active_) {
             advance_stress_suite();
+        } else if (diagnostic_suite_active_) {
+            advance_diagnostic_suite();
         }
 
         if (framebufferResized_) {

@@ -6,7 +6,7 @@
 namespace scene {
 
 struct Model {
-    Mesh      mesh;
+    Mesh mesh;
     Transform transform{};
 };
 

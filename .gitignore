@@ -13,13 +13,31 @@ docs/
 
 # Benchmark measurement outputs
 measurements/*.json
+measurements/*.csv
+
+# Per-frame traces: regenerable from the engine (F3 -> F6), only the summary JSON is tracked
+tests/benchmarks/results/**/frames_*.csv
+
+# Mock per-frame traces (regenerate with fixtures/generate_mock_frames.py)
+tests/benchmarks/fixtures/mock_frames/
 
 # Benchmark visualization outputs
 tests/benchmarks/output/
-tests/benchmarks/.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
 tests/benchmarks/.packages/
 
 # Local format helper (uses repo .clang-format; not tracked)
 scripts/format-cpp.ps1
 
 .vscode/
+.claude/

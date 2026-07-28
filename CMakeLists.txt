@@ -98,6 +98,7 @@ add_executable(real_time_ray_tracing_v2
         src/engine/engine.cpp
         src/engine/benchmark.cpp
         src/engine/benchmark_session.cpp
+        src/engine/frame_trace_writer.cpp
         src/engine/camera_animator.cpp
         src/util/asset_root.cpp
         src/scene/scene_registry.cpp

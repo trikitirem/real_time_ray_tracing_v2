@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -7,6 +8,7 @@
 
 #include <vulkan/vulkan_raii.hpp>
 
+#include "renderer/shared/frame_timings.hpp"
 #include "renderer/shared/render_backend.hpp"
 #include "renderer/shared/swapchain.hpp"
 
@@ -50,12 +52,31 @@ class Renderer {
         framebuffer_resized_ = true;
     }
 
+    [[nodiscard]] bool gpu_timing_enabled() const {
+        return gpu_timing_enabled_;
+    }
+
+    // CPU stage costs of the most recent completed draw(). serial == kInvalidFrameSerial when the
+    // last draw() bailed out before submitting (paused rendering, swapchain recreation).
+    [[nodiscard]] const FrameCpuTimings& last_frame_cpu_timings() const {
+        return last_cpu_timings_;
+    }
+
+    // Moves out every GPU sample resolved since the previous call. Samples arrive
+    // kMaxFramesInFlight frames after submission, so callers must join them by
+    // FrameCpuTimings::serial.
+    void drain_gpu_samples(std::vector<GpuTimeSample>& out);
+
   private:
     void create_command_pool_and_buffers();
     void destroy_command_pool_and_buffers();
 
     void create_sync_objects();
     void destroy_sync_objects();
+
+    void create_timestamp_pool();
+    void destroy_timestamp_pool();
+    void resolve_gpu_timestamps(std::uint32_t frame_index);
 
     void recreate_swapchain();
 
@@ -84,6 +105,15 @@ class Renderer {
 
     std::uint32_t current_frame_ = 0;
     bool framebuffer_resized_ = false;
+
+    // Whole-frame GPU timing. One pool, two timestamp slots per in-flight frame: 2*i and 2*i+1.
+    vk::raii::QueryPool timestamp_pool_ = nullptr;
+    bool gpu_timing_enabled_ = false;
+    std::array<FrameSerial, kMaxFramesInFlight> slot_serial_{};
+    std::array<bool, kMaxFramesInFlight> slot_pending_{};
+    FrameSerial frame_serial_ = 0;
+    std::vector<GpuTimeSample> resolved_gpu_{};
+    FrameCpuTimings last_cpu_timings_{};
 };
 
 } // namespace renderer

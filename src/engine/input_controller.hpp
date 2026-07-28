@@ -50,6 +50,9 @@ class InputController {
     [[nodiscard]] bool pressed_f5() const {
         return edge_f5_;
     }
+    [[nodiscard]] bool pressed_f6() const {
+        return edge_f6_;
+    }
     [[nodiscard]] bool pressed_f7() const {
         return edge_f7_;
     }
@@ -94,6 +97,7 @@ class InputController {
     mutable bool prev_f2_ = false;
     mutable bool prev_f3_ = false;
     mutable bool prev_f5_ = false;
+    mutable bool prev_f6_ = false;
     mutable bool prev_f7_ = false;
     mutable bool prev_f8_ = false;
     mutable bool prev_tab_ = false;
@@ -106,6 +110,7 @@ class InputController {
     bool edge_f2_ = false;
     bool edge_f3_ = false;
     bool edge_f5_ = false;
+    bool edge_f6_ = false;
     bool edge_f7_ = false;
     bool edge_f8_ = false;
     bool edge_tab_ = false;

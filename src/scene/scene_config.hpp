@@ -70,10 +70,27 @@ struct StressConfig {
     std::string texture;
 };
 
+// One entry of the diagnostic suite: a specific backend at a specific object count. Unlike the
+// full stress suite (every backend x every count), this runs only the configurations needed to
+// separate GPU execution time from CPU/driver overhead, and it exports a per-frame CSV trace.
+struct DiagnosticConfigEntry {
+    std::string backend; // "raster" | "rt_full" | "rt_shadows"
+    int stress_count = 0;
+    // Overrides BenchmarkSettings::duration_seconds for this entry only. Slow configurations need
+    // a longer run to put a meaningful number of frames into the 1% low bucket.
+    std::optional<float> duration_seconds;
+};
+
+struct DiagnosticSettings {
+    int runs_per_config = 3;
+    std::vector<DiagnosticConfigEntry> configs;
+};
+
 struct SceneConfig {
     std::string name;
     SceneKind kind = SceneKind::Viewing;
     BenchmarkSettings benchmark{};
+    DiagnosticSettings diagnostic{};
     std::vector<CameraPreset> camera_presets;
     std::optional<InitialCamera> initial_camera;
     std::optional<BenchmarkPath> benchmark_path;

@@ -8,6 +8,8 @@
 #include "renderer/shared/device_context.hpp"
 #include "scene/scene.hpp"
 
+#include <array>
+#include <chrono>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -36,6 +38,12 @@ std::string present_mode_to_string(const vk::PresentModeKHR mode) {
     }
 }
 
+using StageClock = std::chrono::steady_clock;
+
+float elapsed_ms_since(const StageClock::time_point start) {
+    return std::chrono::duration<float, std::milli>(StageClock::now() - start).count();
+}
+
 } // namespace
 
 Renderer::Renderer(GLFWwindow* window, DeviceContext& ctx, bool useRasterBackend)
@@ -57,10 +65,12 @@ Renderer::Renderer(GLFWwindow* window, DeviceContext& ctx, bool useRasterBackend
     backend_->create(ctx_, swapchain_);
     create_command_pool_and_buffers();
     create_sync_objects();
+    create_timestamp_pool();
 }
 
 Renderer::~Renderer() {
     ctx_.device().waitIdle();
+    destroy_timestamp_pool();
     destroy_sync_objects();
     destroy_command_pool_and_buffers();
     backend_->destroy(ctx_);
@@ -98,6 +108,7 @@ std::string Renderer::present_mode_string() const {
 void Renderer::switch_backend(const bool use_raster) {
     ctx_.device().waitIdle();
 
+    destroy_timestamp_pool();
     destroy_sync_objects();
     destroy_command_pool_and_buffers();
     backend_->destroy(ctx_);
@@ -116,6 +127,7 @@ void Renderer::switch_backend(const bool use_raster) {
 
     create_command_pool_and_buffers();
     create_sync_objects();
+    create_timestamp_pool();
 }
 
 void Renderer::create_command_pool_and_buffers() {
@@ -165,9 +177,71 @@ void Renderer::destroy_sync_objects() {
     frames_.clear();
 }
 
+void Renderer::create_timestamp_pool() {
+    slot_serial_.fill(kInvalidFrameSerial);
+    slot_pending_.fill(false);
+
+    gpu_timing_enabled_ = ctx_.gpuTimingSupported();
+    if (!gpu_timing_enabled_) {
+        return;
+    }
+
+    const vk::QueryPoolCreateInfo info{
+        .queryType = vk::QueryType::eTimestamp,
+        .queryCount = 2 * kMaxFramesInFlight,
+    };
+    timestamp_pool_ = vk::raii::QueryPool(ctx_.device(), info);
+}
+
+void Renderer::destroy_timestamp_pool() {
+    // Slots recorded against the old pool can never resolve; drop them so no stale serial is
+    // reported after a swapchain rebuild or backend switch.
+    slot_pending_.fill(false);
+    slot_serial_.fill(kInvalidFrameSerial);
+    timestamp_pool_ = nullptr;
+    gpu_timing_enabled_ = false;
+}
+
+void Renderer::resolve_gpu_timestamps(const std::uint32_t frame_index) {
+    if (!gpu_timing_enabled_ || !slot_pending_[frame_index]) {
+        return;
+    }
+    // The caller has just waited on the fence belonging to this slot, so the timestamps written by
+    // its previous submission are complete. Clearing the flag first keeps the slot consistent even
+    // if the read below fails or draw() bails out afterwards.
+    slot_pending_[frame_index] = false;
+
+    // Raw-pointer overload on purpose: the enhanced-mode wrapper returns a std::vector, which would
+    // mean a heap allocation on every frame of the measurement path.
+    std::array<std::uint64_t, 2> ts{};
+    const vk::Result result =
+        (*ctx_.device())
+            .getQueryPoolResults(*timestamp_pool_, 2 * frame_index, 2, sizeof(ts), ts.data(),
+                                 sizeof(std::uint64_t), vk::QueryResultFlagBits::e64);
+    if (result != vk::Result::eSuccess) {
+        return;
+    }
+
+    const std::uint32_t valid_bits = ctx_.timestampValidBits();
+    const std::uint64_t mask =
+        valid_bits >= 64 ? ~0ULL : ((static_cast<std::uint64_t>(1) << valid_bits) - 1);
+    const std::uint64_t delta = (ts[1] & mask) - (ts[0] & mask);
+
+    resolved_gpu_.push_back({
+        .serial = slot_serial_[frame_index],
+        .gpu_ms = static_cast<float>(delta) * ctx_.timestampPeriod() * 1e-6f,
+    });
+}
+
+void Renderer::drain_gpu_samples(std::vector<GpuTimeSample>& out) {
+    out.clear();
+    out.swap(resolved_gpu_);
+}
+
 void Renderer::recreate_swapchain() {
     ctx_.device().waitIdle();
 
+    destroy_timestamp_pool();
     destroy_sync_objects();
     destroy_command_pool_and_buffers();
     backend_->destroy(ctx_);
@@ -188,6 +262,7 @@ void Renderer::recreate_swapchain() {
     }
     create_command_pool_and_buffers();
     create_sync_objects();
+    create_timestamp_pool();
 }
 
 void Renderer::record_command_buffer(const std::uint32_t frame_index,
@@ -196,6 +271,15 @@ void Renderer::record_command_buffer(const std::uint32_t frame_index,
 
     cmd.begin(vk::CommandBufferBeginInfo{});
 
+    if (gpu_timing_enabled_) {
+        // hostQueryReset is not enabled, so the pool must be reset from the command buffer. Both
+        // this and the timestamp writes must stay outside any render pass, hence before the backend
+        // records anything.
+        cmd.resetQueryPool(*timestamp_pool_, 2 * frame_index, 2);
+        cmd.writeTimestamp2(vk::PipelineStageFlagBits2::eTopOfPipe, *timestamp_pool_,
+                            2 * frame_index);
+    }
+
     FrameRecordContext ctx{};
     ctx.extent = swapchain_.extent();
     ctx.frameIndex = frame_index;
@@ -203,10 +287,19 @@ void Renderer::record_command_buffer(const std::uint32_t frame_index,
     ctx.swapchainImage = swapchain_.images()[image_index];
     backend_->record(cmd, ctx);
 
+    if (gpu_timing_enabled_) {
+        cmd.writeTimestamp2(vk::PipelineStageFlagBits2::eAllCommands, *timestamp_pool_,
+                            2 * frame_index + 1);
+    }
+
     cmd.end();
 }
 
 void Renderer::draw() {
+    // Reset first: any early return below means this frame produced no measurement, and the
+    // invalid serial tells the consumer to record a gap rather than reuse the previous frame.
+    last_cpu_timings_ = FrameCpuTimings{};
+
     if (framebuffer_resized_) {
         framebuffer_resized_ = false;
         recreate_swapchain();
@@ -226,14 +319,23 @@ void Renderer::draw() {
 
     FrameSync& frame = frames_[current_frame_];
 
+    FrameCpuTimings timings{};
+
+    const auto fence_wait_start = StageClock::now();
     const vk::Result fence_wait = device.waitForFences({*frame.in_flight}, vk::True,
                                                        std::numeric_limits<std::uint64_t>::max());
+    timings.fence_wait_ms = elapsed_ms_since(fence_wait_start);
     if (fence_wait != vk::Result::eSuccess) {
         throw std::runtime_error("Renderer::draw: waitForFences failed");
     }
 
+    // The fence just signalled belongs to this slot's submission from kMaxFramesInFlight frames
+    // ago, so its timestamps are readable without stalling.
+    resolve_gpu_timestamps(current_frame_);
+
     std::uint32_t image_index = 0;
     vk::Result acq = vk::Result::eSuccess;
+    const auto acquire_start = StageClock::now();
     try {
         const auto r = device.acquireNextImageKHR(*swapchain_.handle(),
                                                   std::numeric_limits<std::uint64_t>::max(),
@@ -247,6 +349,7 @@ void Renderer::draw() {
         }
         throw;
     }
+    timings.acquire_ms = elapsed_ms_since(acquire_start);
 
     if (acq == vk::Result::eErrorOutOfDateKHR) {
         recreate_swapchain();
@@ -258,9 +361,14 @@ void Renderer::draw() {
 
     device.resetFences({*frame.in_flight});
 
+    const FrameSerial serial = frame_serial_++;
+    slot_serial_[current_frame_] = serial;
+
+    const auto record_start = StageClock::now();
     command_buffers_[current_frame_].reset({});
 
     record_command_buffer(current_frame_, image_index);
+    timings.record_ms = elapsed_ms_since(record_start);
 
     const vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
@@ -275,7 +383,11 @@ void Renderer::draw() {
     submit.signalSemaphoreCount = 1;
     submit.pSignalSemaphores = &*render_finished_[image_index];
 
+    const auto submit_start = StageClock::now();
     ctx_.graphicsQueue().submit(submit, *frame.in_flight);
+    timings.submit_ms = elapsed_ms_since(submit_start);
+
+    slot_pending_[current_frame_] = gpu_timing_enabled_;
 
     const vk::SwapchainKHR swapchain_handle = *swapchain_.handle();
     vk::PresentInfoKHR present{};
@@ -285,7 +397,13 @@ void Renderer::draw() {
     present.pSwapchains = &swapchain_handle;
     present.pImageIndices = &image_index;
 
+    const auto present_start = StageClock::now();
     const vk::Result present_result = ctx_.presentQueue().presentKHR(present);
+    timings.present_ms = elapsed_ms_since(present_start);
+
+    timings.serial = serial;
+    last_cpu_timings_ = timings;
+
     if (present_result == vk::Result::eErrorOutOfDateKHR ||
         present_result == vk::Result::eSuboptimalKHR) {
         recreate_swapchain();

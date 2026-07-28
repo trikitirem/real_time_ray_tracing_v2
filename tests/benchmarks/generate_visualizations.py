@@ -28,6 +28,13 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_OUTPUT,
         help=f"Output directory (default: {DEFAULT_OUTPUT.name}/)",
     )
+    parser.add_argument(
+        "--frames-dir",
+        type=Path,
+        default=None,
+        help="Directory with per-frame frames_*.csv traces from the diagnostic suite. "
+        "Skipped when absent.",
+    )
     return parser.parse_args()
 
 
@@ -64,6 +71,19 @@ def main() -> int:
     generated.extend(generate_avg_plots(frames, output_dir))
     generated.extend(generate_stability_plots(frames, output_dir))
     generated.append(generate_frame_illustration_plot(input_path, output_dir))
+
+    if args.frames_dir is not None:
+        frames_dir = args.frames_dir.resolve()
+        if frames_dir.is_dir():
+            from benchmark_viz.plots_cpu_gpu_split import generate_cpu_gpu_split_plots
+
+            split = generate_cpu_gpu_split_plots(frames_dir, output_dir)
+            if split:
+                generated.extend(split)
+            else:
+                print(f"Note: no frames_*.csv traces found in {frames_dir}", file=sys.stderr)
+        else:
+            print(f"Note: frames dir not found: {frames_dir}", file=sys.stderr)
 
     print(f"Input:  {input_path}")
     print(f"GPU:    {meta.get('gpu_name', 'unknown')}")
