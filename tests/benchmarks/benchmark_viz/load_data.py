@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import random
 from pathlib import Path
 
 import pandas as pd
@@ -61,3 +62,12 @@ def _backend_to_dataframe(backend_key: str, backend_obj: dict) -> pd.DataFrame:
 
 def available_backends(frames: dict[str, pd.DataFrame]) -> list[str]:
     return [k for k in BACKEND_ORDER if k in frames]
+
+
+def load_random_run(path: Path, backend_key: str, stress_count: int, seed: int = 42) -> dict:
+    """Pick one run (deterministically, via seed) from runs[] for a given backend/stress_count."""
+    with path.open(encoding="utf-8") as f:
+        raw = json.load(f)
+
+    runs = raw[backend_key][str(stress_count)]["runs"]
+    return random.Random(seed).choice(runs)

@@ -22,6 +22,9 @@ BACKEND_COLORS: dict[str, str] = {
     "rt_shadows": "#16a34a",
 }
 
+COLOR_GOOD = "#16a34a"
+COLOR_BAD = "#dc2626"
+
 TABLE_ROW_EVEN = "#f5f5f5"
 TABLE_ROW_ODD = "#ffffff"
 TABLE_HEADER = "#e0e0e0"

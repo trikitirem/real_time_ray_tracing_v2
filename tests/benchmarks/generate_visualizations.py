@@ -37,6 +37,7 @@ def main() -> int:
 
     from benchmark_viz.load_data import load_summary
     from benchmark_viz.plots_avg import generate_avg_plots
+    from benchmark_viz.plots_frame_illustration import generate_frame_illustration_plot
     from benchmark_viz.plots_stability import generate_stability_plots
     from benchmark_viz.plots_tables import generate_tables
     from benchmark_viz.style import apply_style
@@ -62,6 +63,7 @@ def main() -> int:
     generated.extend(generate_tables(frames, output_dir))
     generated.extend(generate_avg_plots(frames, output_dir))
     generated.extend(generate_stability_plots(frames, output_dir))
+    generated.append(generate_frame_illustration_plot(input_path, output_dir))
 
     print(f"Input:  {input_path}")
     print(f"GPU:    {meta.get('gpu_name', 'unknown')}")
