@@ -1,0 +1,9 @@
+Input_File_Name=scene/main_shot.pov
+Output_File_Name=renders/main_shot.png
+Library_Path=scene
+Width=1920
+Height=1080
+Output_File_Type=N
+Antialias=On
+Antialias_Threshold=0.3
+Display=off
