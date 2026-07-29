@@ -83,10 +83,17 @@ def _finish_block(metalness: float, roughness: float) -> str:
     # specular scales down with roughness, otherwise a "matte" (high-roughness) surface still
     # gets a full-strength highlight.
     specular = SPECULAR_STRENGTH * (1.0 - roughness) * local_shading_weight
-    # POV-Ray's `roughness` is a highlight-tightness knob that in practice stays well under ~0.15
-    # for anything but a chalky, glowing-looking surface -- passed straight through on a 0-1 scale
-    # it produces a huge, non-energy-conserving highlight that washes the surface out toward white.
-    # Rescale into a sane POV range while preserving relative order.
+    # KNOWN APPROXIMATION -- see docs/analiza_offline_renderery/probe_specular/README.md, where the
+    # two POV-Ray highlight models were measured empirically:
+    #   `specular` + `roughness r` is Blinn (halfway vector), effective exponent n ~ 1/r
+    #   `phong`    + `phong_size n` is classic Phong (reflect vector), n used literally
+    # The engine uses classic Phong, pow(dot(R, V), kShininess=24). Since cos(2t)^n ~ cos(t)^(4n)
+    # for small angles, matching the engine here would need roughness = 1/(4*24) ~ 0.0104, or --
+    # with no conversion at all -- `phong <specular> phong_size 24`. The 0.1 factor below is an
+    # eyeballed rescale that lands ~4x too low an exponent, so highlights come out about twice as
+    # wide in angle as the engine's. Left as-is deliberately: changing it would invalidate the
+    # already-published renders, and it affects only highlight width, not the shadow/geometry
+    # findings in the analysis.
     povray_roughness = max(0.0008, roughness * 0.1)
     lines = (
         f"diffuse {_fmt(diffuse)} ambient {_fmt(local_shading_weight)} "
